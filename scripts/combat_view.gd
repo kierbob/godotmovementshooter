@@ -159,10 +159,11 @@ func _add_tracer(from: Vector3, to: Vector3) -> void:
 	_next_tracer += 1
 	var node: MeshInstance3D = t.node
 	var length := from.distance_to(to)
-	if length < 0.01:
+	if length < 0.3: # hit something right in front of the gun: nothing to draw
 		return
 	var dir := (to - from) / length
-	node.basis = Basis.looking_at(dir, Vector3.RIGHT if absf(dir.y) > 0.99 else Vector3.UP).scaled(Vector3(1, 1, length))
+	# Stretch along the tracer's own axis (Basis.scaled would stretch along the world's Z and skew it).
+	node.basis = Basis.looking_at(dir, Vector3.RIGHT if absf(dir.y) > 0.99 else Vector3.UP) * Basis.from_scale(Vector3(1, 1, length))
 	node.position = (from + to) / 2
 	node.visible = true
 	t.life = 0.07
