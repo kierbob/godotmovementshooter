@@ -1,0 +1,45 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Movement Shooter"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.6", "Forward Plus")
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+
+[physics]
+
+common/physics_ticks_per_second=120
+common/max_physics_steps_per_frame=12
+common/physics_jitter_fix=0.0
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2
+
+[shader_globals]
+
+hemi_sky={
+"type": "vec3",
+"value": Vector3(1, 0.888, 1)
+}
+hemi_ground={
+"type": "vec3",
+"value": Vector3(0.323, 0.216, 0.578)
+}
+hemi_energy={
+"type": "float",
+"value": 1.8
+}
