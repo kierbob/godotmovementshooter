@@ -290,8 +290,18 @@ func _build_beans() -> void:
 				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			mi.material_override = m
 			bar.add_child(mi)
+		# HP number above the bar, so you can see exactly what each shot did.
+		var hp := Label3D.new()
+		hp.position.y = 0.17
+		hp.pixel_size = 0.0055
+		hp.font = Models.font("res://assets/fonts/Bangers-Regular.ttf")
+		hp.font_size = 44
+		hp.outline_size = 12
+		hp.outline_modulate = Color("15151f")
+		hp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		bar.add_child(hp)
 		node.add_child(bar)
-		beans.append({"node": node, "mats": mats, "fill": bar.get_child(1), "flash": 0.0})
+		beans.append({"node": node, "mats": mats, "fill": bar.get_child(1), "hp_label": hp, "flash": 0.0, "shown_hp": -1})
 
 
 # ---------- input ----------
@@ -532,6 +542,10 @@ func _update_beans(look_at_pos: Vector3, dt: float) -> void:
 		fill.position.x = -0.4 * (1 - frac)
 		(fill.material_override as StandardMaterial3D).albedo_color = \
 			Color("5ee06a") if frac > 0.5 else Color("f2c14e") if frac > 0.25 else Color("e5534b")
+		var hp_now := ceili(t.hp)
+		if hp_now != b.shown_hp:
+			b.shown_hp = hp_now
+			(b.hp_label as Label3D).text = "%d / %d" % [hp_now, roundi(t.max_hp)]
 		b.flash = maxf(0.0, b.flash - dt)
 		for m: ShaderMaterial in b.mats:
 			m.set_shader_parameter("emission_boost", 2.5 if b.flash > 0 else 0.0)
