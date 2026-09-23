@@ -21,6 +21,7 @@ var player: PlayerSim
 var combat: Combat
 var combat_view: CombatView
 var viewmodel: Viewmodel
+var sound: Sound
 var camera: Camera3D
 var hud: Hud
 var menu: Menu
@@ -47,6 +48,7 @@ var reload_pressed := false
 var ability_pressed := false
 var slot_pressed := "" # "primary" / "secondary"
 var cycle := 0 # mouse wheel
+var _last_move_t := -1.0 # newest movement event that already made a sound
 
 var _debug_timer := 0.0
 var _frames := 0
@@ -79,6 +81,8 @@ func _ready() -> void:
 	Settings.apply_quality(get_viewport())
 	viewmodel = Viewmodel.new()
 	add_child(viewmodel)
+	sound = Sound.new()
+	add_child(sound)
 	viewmodel.set_msaa(Settings.QUALITY[Settings.quality].msaa)
 
 	camera = Camera3D.new()
@@ -104,7 +108,13 @@ func _ready() -> void:
 	menu.settings_changed.connect(_on_settings_changed)
 	combat_view.word.connect(hud.word)
 	viewmodel.word.connect(func(text: String, at: Vector2, style: String) -> void: hud.word(text, null, at, style))
-	viewmodel.tossed.connect(func(id: String) -> void: combat_view.toss_gun(id, camera, player))
+	viewmodel.tossed.connect(func(id: String) -> void:
+		combat_view.toss_gun(id, camera, player)
+		sound.play("throw"))
+	viewmodel.reload_caught.connect(func() -> void: sound.play("switch"))
+	# Every button in the menus clicks (web: any <button>).
+	_hook_buttons(menu)
+	get_tree().node_added.connect(_hook_button) # buttons made later (menus rebuild their lists)
 
 	if auto_play:
 		auto_play = false
@@ -133,6 +143,7 @@ func _start_play() -> void:
 	eye = Cfg.PLAYER_EYE_HEIGHT
 	prev_pos = _player_pos()
 	combat.set_loadout(Settings.loadout)
+	_last_move_t = -1.0 # a new PlayerSim starts its clock at 0
 	combat.reset_targets()
 	combat_view.clear()
 	hud.clear_floaters()
@@ -437,6 +448,10 @@ func _process(delta: float) -> void:
 		if e.type == "hit":
 			beans[e.target].flash = 0.08
 	combat_view.update(dt if state == "playing" else 0.0, combat)
+	sound.listener = camera.global_position
+	_play_combat_sounds(events)
+	if state == "playing":
+		_play_movement_sounds()
 	if state != "menu":
 		hud.update_combat(dt if state == "playing" else 0.0, combat, camera)
 		viewmodel.update(dt if state == "playing" else 0.0, combat, player, yaw)
@@ -447,6 +462,54 @@ func _process(delta: float) -> void:
 		if _frame == _shot_frames:
 			get_viewport().get_texture().get_image().save_png(_shot_path)
 			get_tree().quit()
+
+
+# ---------- sounds (web main.js playCombatSounds / playMovementSounds) ----------
+
+func _play_combat_sounds(events: Array[Dictionary]) -> void:
+	for e in events:
+		match e.type:
+			"shot": sound.play(e.weapon, {"gap": 0.0})
+			"hit": sound.play("kill" if e.kill else "headshot" if e.zone == "head" else "hit", {"gap": 0.03})
+			"impact": sound.play("impact", {"pos": e.pos, "gap": 0.03})
+			"explosion": sound.play("impulse" if e.kind == "impulse" else "explosion", {"pos": e.pos, "gap": 0.0})
+			"throw": sound.play("knifeThrow" if e.ability == "knife" else "throw")
+			"switch": sound.play("switch")
+			# (reload sounds come from the gun toss animation: throw, then catch)
+
+
+## Movement sounds come from the player's event log (jump, land, slide...).
+func _play_movement_sounds() -> void:
+	for e: Dictionary in player.events:
+		if e.t <= _last_move_t:
+			continue
+		_last_move_t = e.t
+		var n: String = e.name
+		if n == "wall jump":
+			sound.play("wallJump")
+		elif n.ends_with("jump"):
+			sound.play("jump")
+		elif n == "land":
+			var air := String(e.detail).get_slice("after ", 1).to_float()
+			if air > 0.15:
+				var k := minf(1.0, air / 1.2)
+				sound.play("land", {"vol": (0.2 + 0.3 * k) / 0.5}) # baked at full strength
+		elif n == "slide" or n == "land slide":
+			sound.play("slide")
+		elif n == "jump pad":
+			sound.play("pad")
+
+
+func _hook_buttons(n: Node) -> void:
+	_hook_button(n)
+	for c in n.get_children():
+		_hook_buttons(c)
+
+
+func _hook_button(n: Node) -> void:
+	if n is BaseButton and not n.has_meta("clicks"):
+		n.set_meta("clicks", true)
+		(n as BaseButton).pressed.connect(func() -> void: sound.play("ui", {"gap": 0.05}))
 
 
 func _ease(cur: float, target: float, rate: float, dt: float) -> float:

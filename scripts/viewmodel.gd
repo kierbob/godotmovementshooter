@@ -9,6 +9,8 @@ extends CanvasLayer
 
 ## The reload flick is done: the world should fling this gun away (CombatView.toss_gun).
 signal tossed(weapon_id: String)
+## The fresh gun has sprung back up at the end of a reload (catch sound).
+signal reload_caught
 ## A comic word next to the gun; screen_pos is 0..1.
 signal word(text: String, screen_pos: Vector2, style: String)
 
@@ -35,6 +37,7 @@ var _lines_t := 0.0
 var _lines_size := 0.0
 var _light: OmniLight3D
 var _tossed_this_reload := false
+var _caught_this_reload := false
 var _star_tex: Texture2D
 var _lines_tex: Texture2D
 
@@ -234,8 +237,12 @@ func update(dt: float, combat: Combat, player: PlayerSim, yaw: float) -> void:
 			var e := 1 + (c + 1) * pow(k - 1, 3) + c * pow(k - 1, 2) # ease-out-back
 			r_y = -0.45 * (1 - e)
 			r_rot = -0.5 * (1 - e)
+			if not _caught_this_reload:
+				_caught_this_reload = true
+				reload_caught.emit()
 	else:
 		_tossed_this_reload = false
+		_caught_this_reload = false
 	gun.visible = not empty
 
 	_kick = maxf(0.0, _kick - dt * 7)
