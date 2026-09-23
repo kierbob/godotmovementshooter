@@ -4,6 +4,7 @@ class_name Models
 ## models.js). Also builds the knife and the flying projectiles out of simple shapes.
 
 const DIR := "res://assets/models/weapons/"
+const INK := Color("15151f") # outline color (web outline.js)
 const STAGE_FIT := 1.7 # longest side of every model on the loadout stage
 
 static var _cache := {} # file -> PackedScene (null if it failed), instanced for every use
@@ -51,9 +52,72 @@ static func toonify(root: Node, outline: float) -> void:
 			if tex:
 				m.set_shader_parameter("use_palette", true)
 				m.set_shader_parameter("palette_tex", tex)
-			if outline > 0:
-				WorldView.with_outline(m, outline)
 			mi.mesh.surface_set_material(i, m)
+		if outline > 0:
+			add_outline(mi, outline)
+
+
+## Black cartoon outline: an inflated copy of the mesh drawn back faces only (outline.js). The copy
+## is welded and uses smoothed normals; pushing a low-poly mesh out along its own hard-edged normals
+## tears the outline apart at every corner.
+static func add_outline(mi: MeshInstance3D, thickness: float) -> void:
+	var o := MeshInstance3D.new()
+	o.name = "Outline"
+	o.mesh = shell(mi.mesh, thickness)
+	o.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_color = INK
+	m.cull_mode = BaseMaterial3D.CULL_FRONT
+	o.material_override = m
+	mi.add_child(o)
+
+
+## The mesh with vertices at the same spot merged, each pushed out by `thickness` along the
+## average of the faces around it (area-weighted, like three.js computeVertexNormals).
+static func shell(mesh: Mesh, thickness: float) -> ArrayMesh:
+	var out := ArrayMesh.new()
+	for si in mesh.get_surface_count():
+		var arrays := mesh.surface_get_arrays(si)
+		var src: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var idx: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+		if idx.is_empty():
+			idx = PackedInt32Array(range(src.size()))
+		# weld by position (1e-4 grid, like mergeVertices)
+		var key_to_new := {}
+		var remap := PackedInt32Array()
+		remap.resize(src.size())
+		var pos := PackedVector3Array()
+		for i in src.size():
+			var k := Vector3i((src[i] * 10000.0).round())
+			if not key_to_new.has(k):
+				key_to_new[k] = pos.size()
+				pos.append(src[i])
+			remap[i] = key_to_new[k]
+		var normals := PackedVector3Array()
+		normals.resize(pos.size())
+		var tris := PackedInt32Array()
+		tris.resize(idx.size())
+		for t in range(0, idx.size() - 2, 3):
+			var a := remap[idx[t]]
+			var b := remap[idx[t + 1]]
+			var c := remap[idx[t + 2]]
+			tris[t] = a
+			tris[t + 1] = b
+			tris[t + 2] = c
+			# Godot winds front faces clockwise, so this cross product points outward.
+			var n := (pos[c] - pos[a]).cross(pos[b] - pos[a])
+			normals[a] += n
+			normals[b] += n
+			normals[c] += n
+		for i in pos.size():
+			pos[i] += normals[i].normalized() * thickness
+		var shell_arrays := []
+		shell_arrays.resize(Mesh.ARRAY_MAX)
+		shell_arrays[Mesh.ARRAY_VERTEX] = pos
+		shell_arrays[Mesh.ARRAY_INDEX] = tris
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, shell_arrays)
+	return out
 
 
 static func _meshes(root: Node) -> Array[MeshInstance3D]:
@@ -161,8 +225,9 @@ static func _part(parent: Node3D, mesh: PrimitiveMesh, size: Vector3, pos: Vecto
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.position = pos
-	var m := WorldView.toon_material(color)
-	mi.material_override = WorldView.with_outline(m, outline) if outline > 0 else m
+	mi.material_override = WorldView.toon_material(color)
+	if outline > 0:
+		add_outline(mi, outline)
 	parent.add_child(mi)
 	return mi
 
