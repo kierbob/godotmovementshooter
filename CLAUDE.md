@@ -1,7 +1,8 @@
 # Movement Shooter (Godot) — notes for Claude
 
 Godot 4.6 port of the web movement shooter. Read README.md first, then the scripts.
-Single player for now, multiplayer later. The owner plays on Windows (`play.bat` or F5 in Godot).
+Single player for now, multiplayer later. The owner plays on Windows (`play.bat` or F5 in Godot)
+and works on the game in Claude Code cloud sessions.
 
 ## The web game
 
@@ -20,7 +21,8 @@ the loadout screen are in; bots, time trial, effects and sound come later, in th
 - `scripts/player_sim.gd`: the movement, line for line from the web game's `src/player.js`. It uses
   plain 64-bit floats on purpose (Vector3 is 32-bit). Do NOT refactor it to Vector3.
 - `scripts/cfg.gd`: every movement number, 1:1 from the web game's `config.js`.
-- `scripts/cmd.gd`: one tick of input as plain data, including fire/reload/ability/slot/cycle.
+- `scripts/cmd.gd`: one tick of input as plain data (network-ready for multiplayer), including
+  fire/reload/ability/slot/cycle.
 - `scripts/items.gd`: weapon + ability data, 1:1 from `items.js`, plus loadout-screen stats.
 - `scripts/combat.gd`: guns, projectiles, damage and knockback (port of `combat.js`, no bots yet).
   Ticks before `player.step`, like the web game. Uses Vector3 (spread is random, so no bit-exact
@@ -45,7 +47,8 @@ the loadout screen are in; bots, time trial, effects and sound come later, in th
   explain why.
 - Update README.md ("What's in" and "Next") when a feature lands.
 - Commit and push as you go.
-- Never claim something is tested unless the test actually ran.
+- Never claim something is tested unless the test actually ran. If the network blocks the Godot
+  download below, say so.
 
 ## Running Godot in the cloud container
 
