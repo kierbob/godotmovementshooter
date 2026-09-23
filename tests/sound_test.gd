@@ -48,4 +48,4 @@ func run() -> void:
 	sound.play("smg", {"gap": 0.5})
 	check("gap stops the same sound stacking", sound._next_flat == t0 + 1)
 	sound.queue_free()
-	await process_frame
+	await create_timer(1.2).timeout # let the audio thread finish with the (up to 1 s) sounds

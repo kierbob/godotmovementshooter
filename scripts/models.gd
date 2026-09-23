@@ -8,7 +8,6 @@ const INK := Color("15151f") # outline color (web outline.js)
 const OUTLINE := preload("res://shaders/outline.gdshader")
 const STAGE_FIT := 1.7 # longest side of every model on the loadout stage
 
-static var _outline_mats := {} # thickness -> ShaderMaterial
 static var _cache := {} # file -> PackedScene (null if it failed), instanced for every use
 
 
@@ -88,17 +87,14 @@ static func add_outline(mi: MeshInstance3D, thickness: float) -> void:
 	mi.add_child(o)
 
 
-## Ink material for outline shells (shaders/outline.gdshader), one per thickness. The shell is
-## pushed back 3x its thickness so it only shows around the silhouette, never over the model.
+## Ink material for outline shells (shaders/outline.gdshader). The shell is pushed back 3x its
+## thickness so it only shows around the silhouette, never over the model.
 static func _outline_material(thickness: float) -> ShaderMaterial:
-	var key := snappedf(thickness, 0.00001)
-	if not _outline_mats.has(key):
-		var m := ShaderMaterial.new()
-		m.shader = OUTLINE
-		m.set_shader_parameter("ink", INK)
-		m.set_shader_parameter("push", thickness * 3.0)
-		_outline_mats[key] = m
-	return _outline_mats[key]
+	var m := ShaderMaterial.new()
+	m.shader = OUTLINE
+	m.set_shader_parameter("ink", INK)
+	m.set_shader_parameter("push", thickness * 3.0)
+	return m
 
 
 ## The mesh with vertices at the same spot merged, each pushed out by `thickness` along the

@@ -135,7 +135,6 @@ func run() -> void:
 	await process_frame
 	check("playing normally afterwards is off the course with guns", not game.trial.active and game.combat.enabled)
 	game.queue_free() # stops any sound still playing, so nothing is held at exit
-	for i in 3:
-		await process_frame
+	await create_timer(0.5).timeout # the audio thread lets go of the last sound a moment later
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TimeTrial.path))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(Settings.path))
