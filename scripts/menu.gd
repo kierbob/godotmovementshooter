@@ -1,13 +1,14 @@
 class_name Menu
 extends CanvasLayer
-## Main menu, map picker, settings and the pause menu (the web game's menu.js, rebuilt in Godot).
+## Main menu, map picker, loadout, settings and the pause menu (the web game's menu.js, rebuilt in
+## Godot).
 ## The game (main.gd) listens to the signals and decides what actually happens.
 
 signal play(map_id: String)
 signal resume
 signal to_main_menu
 signal quit_game
-signal settings_changed(what: String) # "video" | "quality" | "lighting" | "audio" | "mouse" | "binds"
+signal settings_changed(what: String) # "video" | "quality" | "lighting" | "audio" | "mouse" | "binds" | "loadout"
 
 const TOP_H := 64
 const MAP_INFO := {
@@ -41,6 +42,16 @@ var _settings_scroll: ScrollContainer
 var _side_tabs := {}
 var _pause_mode: Label
 var _key_buttons := {}
+var _chips: HFlowContainer
+var loadout_slot := "primary" # slot being edited on the loadout screen
+var _preview_id := "" # item hovered on the loadout screen ("" = show the equipped one)
+var _showcase: Showcase
+var _loadout_slots: VBoxContainer
+var _items_title: Label
+var _items_count: Label
+var _items_row: HBoxContainer
+var _stage_info: VBoxContainer
+var _thumb_rects := {} # item id -> [TextureRect] waiting for / showing its thumbnail
 
 
 func _ready() -> void:
@@ -52,6 +63,7 @@ func _ready() -> void:
 	add_child(_root)
 	_screens.main = _build_main()
 	_screens.maps = _build_maps()
+	_screens.loadout = _build_loadout()
 	_screens.settings = _build_settings()
 	_screens.pause = _build_pause()
 	_top = _build_topbar()
@@ -64,7 +76,7 @@ func show_screen(s: String) -> void:
 	visible = s != ""
 	for k: String in _screens:
 		(_screens[k] as Control).visible = k == s
-	var with_top := s in ["main", "maps"] or (s == "settings" and _settings_back != "pause")
+	var with_top := s in ["main", "maps", "loadout"] or (s == "settings" and _settings_back != "pause")
 	_top.visible = with_top
 	(_screens.settings as Control).offset_top = TOP_H if with_top else 0
 	for k: String in _top_tabs:
@@ -72,6 +84,7 @@ func show_screen(s: String) -> void:
 	match s:
 		"main": _refresh_main()
 		"maps": _refresh_maps()
+		"loadout": _open_loadout()
 		"settings": _refresh_settings()
 		"pause": _pause_mode.text = map_name.to_upper()
 
@@ -106,7 +119,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
 		match screen:
 			"settings": show_screen(_settings_back)
-			"maps": show_screen("main")
+			"maps", "loadout": show_screen("main")
 			"pause": resume.emit()
 			_: return
 		get_viewport().set_input_as_handled()
@@ -143,8 +156,7 @@ func _build_topbar() -> Control:
 		b.button_group = group
 		b.size_flags_vertical = Control.SIZE_FILL
 		if t[0] == "loadout":
-			b.disabled = true
-			b.tooltip_text = "Comes with the guns"
+			b.pressed.connect(func() -> void: show_screen("loadout"))
 		elif t[0] == "settings":
 			b.pressed.connect(func() -> void: open_settings("main"))
 		else:
@@ -176,11 +188,16 @@ func _build_main() -> Control:
 	var col := VBoxContainer.new()
 	col.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	col.offset_left = -448
-	col.offset_top = -420
+	col.offset_top = -620 # room for the loadout chips when they wrap
 	col.offset_right = -48
 	col.offset_bottom = -44
 	col.alignment = BoxContainer.ALIGNMENT_END
 	col.add_theme_constant_override("separation", 16)
+	_chips = HFlowContainer.new() # wraps onto a second line when the names are long
+	_chips.alignment = FlowContainer.ALIGNMENT_END
+	_chips.add_theme_constant_override("h_separation", 6)
+	_chips.add_theme_constant_override("v_separation", 6)
+	col.add_child(_chips)
 	_main_card_slot = VBoxContainer.new()
 	col.add_child(_main_card_slot)
 	var play_btn := UiStyle.button("PLAY", "PlayButton", func() -> void: play.emit(Settings.map))
@@ -204,6 +221,357 @@ func _refresh_main() -> void:
 	for c in _main_card_slot.get_children():
 		c.queue_free()
 	_main_card_slot.add_child(_map_card(Settings.map, "CHANGE MAP", func() -> void: show_screen("maps")))
+	for c in _chips.get_children():
+		c.queue_free()
+	for slot: Dictionary in Items.SLOTS:
+		_chips.add_child(_chip(slot.label, Items.item(slot.id, Settings.loadout[slot.id]).name))
+
+
+## Small "PRIMARY Boomstick" tag above the map card.
+func _chip(kind: String, value: String) -> Control:
+	var p := PanelContainer.new()
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.03, 0.047, 0.157, 0.8)
+	st.content_margin_left = 10
+	st.content_margin_right = 10
+	st.content_margin_top = 2
+	st.content_margin_bottom = 2
+	p.add_theme_stylebox_override("panel", st)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	var k := UiStyle.label(kind.to_upper(), 15, UiStyle.YELLOW)
+	k.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(k)
+	row.add_child(UiStyle.label(value.to_upper(), 20))
+	p.add_child(row)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return p
+
+
+# ---------- loadout (locker) ----------
+
+func _build_loadout() -> Control:
+	var s := _screen_root(TOP_H)
+	s.add_child(_menu_backdrop())
+	var row := HBoxContainer.new()
+	row.set_anchors_preset(Control.PRESET_FULL_RECT)
+	row.add_theme_constant_override("separation", 0)
+	s.add_child(row)
+	# left: title + the three slot cards
+	var nav := Control.new()
+	nav.custom_minimum_size.x = 300
+	nav.add_child(UiStyle.gradient_rect(PackedColorArray([Color(0.02, 0.03, 0.11, 0.85), Color(0.02, 0.03, 0.11, 0.45)])))
+	var edge := UiStyle.fill_rect(UiStyle.LINE)
+	edge.set_anchors_and_offsets_preset(Control.PRESET_RIGHT_WIDE)
+	edge.offset_left = -2
+	nav.add_child(edge)
+	_loadout_slots = VBoxContainer.new()
+	_loadout_slots.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_loadout_slots.offset_left = 28
+	_loadout_slots.offset_top = 22
+	_loadout_slots.offset_right = -22
+	_loadout_slots.offset_bottom = -22
+	_loadout_slots.add_theme_constant_override("separation", 10)
+	nav.add_child(_loadout_slots)
+	row.add_child(nav)
+	# right: the stage on top, the item tiles below
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 0)
+	row.add_child(right)
+	var stage := Control.new()
+	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	stage.clip_contents = true
+	right.add_child(stage)
+	# soft purple glow behind the item, and a yellow "floor" under it
+	var glow := _radial(Color(0.55, 0.35, 1.0, 0.35))
+	glow.anchor_left = 0.35
+	glow.anchor_right = 0.9
+	glow.anchor_top = 0.05
+	glow.anchor_bottom = 0.95
+	stage.add_child(glow)
+	var floor_glow := _radial(Color(1, 0.88, 0.2, 0.28))
+	floor_glow.anchor_left = 0.3
+	floor_glow.anchor_right = 1.05
+	floor_glow.anchor_top = 0.72
+	floor_glow.anchor_bottom = 0.92
+	stage.add_child(floor_glow)
+	_showcase = Showcase.new()
+	_showcase.set_anchors_preset(Control.PRESET_FULL_RECT)
+	stage.add_child(_showcase)
+	_stage_info = VBoxContainer.new()
+	_stage_info.position = Vector2(36, 26)
+	_stage_info.custom_minimum_size.x = 380
+	_stage_info.add_theme_constant_override("separation", 0)
+	_stage_info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stage.add_child(_stage_info)
+	var hint := UiStyle.label("DRAG TO SPIN", 18, Color(1, 1, 1, 0.35))
+	hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	hint.offset_left = -200
+	hint.offset_top = -40
+	hint.offset_right = -24
+	hint.offset_bottom = -14
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stage.add_child(hint)
+	var items := MarginContainer.new()
+	items.add_theme_constant_override("margin_left", 32)
+	items.add_theme_constant_override("margin_right", 28)
+	items.add_theme_constant_override("margin_top", 6)
+	items.add_theme_constant_override("margin_bottom", 22)
+	var iv := VBoxContainer.new()
+	iv.add_theme_constant_override("separation", 8)
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 10)
+	_items_title = UiStyle.label("", 24, UiStyle.MUTED)
+	title_row.add_child(_items_title)
+	var count_box := PanelContainer.new()
+	var cs := StyleBoxFlat.new()
+	cs.bg_color = Color(1, 1, 1, 0.1)
+	cs.content_margin_left = 7
+	cs.content_margin_right = 7
+	count_box.add_theme_stylebox_override("panel", cs)
+	count_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_items_count = UiStyle.label("", 17)
+	count_box.add_child(_items_count)
+	title_row.add_child(count_box)
+	iv.add_child(title_row)
+	var scroll := ScrollContainer.new()
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size.y = 136
+	_items_row = HBoxContainer.new()
+	_items_row.add_theme_constant_override("separation", 12)
+	scroll.add_child(_items_row)
+	iv.add_child(scroll)
+	items.add_child(iv)
+	right.add_child(items)
+	return s
+
+
+## Soft oval glow (a radial gradient fading to clear).
+func _radial(color: Color) -> TextureRect:
+	var g := Gradient.new()
+	g.colors = PackedColorArray([color, Color(color, 0)])
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(0.5, 0.0)
+	var r := TextureRect.new()
+	r.texture = tex
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_SCALE
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return r
+
+
+func _open_loadout() -> void:
+	_preview_id = ""
+	_refresh_loadout()
+	var ids: Array = Items.WEAPONS.keys() + Items.ABILITIES.keys()
+	_showcase.render_thumbnails(ids, func(id: String, tex: Texture2D) -> void:
+		for r: TextureRect in _thumb_rects.get(id, []):
+			if is_instance_valid(r):
+				r.texture = tex)
+
+
+func _thumb(id: String, rect_size: Vector2) -> TextureRect:
+	var r := TextureRect.new()
+	r.texture = _showcase.thumb(id)
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	r.custom_minimum_size = rect_size
+	r.size = rect_size
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if not _thumb_rects.has(id):
+		_thumb_rects[id] = []
+	_thumb_rects[id].append(r)
+	return r
+
+
+func _flat(color: Color) -> StyleBoxFlat:
+	var st := StyleBoxFlat.new()
+	st.bg_color = color
+	return st
+
+
+func _refresh_loadout() -> void:
+	_thumb_rects.clear()
+	for c in _loadout_slots.get_children():
+		c.queue_free()
+	_loadout_slots.add_child(UiStyle.label("LOADOUT", 56, UiStyle.TEXT, true))
+	for slot: Dictionary in Items.SLOTS:
+		_loadout_slots.add_child(_slot_card(slot))
+
+	var slot_info: Dictionary = Items.SLOTS.filter(func(x: Dictionary) -> bool: return x.id == loadout_slot)[0]
+	var items := Items.items_for_slot(loadout_slot)
+	_items_title.text = String(slot_info.title).to_upper()
+	_items_count.text = str(items.size())
+	for c in _items_row.get_children():
+		c.queue_free()
+	for it: Dictionary in items:
+		_items_row.add_child(_item_tile(it))
+	_refresh_stage()
+
+
+func _slot_card(slot: Dictionary) -> Button:
+	var id: String = slot.id
+	var selected := id == loadout_slot
+	var card := Button.new()
+	card.focus_mode = Control.FOCUS_NONE
+	card.custom_minimum_size = Vector2(0, 92)
+	card.clip_contents = true
+	card.add_theme_stylebox_override("normal", _flat(Color(1, 0.88, 0.2, 0.14) if selected else Color(1, 1, 1, 0.06)))
+	card.add_theme_stylebox_override("hover", _flat(Color(1, 1, 1, 0.12)))
+	card.add_theme_stylebox_override("pressed", _flat(Color(1, 1, 1, 0.12)))
+	card.pressed.connect(func() -> void:
+		loadout_slot = id
+		_preview_id = ""
+		_refresh_loadout())
+	var item_id: String = Settings.loadout[id]
+	var th := _thumb(item_id, Vector2(120, 68))
+	th.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	th.offset_left = -112
+	th.offset_top = 2
+	th.offset_right = 8
+	th.offset_bottom = 70
+	th.modulate.a = 0.95 if selected else 0.55
+	card.add_child(th)
+	var bar := UiStyle.fill_rect(UiStyle.YELLOW if selected else UiStyle.LINE)
+	bar.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
+	bar.offset_right = 7 if selected else 5
+	card.add_child(bar)
+	var v := VBoxContainer.new()
+	v.set_anchors_preset(Control.PRESET_FULL_RECT)
+	v.offset_left = 20
+	v.offset_top = 10
+	v.offset_right = -10
+	v.add_theme_constant_override("separation", 0)
+	var label_row := HBoxContainer.new()
+	label_row.add_theme_constant_override("separation", 8)
+	label_row.add_child(UiStyle.label(String(slot.label).to_upper(), 18, UiStyle.YELLOW if selected else UiStyle.MUTED))
+	var kb := PanelContainer.new()
+	var ks := _flat(Color(0, 0, 0, 0.4))
+	ks.set_corner_radius_all(3)
+	ks.content_margin_left = 6
+	ks.content_margin_right = 6
+	kb.add_theme_stylebox_override("panel", ks)
+	kb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	kb.add_child(UiStyle.label(Settings.bind_label(Settings.binds[id]).to_upper(), 13))
+	label_row.add_child(kb)
+	v.add_child(label_row)
+	var name_l := UiStyle.label(String(Items.item(id, item_id).name).to_upper(), 32)
+	name_l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.5))
+	name_l.add_theme_constant_override("outline_size", 6)
+	v.add_child(name_l)
+	card.add_child(v)
+	_ignore_mouse(v)
+	return card
+
+
+func _item_tile(it: Dictionary) -> Button:
+	var id: String = it.id
+	var equipped: bool = Settings.loadout[loadout_slot] == id
+	var tile := Button.new()
+	tile.focus_mode = Control.FOCUS_NONE
+	tile.custom_minimum_size = Vector2(190, 128)
+	var normal := _flat(Color(1, 1, 1, 0.06))
+	var hover := _flat(Color(1, 1, 1, 0.12))
+	for st: StyleBoxFlat in [normal, hover]:
+		st.set_border_width_all(2)
+		st.border_color = UiStyle.YELLOW if equipped else Color(1, 1, 1, 0.12)
+	tile.add_theme_stylebox_override("normal", normal)
+	tile.add_theme_stylebox_override("hover", hover)
+	tile.add_theme_stylebox_override("pressed", hover)
+	var th := _thumb(id, Vector2(180, 96))
+	th.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	th.offset_top = 2
+	th.offset_bottom = 98
+	tile.add_child(th)
+	var name_l := UiStyle.label(String(it.name).to_upper(), 22)
+	name_l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_l.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	name_l.offset_left = 12
+	name_l.offset_right = -8
+	name_l.offset_top = -34
+	name_l.offset_bottom = -6
+	name_l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.5))
+	name_l.add_theme_constant_override("outline_size", 4)
+	tile.add_child(name_l)
+	if equipped:
+		var tag := PanelContainer.new()
+		var ts := _flat(UiStyle.YELLOW)
+		ts.content_margin_left = 8
+		ts.content_margin_right = 8
+		tag.add_theme_stylebox_override("panel", ts)
+		tag.position = Vector2(8, 8)
+		tag.add_child(UiStyle.label("EQUIPPED", 15, UiStyle.INK))
+		tile.add_child(tag)
+	_ignore_mouse(name_l)
+	tile.mouse_entered.connect(func() -> void:
+		_preview_id = id
+		_refresh_stage())
+	tile.mouse_exited.connect(func() -> void:
+		if _preview_id == id:
+			_preview_id = ""
+			_refresh_stage())
+	tile.pressed.connect(func() -> void:
+		Settings.loadout[loadout_slot] = id
+		Settings.save_settings()
+		settings_changed.emit("loadout")
+		_preview_id = ""
+		_refresh_loadout())
+	return tile
+
+
+func _refresh_stage() -> void:
+	var equipped_id: String = Settings.loadout[loadout_slot]
+	var id := _preview_id if _preview_id != "" else equipped_id
+	var it := Items.item(loadout_slot, id)
+	var stats := Items.ability_stats(it) if loadout_slot == "ability" else Items.weapon_stats(it)
+	for c in _stage_info.get_children():
+		c.queue_free()
+	_stage_info.add_child(UiStyle.label(Items.item_class(it).to_upper(), 18, UiStyle.YELLOW))
+	_stage_info.add_child(UiStyle.label(String(it.name).to_upper(), 84, UiStyle.TEXT, true))
+	var desc := UiStyle.note(it.desc, 14, Color("c9d1f5"))
+	desc.custom_minimum_size.x = 340
+	_stage_info.add_child(desc)
+	_stage_info.add_child(_spacer(0, 16))
+	for stat: Array in stats:
+		var r := HBoxContainer.new()
+		r.add_theme_constant_override("separation", 12)
+		var sl := UiStyle.label(String(stat[0]).to_upper(), 18, UiStyle.MUTED)
+		sl.custom_minimum_size.x = 84
+		r.add_child(sl)
+		var seg := HBoxContainer.new()
+		seg.add_theme_constant_override("separation", 3)
+		seg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		for i in 10:
+			var cell := ColorRect.new()
+			cell.custom_minimum_size = Vector2(13, 9)
+			cell.color = UiStyle.YELLOW if i < roundi(float(stat[1]) * 10) else Color(1, 1, 1, 0.12)
+			seg.add_child(cell)
+		r.add_child(seg)
+		r.add_child(UiStyle.label(String(stat[2]).to_upper(), 20))
+		_stage_info.add_child(r)
+		_stage_info.add_child(_spacer(0, 4))
+	_stage_info.add_child(_spacer(0, 14))
+	var equipped := id == equipped_id
+	var state := PanelContainer.new()
+	var ss := _flat(UiStyle.YELLOW if equipped else Color(0, 0, 0, 0))
+	ss.set_border_width_all(2)
+	ss.border_color = UiStyle.YELLOW if equipped else UiStyle.LINE
+	ss.content_margin_left = 14
+	ss.content_margin_right = 14
+	ss.content_margin_top = 2
+	ss.content_margin_bottom = 2
+	state.add_theme_stylebox_override("panel", ss)
+	state.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	state.add_child(UiStyle.label("EQUIPPED" if equipped else "CLICK TO EQUIP", 20, Color("15151a") if equipped else UiStyle.MUTED))
+	_stage_info.add_child(state)
+	_ignore_mouse(_stage_info)
+	_showcase.show_item(id)
 
 
 # ---------- map picker ----------
@@ -551,7 +919,7 @@ func _tab_audio() -> void:
 			Settings.volume = v
 			Settings.save_settings()
 			settings_changed.emit("audio"))
-	_settings_body.add_child(_indent(UiStyle.note("Sounds arrive with the guns update; this is saved for then.", 14)))
+	_settings_body.add_child(_indent(UiStyle.note("Sounds arrive with the effects update; this is saved for then.", 14)))
 
 
 func _tab_controls() -> void:
