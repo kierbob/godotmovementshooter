@@ -12,18 +12,8 @@ signal quit_game
 signal settings_changed(what: String) # "video" | "quality" | "lighting" | "audio" | "mouse" | "binds" | "loadout"
 
 const TOP_H := 64
-const MAP_INFO := {
-	"dev_map": {
-		"tag": "Sandbox", "name": "Dev Arena", "art": "DEV",
-		"desc": "Movement playground · bean dummies · jump pads · wall-jump corridor",
-		"grad": [Color("2f6bff"), Color("8a3dff")],
-	},
-	"bean-street": {
-		"tag": "FFA map", "name": "Bean Street", "art": "BEAN",
-		"desc": "Two houses across a street · ramps, big windows, a bus bridge",
-		"grad": [Color("ff4fd8"), Color("7a2dff")],
-	},
-}
+## Map cards come from each map scene's root (MapRoot: name, tag, desc, art, colors).
+var map_info := {} # id -> {name, tag, desc, art, grad}
 ## Time trial cards on the map screen (not maps you can select: they start the course right away).
 const TRIAL_INFO := {
 	"trial_off": {
@@ -71,6 +61,8 @@ var _thumb_rects := {} # item id -> [TextureRect] waiting for / showing its thum
 
 func _ready() -> void:
 	layer = 10
+	for id in MapData.list():
+		map_info[id] = MapData.info(id)
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.theme = UiStyle.theme()
@@ -615,7 +607,7 @@ func _build_maps() -> Control:
 func _refresh_maps() -> void:
 	for c in _map_grid.get_children():
 		c.queue_free()
-	for id: String in MAP_INFO:
+	for id: String in map_info:
 		var pick := func() -> void:
 			Settings.map = id
 			Settings.save_settings()
@@ -632,7 +624,8 @@ func _refresh_maps() -> void:
 
 ## Card with gradient art, a big faded label, a badge, and the map's name + blurb.
 func _map_card(id: String, badge: String, on_press: Callable, selected := false, art_h := 150) -> Button:
-	var info: Dictionary = MAP_INFO.get(id, TRIAL_INFO.get(id, MAP_INFO.dev_map))
+	var info: Dictionary = map_info.get(id, TRIAL_INFO.get(id, {"tag": "", "name": id, "art": "", "desc": "",
+		"grad": [Color("2f6bff"), Color("8a3dff")]}))
 	var card := Button.new()
 	card.focus_mode = Control.FOCUS_NONE
 	card.custom_minimum_size = Vector2(400, 292)

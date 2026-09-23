@@ -1,0 +1,956 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/map/map_root.gd" id="1_hkf7o"]
+[ext_resource type="Script" path="res://scripts/map/map_box.gd" id="2_knj16"]
+[ext_resource type="Script" path="res://scripts/map/map_trial.gd" id="3_gngwc"]
+[ext_resource type="Script" path="res://scripts/map/map_spawn.gd" id="4_63htl"]
+[ext_resource type="Script" path="res://scripts/map/map_portal.gd" id="5_b1wtg"]
+[ext_resource type="Script" path="res://scripts/map/map_volume.gd" id="6_unixv"]
+[ext_resource type="Script" path="res://scripts/map/map_board.gd" id="7_36ehd"]
+[ext_resource type="Script" path="res://scripts/map/map_pad.gd" id="8_yhwtb"]
+[ext_resource type="Script" path="res://scripts/map/map_target.gd" id="9_hq8wk"]
+
+[node name="DevMap" type="Node3D" unique_id=1003383209]
+script = ExtResource("1_hkf7o")
+map_name = "Dev Arena"
+tag = "Sandbox"
+desc = "Movement playground · bean dummies · jump pads · wall-jump corridor · time trial"
+art = "DEV"
+arena = {
+"bounds": {
+"maxX": -165.0,
+"maxZ": 35.0,
+"minX": -235.0,
+"minZ": -35.0
+},
+"center": {
+"x": -200.0,
+"z": 0.0
+},
+"roam": [{
+"x": -200.0,
+"z": 0.0
+}, {
+"x": -220.0,
+"z": 0.0
+}, {
+"x": -180.0,
+"z": 0.0
+}, {
+"x": -200.0,
+"z": 20.0
+}, {
+"x": -200.0,
+"z": -20.0
+}, {
+"x": -220.0,
+"z": -28.0
+}, {
+"x": -180.0,
+"z": 28.0
+}, {
+"x": -228.0,
+"z": 28.0
+}, {
+"x": -172.0,
+"z": -28.0
+}, {
+"x": -210.0,
+"z": 12.0
+}, {
+"x": -190.0,
+"z": -12.0
+}],
+"spawns": [{
+"x": -200.0,
+"y": 0.0,
+"yaw": 0.0,
+"z": 31.0
+}, {
+"x": -200.0,
+"y": 0.0,
+"yaw": 3.141592653589793,
+"z": -31.0
+}, {
+"x": -169.0,
+"y": 0.0,
+"yaw": 1.5707963267948966,
+"z": 0.0
+}, {
+"x": -231.0,
+"y": 0.0,
+"yaw": -1.5707963267948966,
+"z": 0.0
+}, {
+"x": -170.0,
+"y": 0.0,
+"yaw": 0.7853981633974483,
+"z": 30.0
+}, {
+"x": -230.0,
+"y": 0.0,
+"yaw": -2.356194490192345,
+"z": -30.0
+}, {
+"x": -230.0,
+"y": 0.0,
+"yaw": -0.7853981633974483,
+"z": 31.0
+}, {
+"x": -170.0,
+"y": 0.0,
+"yaw": 2.356194490192345,
+"z": -31.0
+}]
+}
+
+[node name="Boxes" type="Node3D" parent="." unique_id=1026087840]
+
+[node name="Floor0" type="Node3D" parent="Boxes" unique_id=1355720649]
+transform = Transform3D(80, 0, 0, 0, 1, 0, 0, 0, 80, 0, -0.5, 0)
+script = ExtResource("2_knj16")
+kind = "floor"
+box = PackedFloat64Array(-40, -1, -40, 40, 0, 40)
+web_box = PackedFloat64Array()
+
+[node name="Wall1" type="Node3D" parent="Boxes" unique_id=1850290626]
+transform = Transform3D(82, 0, 0, 0, 8, 0, 0, 0, 1, 0, 4, -40.5)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-41, 0, -41, 41, 8, -40)
+web_box = PackedFloat64Array()
+
+[node name="Wall2" type="Node3D" parent="Boxes" unique_id=87473147]
+transform = Transform3D(82, 0, 0, 0, 8, 0, 0, 0, 1, 0, 4, 40.5)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-41, 0, 40, 41, 8, 41)
+web_box = PackedFloat64Array()
+
+[node name="Wall3" type="Node3D" parent="Boxes" unique_id=1659913960]
+transform = Transform3D(1, 0, 0, 0, 8, 0, 0, 0, 80, -40.5, 4, 0)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-41, 0, -40, -40, 8, 40)
+web_box = PackedFloat64Array()
+
+[node name="Wall4" type="Node3D" parent="Boxes" unique_id=1855818520]
+transform = Transform3D(1, 0, 0, 0, 8, 0, 0, 0, 80, 40.5, 4, 0)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(40, 0, -40, 41, 8, 40)
+web_box = PackedFloat64Array()
+
+[node name="Test5" type="Node3D" parent="Boxes" unique_id=1881890934]
+transform = Transform3D(2, 0, 0, 0, 0.3, 0, 0, 0, 2, -10, 0.15, 22)
+script = ExtResource("2_knj16")
+kind = "test"
+box = PackedFloat64Array(-11, 0, 21, -9, 0.3, 23)
+web_box = PackedFloat64Array()
+
+[node name="Test6" type="Node3D" parent="Boxes" unique_id=1462518712]
+transform = Transform3D(2, 0, 0, 0, 0.45, 0, 0, 0, 2, -7, 0.225, 22)
+script = ExtResource("2_knj16")
+kind = "test"
+box = PackedFloat64Array(-8, 0, 21, -6, 0.45, 23)
+web_box = PackedFloat64Array()
+
+[node name="Test7" type="Node3D" parent="Boxes" unique_id=734954097]
+transform = Transform3D(2, 0, 0, 0, 0.6, 0, 0, 0, 2, -4, 0.3, 22)
+script = ExtResource("2_knj16")
+kind = "test"
+box = PackedFloat64Array(-5, 0, 21, -3, 0.6, 23)
+web_box = PackedFloat64Array()
+
+[node name="Test8" type="Node3D" parent="Boxes" unique_id=490359660]
+transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 2, -1, 0.5, 22)
+script = ExtResource("2_knj16")
+kind = "test"
+box = PackedFloat64Array(-2, 0, 21, 0, 1, 23)
+web_box = PackedFloat64Array()
+
+[node name="Test9" type="Node3D" parent="Boxes" unique_id=392096201]
+transform = Transform3D(2, 0, 0, 0, 1.4, 0, 0, 0, 2, 2, 0.7, 22)
+script = ExtResource("2_knj16")
+kind = "test"
+box = PackedFloat64Array(1, 0, 21, 3, 1.4, 23)
+web_box = PackedFloat64Array()
+
+[node name="Test10" type="Node3D" parent="Boxes" unique_id=1602985383]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 5, 1, 22)
+script = ExtResource("2_knj16")
+kind = "test"
+box = PackedFloat64Array(4, 0, 21, 6, 2, 23)
+web_box = PackedFloat64Array()
+
+[node name="Low11" type="Node3D" parent="Boxes" unique_id=370758045]
+transform = Transform3D(4.5, 0, 0, 0, 0.5, 0, 0, 0, 8, 10, 1.45, 16)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(7.75, 1.2, 12, 12.25, 1.7, 20)
+web_box = PackedFloat64Array()
+
+[node name="Low12" type="Node3D" parent="Boxes" unique_id=8040146]
+transform = Transform3D(0.5, 0, 0, 0, 1.2, 0, 0, 0, 8, 7.5, 0.6, 16)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(7.25, 0, 12, 7.75, 1.2, 20)
+web_box = PackedFloat64Array()
+
+[node name="Low13" type="Node3D" parent="Boxes" unique_id=469973882]
+transform = Transform3D(0.5, 0, 0, 0, 1.2, 0, 0, 0, 8, 12.5, 0.6, 16)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(12.25, 0, 12, 12.75, 1.2, 20)
+web_box = PackedFloat64Array()
+
+[node name="Block14" type="Node3D" parent="Boxes" unique_id=532530690]
+transform = Transform3D(10, 0, 0, 0, 3.2, 0, 0, 0, 10, 0, 1.6, 0)
+script = ExtResource("2_knj16")
+box = PackedFloat64Array(-5, 0, -5, 5, 3.2, 5)
+web_box = PackedFloat64Array()
+
+[node name="Stair15" type="Node3D" parent="Boxes" unique_id=1675772899]
+transform = Transform3D(4, 0, 0, 0, 3.2, 0, 0, 0, 1, 0, 1.6, 5.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-2, 0, 5, 2, 3.2, 6)
+web_box = PackedFloat64Array()
+
+[node name="Stair16" type="Node3D" parent="Boxes" unique_id=655639354]
+transform = Transform3D(4, 0, 0, 0, 2.8, 0, 0, 0, 1, 0, 1.4, 6.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-2, 0, 6, 2, 2.8, 7)
+web_box = PackedFloat64Array()
+
+[node name="Stair17" type="Node3D" parent="Boxes" unique_id=1773295527]
+transform = Transform3D(4, 0, 0, 0, 2.4, 0, 0, 0, 1, 0, 1.2, 7.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-2, 0, 7, 2, 2.4, 8)
+web_box = PackedFloat64Array()
+
+[node name="Stair18" type="Node3D" parent="Boxes" unique_id=1390764809]
+transform = Transform3D(4, 0, 0, 0, 2, 0, 0, 0, 1, 0, 1, 8.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-2, 0, 8, 2, 2, 9)
+web_box = PackedFloat64Array()
+
+[node name="Stair19" type="Node3D" parent="Boxes" unique_id=1947933008]
+transform = Transform3D(4, 0, 0, 0, 1.6, 0, 0, 0, 1, 0, 0.8, 9.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-2, 0, 9, 2, 1.6, 10)
+web_box = PackedFloat64Array()
+
+[node name="Stair20" type="Node3D" parent="Boxes" unique_id=949794978]
+transform = Transform3D(4, 0, 0, 0, 1.2, 0, 0, 0, 1, 0, 0.6, 10.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-2, 0, 10, 2, 1.2, 11)
+web_box = PackedFloat64Array()
+
+[node name="Stair21" type="Node3D" parent="Boxes" unique_id=313155253]
+transform = Transform3D(4, 0, 0, 0, 0.8, 0, 0, 0, 1, 0, 0.4, 11.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-2, 0, 11, 2, 0.8, 12)
+web_box = PackedFloat64Array()
+
+[node name="Stair22" type="Node3D" parent="Boxes" unique_id=346832765]
+transform = Transform3D(4, 0, 0, 0, 0.4, 0, 0, 0, 1, 0, 0.2, 12.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-2, 0, 12, 2, 0.4, 13)
+web_box = PackedFloat64Array()
+
+[node name="Pillar23" type="Node3D" parent="Boxes" unique_id=696600932]
+transform = Transform3D(2, 0, 0, 0, 6, 0, 0, 0, 2, -15, 3, -10)
+script = ExtResource("2_knj16")
+kind = "pillar"
+box = PackedFloat64Array(-16, 0, -11, -14, 6, -9)
+web_box = PackedFloat64Array()
+
+[node name="Pillar24" type="Node3D" parent="Boxes" unique_id=1168932075]
+transform = Transform3D(2, 0, 0, 0, 6, 0, 0, 0, 2, 15, 3, -10)
+script = ExtResource("2_knj16")
+kind = "pillar"
+box = PackedFloat64Array(14, 0, -11, 16, 6, -9)
+web_box = PackedFloat64Array()
+
+[node name="Pillar25" type="Node3D" parent="Boxes" unique_id=2057976305]
+transform = Transform3D(2, 0, 0, 0, 6, 0, 0, 0, 2, -15, 3, 10)
+script = ExtResource("2_knj16")
+kind = "pillar"
+box = PackedFloat64Array(-16, 0, 9, -14, 6, 11)
+web_box = PackedFloat64Array()
+
+[node name="Pillar26" type="Node3D" parent="Boxes" unique_id=607882792]
+transform = Transform3D(2, 0, 0, 0, 6, 0, 0, 0, 2, 15, 3, 10)
+script = ExtResource("2_knj16")
+kind = "pillar"
+box = PackedFloat64Array(14, 0, 9, 16, 6, 11)
+web_box = PackedFloat64Array()
+
+[node name="Pillar27" type="Node3D" parent="Boxes" unique_id=2002108172]
+transform = Transform3D(2, 0, 0, 0, 6, 0, 0, 0, 2, -8, 3, -22)
+script = ExtResource("2_knj16")
+kind = "pillar"
+box = PackedFloat64Array(-9, 0, -23, -7, 6, -21)
+web_box = PackedFloat64Array()
+
+[node name="Pillar28" type="Node3D" parent="Boxes" unique_id=1358267550]
+transform = Transform3D(2, 0, 0, 0, 6, 0, 0, 0, 2, 8, 3, -22)
+script = ExtResource("2_knj16")
+kind = "pillar"
+box = PackedFloat64Array(7, 0, -23, 9, 6, -21)
+web_box = PackedFloat64Array()
+
+[node name="Wall29" type="Node3D" parent="Boxes" unique_id=1668971927]
+transform = Transform3D(1, 0, 0, 0, 10, 0, 0, 0, 14, 26, 5, -5)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(25.5, 0, -12, 26.5, 10, 2)
+web_box = PackedFloat64Array()
+
+[node name="Wall30" type="Node3D" parent="Boxes" unique_id=1922231718]
+transform = Transform3D(1, 0, 0, 0, 10, 0, 0, 0, 14, 30, 5, -5)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(29.5, 0, -12, 30.5, 10, 2)
+web_box = PackedFloat64Array()
+
+[node name="Wall31" type="Node3D" parent="Boxes" unique_id=789508146]
+transform = Transform3D(24, 0, 0, 0, 7, 0, 0, 0, 1, -14, 3.5, -32)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-26, 0, -32.5, -2, 7, -31.5)
+web_box = PackedFloat64Array()
+
+[node name="Wall32" type="Node3D" parent="Boxes" unique_id=1717078336]
+transform = Transform3D(24, 0, 0, 0, 7, 0, 0, 0, 1, -14, 3.5, -37)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-26, 0, -37.5, -2, 7, -36.5)
+web_box = PackedFloat64Array()
+
+[node name="Low33" type="Node3D" parent="Boxes" unique_id=987519321]
+transform = Transform3D(1, 0, 0, 0, 1.2, 0, 0, 0, 60, -30, 0.6, 0)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(-30.5, 0, -30, -29.5, 1.2, 30)
+web_box = PackedFloat64Array()
+
+[node name="Low34" type="Node3D" parent="Boxes" unique_id=1127552599]
+transform = Transform3D(1, 0, 0, 0, 1.2, 0, 0, 0, 60, -36, 0.6, 0)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(-36.5, 0, -30, -35.5, 1.2, 30)
+web_box = PackedFloat64Array()
+
+[node name="Plat35" type="Node3D" parent="Boxes" unique_id=126487732]
+transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 3, 18, 0.5, 22)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(16.5, 0, 20.5, 19.5, 1, 23.5)
+web_box = PackedFloat64Array()
+
+[node name="Plat36" type="Node3D" parent="Boxes" unique_id=2043462699]
+transform = Transform3D(3, 0, 0, 0, 2, 0, 0, 0, 3, 22, 1, 26)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(20.5, 0, 24.5, 23.5, 2, 27.5)
+web_box = PackedFloat64Array()
+
+[node name="Plat37" type="Node3D" parent="Boxes" unique_id=510871439]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 26, 1.5, 30)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(24.5, 0, 28.5, 27.5, 3, 31.5)
+web_box = PackedFloat64Array()
+
+[node name="Plat38" type="Node3D" parent="Boxes" unique_id=456425064]
+transform = Transform3D(3, 0, 0, 0, 4, 0, 0, 0, 3, 31, 2, 33)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(29.5, 0, 31.5, 32.5, 4, 34.5)
+web_box = PackedFloat64Array()
+
+[node name="Plat39" type="Node3D" parent="Boxes" unique_id=1436146663]
+transform = Transform3D(4, 0, 0, 0, 5, 0, 0, 0, 8, 35, 2.5, 28)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(33, 0, 24, 37, 5, 32)
+web_box = PackedFloat64Array()
+
+[node name="TimeTrial" type="Node3D" parent="." unique_id=2003704527]
+script = ExtResource("3_gngwc")
+
+[node name="Course" type="Node3D" parent="TimeTrial" unique_id=223691317]
+
+[node name="Trialfloor40" type="Node3D" parent="TimeTrial/Course" unique_id=834447032]
+transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 20, 200, -0.5, 10)
+script = ExtResource("2_knj16")
+kind = "trialfloor"
+box = PackedFloat64Array(192, -1, 0, 208, 0, 20)
+web_box = PackedFloat64Array()
+
+[node name="Wall41" type="Node3D" parent="TimeTrial/Course" unique_id=1247138596]
+transform = Transform3D(1, 0, 0, 0, 5, 0, 0, 0, 20, 191.5, 2.5, 10)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(191, 0, 0, 192, 5, 20)
+web_box = PackedFloat64Array()
+
+[node name="Wall42" type="Node3D" parent="TimeTrial/Course" unique_id=515944181]
+transform = Transform3D(1, 0, 0, 0, 5, 0, 0, 0, 20, 208.5, 2.5, 10)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(208, 0, 0, 209, 5, 20)
+web_box = PackedFloat64Array()
+
+[node name="Wall43" type="Node3D" parent="TimeTrial/Course" unique_id=687341500]
+transform = Transform3D(18, 0, 0, 0, 5, 0, 0, 0, 1, 200, 2.5, 20.5)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(191, 0, 20, 209, 5, 21)
+web_box = PackedFloat64Array()
+
+[node name="Gate44" type="Node3D" parent="TimeTrial/Course" unique_id=456589146]
+transform = Transform3D(1, 0, 0, 0, 4, 0, 0, 0, 1, 195.5, 2, 0)
+script = ExtResource("2_knj16")
+kind = "gate"
+box = PackedFloat64Array(195, 0, -0.5, 196, 4, 0.5)
+web_box = PackedFloat64Array()
+
+[node name="Gate45" type="Node3D" parent="TimeTrial/Course" unique_id=2063602220]
+transform = Transform3D(1, 0, 0, 0, 4, 0, 0, 0, 1, 204.5, 2, 0)
+script = ExtResource("2_knj16")
+kind = "gate"
+box = PackedFloat64Array(204, 0, -0.5, 205, 4, 0.5)
+web_box = PackedFloat64Array()
+
+[node name="Gate46" type="Node3D" parent="TimeTrial/Course" unique_id=400405998]
+transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 1, 200, 4.5, 0)
+script = ExtResource("2_knj16")
+kind = "gate"
+box = PackedFloat64Array(195, 4, -0.5, 205, 5, 0.5)
+web_box = PackedFloat64Array()
+
+[node name="Trialfloor47" type="Node3D" parent="TimeTrial/Course" unique_id=11273093]
+transform = Transform3D(8, 0, 0, 0, 1, 0, 0, 0, 40, 200, -0.5, -20)
+script = ExtResource("2_knj16")
+kind = "trialfloor"
+box = PackedFloat64Array(196, -1, -40, 204, 0, 0)
+web_box = PackedFloat64Array()
+
+[node name="Low48" type="Node3D" parent="TimeTrial/Course" unique_id=860382249]
+transform = Transform3D(1, 0, 0, 0, 0.6, 0, 0, 0, 40, 195.5, 0.3, -20)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(195, 0, -40, 196, 0.6, 0)
+web_box = PackedFloat64Array()
+
+[node name="Low49" type="Node3D" parent="TimeTrial/Course" unique_id=395640870]
+transform = Transform3D(1, 0, 0, 0, 0.6, 0, 0, 0, 40, 204.5, 0.3, -20)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(204, 0, -40, 205, 0.6, 0)
+web_box = PackedFloat64Array()
+
+[node name="Gate50" type="Node3D" parent="TimeTrial/Course" unique_id=337877280]
+transform = Transform3D(8, 0, 0, 0, 1.4999999, 0, 0, 0, 1.2000008, 200, 1.8499999, -22)
+script = ExtResource("2_knj16")
+kind = "gate"
+box = PackedFloat64Array(196, 1.1, -22.6, 204, 2.6, -21.4)
+web_box = PackedFloat64Array()
+
+[node name="Plat51" type="Node3D" parent="TimeTrial/Course" unique_id=816058660]
+transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 6, 200, -0.5, -48)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(197, -1, -51, 203, 0, -45)
+web_box = PackedFloat64Array()
+
+[node name="Plat52" type="Node3D" parent="TimeTrial/Course" unique_id=1627590912]
+transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 6, 200, -0.5, -60)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(197, -1, -63, 203, 0, -57)
+web_box = PackedFloat64Array()
+
+[node name="Plat53" type="Node3D" parent="TimeTrial/Course" unique_id=1998211868]
+transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 7, 200, -0.5, -73.5)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(197, -1, -77, 203, 0, -70)
+web_box = PackedFloat64Array()
+
+[node name="Plat54" type="Node3D" parent="TimeTrial/Course" unique_id=932336638]
+transform = Transform3D(8, 0, 0, 0, 1, 0, 0, 0, 14, 200, 5.5, -90)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(196, 5, -97, 204, 6, -83)
+web_box = PackedFloat64Array()
+
+[node name="Wall55" type="Node3D" parent="TimeTrial/Course" unique_id=1885809977]
+transform = Transform3D(1, 0, 0, 0, 12, 0, 0, 0, 20, 196.5, 4, -109)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(196, -2, -119, 197, 10, -99)
+web_box = PackedFloat64Array()
+
+[node name="Wall56" type="Node3D" parent="TimeTrial/Course" unique_id=1130589301]
+transform = Transform3D(1, 0, 0, 0, 12, 0, 0, 0, 20, 203.5, 4, -109)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(203, -2, -119, 204, 10, -99)
+web_box = PackedFloat64Array()
+
+[node name="Plat57" type="Node3D" parent="TimeTrial/Course" unique_id=1656883063]
+transform = Transform3D(8, 0, 0, 0, 1, 0, 0, 0, 16, 200, 4.5, -129)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(196, 4, -137, 204, 5, -121)
+web_box = PackedFloat64Array()
+
+[node name="Plat58" type="Node3D" parent="TimeTrial/Course" unique_id=1753535687]
+transform = Transform3D(8, 0, 0, 0, 1, 0, 0, 0, 10, 200, 4.5, -151)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(196, 4, -156, 204, 5, -146)
+web_box = PackedFloat64Array()
+
+[node name="Trialfloor59" type="Node3D" parent="TimeTrial/Course" unique_id=398127661]
+transform = Transform3D(12, 0, 0, 0, 1, 0, 0, 0, 24, 200, 2.5, -177)
+script = ExtResource("2_knj16")
+kind = "trialfloor"
+box = PackedFloat64Array(194, 2, -189, 206, 3, -165)
+web_box = PackedFloat64Array()
+
+[node name="Wall60" type="Node3D" parent="TimeTrial/Course" unique_id=314447616]
+transform = Transform3D(14, 0, 0, 0, 6, 0, 0, 0, 1, 200, 6, -189.5)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(193, 3, -190, 207, 9, -189)
+web_box = PackedFloat64Array()
+
+[node name="Start" type="Node3D" parent="TimeTrial" unique_id=1318248813]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 200, 0, 14)
+script = ExtResource("4_63htl")
+at = PackedFloat64Array(200, 0, 14)
+
+[node name="Exit" type="Node3D" parent="TimeTrial" unique_id=82045216]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 194.5, 0, 17)
+script = ExtResource("5_b1wtg")
+label = "BACK TO HUB"
+at = PackedFloat64Array(194.5, 0, 17)
+
+[node name="Finish" type="Node3D" parent="TimeTrial" unique_id=859144794]
+transform = Transform3D(12, 0, 0, 0, 8, 0, 0, 0, 20, 200, 6, -178)
+script = ExtResource("6_unixv")
+box = PackedFloat64Array(194, 2, -188, 206, 10, -168)
+web_box = PackedFloat64Array()
+
+[node name="Board" type="Node3D" parent="TimeTrial" unique_id=769961610]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 200, 7.2, 0.6)
+script = ExtResource("7_36ehd")
+at = PackedFloat64Array(200, 7.2, 0.6)
+
+[node name="Arena" type="Node3D" parent="." unique_id=1444020956]
+
+[node name="Arenafloor61" type="Node3D" parent="Arena" unique_id=344147538]
+transform = Transform3D(72, 0, 0, 0, 1, 0, 0, 0, 72, -200, -0.5, 0)
+script = ExtResource("2_knj16")
+kind = "arenafloor"
+box = PackedFloat64Array(-236, -1, -36, -164, 0, 36)
+web_box = PackedFloat64Array()
+
+[node name="Wall62" type="Node3D" parent="Arena" unique_id=2038936381]
+transform = Transform3D(74, 0, 0, 0, 9, 0, 0, 0, 1, -200, 4.5, -36.5)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-237, 0, -37, -163, 9, -36)
+web_box = PackedFloat64Array()
+
+[node name="Wall63" type="Node3D" parent="Arena" unique_id=2086940834]
+transform = Transform3D(74, 0, 0, 0, 9, 0, 0, 0, 1, -200, 4.5, 36.5)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-237, 0, 36, -163, 9, 37)
+web_box = PackedFloat64Array()
+
+[node name="Wall64" type="Node3D" parent="Arena" unique_id=1989552433]
+transform = Transform3D(1, 0, 0, 0, 9, 0, 0, 0, 72, -236.5, 4.5, 0)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-237, 0, -36, -236, 9, 36)
+web_box = PackedFloat64Array()
+
+[node name="Wall65" type="Node3D" parent="Arena" unique_id=2021119555]
+transform = Transform3D(1, 0, 0, 0, 9, 0, 0, 0, 72, -163.5, 4.5, 0)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-164, 0, -36, -163, 9, 36)
+web_box = PackedFloat64Array()
+
+[node name="Block66" type="Node3D" parent="Arena" unique_id=972550639]
+transform = Transform3D(12, 0, 0, 0, 3, 0, 0, 0, 12, -200, 1.5, 0)
+script = ExtResource("2_knj16")
+box = PackedFloat64Array(-206, 0, -6, -194, 3, 6)
+web_box = PackedFloat64Array()
+
+[node name="Stair67" type="Node3D" parent="Arena" unique_id=2115727254]
+transform = Transform3D(4, 0, 0, 0, 2.6, 0, 0, 0, 1, -200, 1.3, 6.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, 6, -198, 2.6, 7)
+web_box = PackedFloat64Array()
+
+[node name="Stair68" type="Node3D" parent="Arena" unique_id=1896902765]
+transform = Transform3D(4, 0, 0, 0, 2.2, 0, 0, 0, 1, -200, 1.1, 7.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, 7, -198, 2.2, 8)
+web_box = PackedFloat64Array()
+
+[node name="Stair69" type="Node3D" parent="Arena" unique_id=798730489]
+transform = Transform3D(4, 0, 0, 0, 1.8, 0, 0, 0, 1, -200, 0.9, 8.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, 8, -198, 1.8, 9)
+web_box = PackedFloat64Array()
+
+[node name="Stair70" type="Node3D" parent="Arena" unique_id=1585180413]
+transform = Transform3D(4, 0, 0, 0, 1.4, 0, 0, 0, 1, -200, 0.7, 9.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, 9, -198, 1.4, 10)
+web_box = PackedFloat64Array()
+
+[node name="Stair71" type="Node3D" parent="Arena" unique_id=678671718]
+transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 1, -200, 0.5, 10.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, 10, -198, 1, 11)
+web_box = PackedFloat64Array()
+
+[node name="Stair72" type="Node3D" parent="Arena" unique_id=1491486835]
+transform = Transform3D(4, 0, 0, 0, 0.6, 0, 0, 0, 1, -200, 0.3, 11.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, 11, -198, 0.6, 12)
+web_box = PackedFloat64Array()
+
+[node name="Stair73" type="Node3D" parent="Arena" unique_id=368547141]
+transform = Transform3D(4, 0, 0, 0, 0.2, 0, 0, 0, 1, -200, 0.1, 12.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, 12, -198, 0.2, 13)
+web_box = PackedFloat64Array()
+
+[node name="Stair74" type="Node3D" parent="Arena" unique_id=1520201822]
+transform = Transform3D(4, 0, 0, 0, 2.6, 0, 0, 0, 1, -200, 1.3, -6.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, -7, -198, 2.6, -6)
+web_box = PackedFloat64Array()
+
+[node name="Stair75" type="Node3D" parent="Arena" unique_id=363496293]
+transform = Transform3D(4, 0, 0, 0, 2.2, 0, 0, 0, 1, -200, 1.1, -7.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, -8, -198, 2.2, -7)
+web_box = PackedFloat64Array()
+
+[node name="Stair76" type="Node3D" parent="Arena" unique_id=1998837029]
+transform = Transform3D(4, 0, 0, 0, 1.8, 0, 0, 0, 1, -200, 0.9, -8.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, -9, -198, 1.8, -8)
+web_box = PackedFloat64Array()
+
+[node name="Stair77" type="Node3D" parent="Arena" unique_id=341022384]
+transform = Transform3D(4, 0, 0, 0, 1.4, 0, 0, 0, 1, -200, 0.7, -9.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, -10, -198, 1.4, -9)
+web_box = PackedFloat64Array()
+
+[node name="Stair78" type="Node3D" parent="Arena" unique_id=1063908613]
+transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 1, -200, 0.5, -10.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, -11, -198, 1, -10)
+web_box = PackedFloat64Array()
+
+[node name="Stair79" type="Node3D" parent="Arena" unique_id=1604159981]
+transform = Transform3D(4, 0, 0, 0, 0.6, 0, 0, 0, 1, -200, 0.3, -11.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, -12, -198, 0.6, -11)
+web_box = PackedFloat64Array()
+
+[node name="Stair80" type="Node3D" parent="Arena" unique_id=979987236]
+transform = Transform3D(4, 0, 0, 0, 0.2, 0, 0, 0, 1, -200, 0.1, -12.5)
+script = ExtResource("2_knj16")
+kind = "stair"
+box = PackedFloat64Array(-202, 0, -13, -198, 0.2, -12)
+web_box = PackedFloat64Array()
+
+[node name="Pillar81" type="Node3D" parent="Arena" unique_id=812086752]
+transform = Transform3D(3, 0, 0, 0, 6, 0, 0, 0, 3, -215, 3, -15)
+script = ExtResource("2_knj16")
+kind = "pillar"
+box = PackedFloat64Array(-216.5, 0, -16.5, -213.5, 6, -13.5)
+web_box = PackedFloat64Array()
+
+[node name="Pillar82" type="Node3D" parent="Arena" unique_id=1734970064]
+transform = Transform3D(3, 0, 0, 0, 6, 0, 0, 0, 3, -185, 3, -15)
+script = ExtResource("2_knj16")
+kind = "pillar"
+box = PackedFloat64Array(-186.5, 0, -16.5, -183.5, 6, -13.5)
+web_box = PackedFloat64Array()
+
+[node name="Pillar83" type="Node3D" parent="Arena" unique_id=629656949]
+transform = Transform3D(3, 0, 0, 0, 6, 0, 0, 0, 3, -215, 3, 15)
+script = ExtResource("2_knj16")
+kind = "pillar"
+box = PackedFloat64Array(-216.5, 0, 13.5, -213.5, 6, 16.5)
+web_box = PackedFloat64Array()
+
+[node name="Pillar84" type="Node3D" parent="Arena" unique_id=1501915650]
+transform = Transform3D(3, 0, 0, 0, 6, 0, 0, 0, 3, -185, 3, 15)
+script = ExtResource("2_knj16")
+kind = "pillar"
+box = PackedFloat64Array(-186.5, 0, 13.5, -183.5, 6, 16.5)
+web_box = PackedFloat64Array()
+
+[node name="Low85" type="Node3D" parent="Arena" unique_id=1267510593]
+transform = Transform3D(7, 0, 0, 0, 1.4, 0, 0, 0, 1, -207, 0.7, -22)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(-210.5, 0, -22.5, -203.5, 1.4, -21.5)
+web_box = PackedFloat64Array()
+
+[node name="Low86" type="Node3D" parent="Arena" unique_id=473981434]
+transform = Transform3D(7, 0, 0, 0, 1.4, 0, 0, 0, 1, -193, 0.7, 22)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(-196.5, 0, 21.5, -189.5, 1.4, 22.5)
+web_box = PackedFloat64Array()
+
+[node name="Low87" type="Node3D" parent="Arena" unique_id=1381751870]
+transform = Transform3D(1, 0, 0, 0, 1.4, 0, 0, 0, 7, -224, 0.7, 5)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(-224.5, 0, 1.5, -223.5, 1.4, 8.5)
+web_box = PackedFloat64Array()
+
+[node name="Low88" type="Node3D" parent="Arena" unique_id=1159491021]
+transform = Transform3D(1, 0, 0, 0, 1.4, 0, 0, 0, 7, -176, 0.7, -5)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(-176.5, 0, -8.5, -175.5, 1.4, -1.5)
+web_box = PackedFloat64Array()
+
+[node name="Low89" type="Node3D" parent="Arena" unique_id=995935516]
+transform = Transform3D(1, 0, 0, 0, 1.4, 0, 0, 0, 5, -192, 0.7, -26)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(-192.5, 0, -28.5, -191.5, 1.4, -23.5)
+web_box = PackedFloat64Array()
+
+[node name="Low90" type="Node3D" parent="Arena" unique_id=2088023610]
+transform = Transform3D(1, 0, 0, 0, 1.4, 0, 0, 0, 5, -208, 0.7, 26)
+script = ExtResource("2_knj16")
+kind = "low"
+box = PackedFloat64Array(-208.5, 0, 23.5, -207.5, 1.4, 28.5)
+web_box = PackedFloat64Array()
+
+[node name="Plat91" type="Node3D" parent="Arena" unique_id=848623603]
+transform = Transform3D(10, 0, 0, 0, 2.5, 0, 0, 0, 14, -231, 1.25, -18)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(-236, 0, -25, -226, 2.5, -11)
+web_box = PackedFloat64Array()
+
+[node name="Plat92" type="Node3D" parent="Arena" unique_id=977657922]
+transform = Transform3D(10, 0, 0, 0, 2.5, 0, 0, 0, 14, -169, 1.25, 18)
+script = ExtResource("2_knj16")
+kind = "plat"
+box = PackedFloat64Array(-174, 0, 11, -164, 2.5, 25)
+web_box = PackedFloat64Array()
+
+[node name="Wall93" type="Node3D" parent="Arena" unique_id=1220091979]
+transform = Transform3D(1, 0, 0, 0, 7, 0, 0, 0, 12, -226, 3.5, 24)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-226.5, 0, 18, -225.5, 7, 30)
+web_box = PackedFloat64Array()
+
+[node name="Wall94" type="Node3D" parent="Arena" unique_id=81875867]
+transform = Transform3D(1, 0, 0, 0, 7, 0, 0, 0, 12, -221, 3.5, 24)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-221.5, 0, 18, -220.5, 7, 30)
+web_box = PackedFloat64Array()
+
+[node name="Wall95" type="Node3D" parent="Arena" unique_id=1151964326]
+transform = Transform3D(1, 0, 0, 0, 7, 0, 0, 0, 12, -174, 3.5, -24)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-174.5, 0, -30, -173.5, 7, -18)
+web_box = PackedFloat64Array()
+
+[node name="Wall96" type="Node3D" parent="Arena" unique_id=608573687]
+transform = Transform3D(1, 0, 0, 0, 7, 0, 0, 0, 12, -179, 3.5, -24)
+script = ExtResource("2_knj16")
+kind = "wall"
+box = PackedFloat64Array(-179.5, 0, -30, -178.5, 7, -18)
+web_box = PackedFloat64Array()
+
+[node name="Pads" type="Node3D" parent="." unique_id=1981704939]
+
+[node name="Pad0" type="Node3D" parent="Pads" unique_id=499185413]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 30)
+script = ExtResource("8_yhwtb")
+at = PackedFloat64Array(6, 0, 30)
+
+[node name="Pad1" type="Node3D" parent="Pads" unique_id=1068962900]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0, 8)
+script = ExtResource("8_yhwtb")
+at = PackedFloat64Array(-7, 0, 8)
+
+[node name="Pad2" type="Node3D" parent="Pads" unique_id=393973517]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, -5)
+script = ExtResource("8_yhwtb")
+at = PackedFloat64Array(28, 0, -5)
+
+[node name="Pad3" type="Node3D" parent="Pads" unique_id=695894980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, 22)
+script = ExtResource("8_yhwtb")
+at = PackedFloat64Array(30, 0, 22)
+
+[node name="Pad4" type="Node3D" parent="Pads" unique_id=1470908420]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33, 0, 26)
+script = ExtResource("8_yhwtb")
+radius = 1.3
+launch = 9.0
+forward = 20.0
+directional = true
+at = PackedFloat64Array(-33, 0, 26)
+
+[node name="Pad5" type="Node3D" parent="Pads" unique_id=1782965232]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -208.5, 0, 0)
+script = ExtResource("8_yhwtb")
+radius = 1.3
+at = PackedFloat64Array(-208.5, 0, 0)
+
+[node name="Pad6" type="Node3D" parent="Pads" unique_id=1852933983]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -191.5, 0, 0)
+script = ExtResource("8_yhwtb")
+radius = 1.3
+at = PackedFloat64Array(-191.5, 0, 0)
+
+[node name="Pad7" type="Node3D" parent="Pads" unique_id=41145316]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -224, 0, -18)
+script = ExtResource("8_yhwtb")
+at = PackedFloat64Array(-224, 0, -18)
+
+[node name="Pad8" type="Node3D" parent="Pads" unique_id=1042085947]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -176, 0, 18)
+script = ExtResource("8_yhwtb")
+at = PackedFloat64Array(-176, 0, 18)
+
+[node name="Pad9" type="Node3D" parent="Pads" unique_id=578293515]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 200, 0, -75)
+script = ExtResource("8_yhwtb")
+radius = 1.3
+at = PackedFloat64Array(200, 0, -75)
+
+[node name="Pad10" type="Node3D" parent="Pads" unique_id=1053984256]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 200, 5, -153)
+script = ExtResource("8_yhwtb")
+radius = 3.8
+launch = 9.0
+forward = 18.0
+directional = true
+at = PackedFloat64Array(200, 5, -153)
+
+[node name="Spawns" type="Node3D" parent="." unique_id=1299330722]
+
+[node name="Spawn0" type="Node3D" parent="Spawns" unique_id=675600729]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 30)
+script = ExtResource("4_63htl")
+at = PackedFloat64Array(0, 0, 30)
+
+[node name="Dummies" type="Node3D" parent="." unique_id=1057654713]
+
+[node name="Dummy0" type="Node3D" parent="Dummies" unique_id=812630790]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
+script = ExtResource("9_hq8wk")
+at = PackedFloat64Array(0, 0, -15)
+
+[node name="Dummy1" type="Node3D" parent="Dummies" unique_id=516165650]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -15)
+script = ExtResource("9_hq8wk")
+at = PackedFloat64Array(-4, 0, -15)
+
+[node name="Dummy2" type="Node3D" parent="Dummies" unique_id=1812114346]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -15)
+script = ExtResource("9_hq8wk")
+at = PackedFloat64Array(4, 0, -15)
+
+[node name="Dummy3" type="Node3D" parent="Dummies" unique_id=131734740]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -28)
+script = ExtResource("9_hq8wk")
+at = PackedFloat64Array(-10, 0, -28)
+
+[node name="Dummy4" type="Node3D" parent="Dummies" unique_id=2007786136]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -28)
+script = ExtResource("9_hq8wk")
+at = PackedFloat64Array(10, 0, -28)
+
+[node name="Dummy5" type="Node3D" parent="Dummies" unique_id=219860151]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 3.2, -2.5)
+script = ExtResource("9_hq8wk")
+at = PackedFloat64Array(2.5, 3.2, -2.5)
+
+[node name="Dummy6" type="Node3D" parent="Dummies" unique_id=840370203]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 5, 30)
+script = ExtResource("9_hq8wk")
+at = PackedFloat64Array(35, 5, 30)
+
+[node name="Dummy7" type="Node3D" parent="Dummies" unique_id=762917112]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)
+script = ExtResource("9_hq8wk")
+move_axis = "z"
+move_amp = 4.0
+move_speed = 1.2
+at = PackedFloat64Array(20, 0, 0)
+
+[node name="Dummy8" type="Node3D" parent="Dummies" unique_id=1490296615]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, -15)
+script = ExtResource("9_hq8wk")
+move_axis = "x"
+move_amp = 5.0
+move_speed = 0.9
+at = PackedFloat64Array(-20, 0, -15)
+
+[node name="Portals" type="Node3D" parent="." unique_id=1585056808]
+
+[node name="Portal0" type="Node3D" parent="Portals" unique_id=1039712301]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 35)
+script = ExtResource("5_b1wtg")
+sub = "GUNS OFF"
+at = PackedFloat64Array(13, 0, 35)
+
+[node name="Portal1" type="Node3D" parent="Portals" unique_id=1541362290]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 35)
+script = ExtResource("5_b1wtg")
+guns = true
+sub = "GUNS ON"
+at = PackedFloat64Array(19, 0, 35)

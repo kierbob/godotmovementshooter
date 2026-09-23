@@ -4,12 +4,11 @@ extends Node3D
 ## menu / playing / paused.
 ##
 ## Command-line options (after `--`), handy for testing:
-##   --map=bean-street        start on another map from data/
+##   --map=bean-street        start on another map from maps/
 ##   --at=x,y,z,yaw,pitch     start playing, placed there
 ##   --screen=main|maps|pause|settings:<tab>   open a menu screen
 ##   --shot=path.png          save a screenshot after --frames=N frames, then quit
 
-const MAPS: Array[String] = ["dev_map", "bean-street"]
 const SENS_BASE := 0.022 * PI / 180.0 # radians per mouse count at sensitivity 1 (CS2 / Apex scale)
 
 static var auto_play := false # set before reloading into another map from the menu
@@ -66,10 +65,11 @@ func _ready() -> void:
 	Settings.load_settings()
 	Settings.apply_input()
 	_parse_args()
-	if not MAPS.has(Settings.map):
-		Settings.map = MAPS[0]
+	var maps := MapData.list()
+	if not maps.has(Settings.map):
+		Settings.map = maps[0] if not maps.is_empty() else "dev_map"
 	map_id = Settings.map
-	map = MapData.load_file("res://data/%s.json" % map_id)
+	map = MapData.load_map(map_id) # maps/<id>.tscn, edited in the Godot editor
 	WorldView.build_world(map, self)
 	WorldView.build_pads(map, self)
 	clouds = WorldView.build_clouds(self)
@@ -414,7 +414,8 @@ func _input(event: InputEvent) -> void:
 		Settings.stats_mode = hud.cycle_debug()
 		Settings.save_settings()
 	if event.is_action_pressed("next_map"):
-		_on_play(MAPS[(MAPS.find(map_id) + 1) % MAPS.size()])
+		var maps := MapData.list()
+		_on_play(maps[(maps.find(map_id) + 1) % maps.size()])
 
 
 func _axis(pos: String, neg: String) -> float:

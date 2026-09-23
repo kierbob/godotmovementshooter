@@ -17,6 +17,13 @@ own step.
 
 ## Files
 
+- `maps/*.tscn`: the maps, edited in the Godot editor. Node scripts in `scripts/map/` (@tool):
+  MapRoot, MapBox (solid box; exact edges in `box`, or web-editor numbers in `web_box`), MapVolume
+  (trigger box), MapPad, MapSpawn, MapTarget, MapPortal, MapTrial, MapBoard. The exact 64-bit
+  values are the truth; the node transform (32-bit) mirrors them and edits write back rounded to
+  the millimeter. Only store short decimals: Godot misreads some 17-digit numbers from scenes.
+  `MapData.load_map(id)` reads a map scene; `MapConvert` / `tools/json_to_map.gd` make one from a
+  map JSON.
 - `scripts/main.gd`: game entry. Builds the map, runs the sim at a fixed 120 ticks/s, moves the
   camera between ticks, switches menu/playing/paused. Test flags: `--map=`, `--at=`, `--screen=`, `--shot=`.
 - `scripts/player_sim.gd`: the movement, line for line from the web game's `src/player.js`. It uses
@@ -38,13 +45,15 @@ own step.
   game's `sound.js` synth recipes (runs headless). Variants are `name_1.wav`, `name_2.wav`...
 - `scripts/trial.gd` (time trial logic, port of `trial.js`; records in `user://trials.cfg`) and
   `trial_view.gd` (portals, timer board, banners). The course, portals and trial settings are in
-  `data/dev_map.json` (`trial`, `portals`).
-- `scripts/map_data.gd`: loads `data/*.json` maps and does collision (matches `world.js`).
+  `maps/dev_map.tscn` (the MapTrial node and MapPortals).
+- `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
 - `scripts/world_view.gd`: map meshes, jump pads, bean dummies, clouds.
 - `scripts/menu.gd`, `ui_style.gd`, `hud.gd`, `settings.gd`: menus, styling, HUD, saved settings
   and keybinds (combat keybinds already exist).
 - `shaders/`: toon shading, sky, clouds.
-- `tests/compare.gd`: replays web-game movement (`tests/traces.json`) and checks every tick.
+- `tests/compare.gd`: replays web-game movement (`tests/traces.json`) and checks every tick, on the
+  frozen original maps in `tests/maps/*.json` (so map edits don't break it). The combat and trial
+  logic tests use those too; `tests/map_test.gd` checks the map scenes.
   `tests/menu_test.gd` clicks through the menus headless. `tests/combat_test.gd` checks the guns,
   `tests/trial_test.gd` the time trial, `tests/sound_test.gd` the sounds.
 
@@ -80,6 +89,7 @@ godot --headless --path . --script res://tests/menu_test.gd
 godot --headless --path . --script res://tests/combat_test.gd
 godot --headless --path . --script res://tests/trial_test.gd
 godot --headless --path . --script res://tests/sound_test.gd
+godot --headless --path . --script res://tests/map_test.gd
 ```
 
 Headless runs draw nothing. To see the game, render under Xvfb (it falls back to OpenGL, so the

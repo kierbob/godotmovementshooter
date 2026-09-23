@@ -17,8 +17,8 @@ const TOLERANCE := 1e-9
 func _init() -> void:
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/traces.json"))
 	var maps := {
-		"dev_map": MapData.load_file("res://data/dev_map.json"),
-		"bean-street": MapData.load_file("res://data/bean-street.json"),
+		"dev_map": MapData.load_file("res://tests/maps/dev_map.json"),
+		"bean-street": MapData.load_file("res://tests/maps/bean-street.json"),
 	}
 	var fails := 0
 	var total := 0
