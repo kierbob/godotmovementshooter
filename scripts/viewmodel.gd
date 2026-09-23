@@ -159,6 +159,12 @@ func on_events(events: Array[Dictionary], combat: Combat) -> void:
 				_throw_t = 1.0
 
 
+## Where the barrel of the gun in your hands is on screen, in pixels. The gun has its own camera
+## (different FOV, plus bob, recoil and sway), so the world has to aim its tracers at this point.
+func muzzle_screen() -> Vector2:
+	return _cam.unproject_position(_muzzle())
+
+
 ## Everything that pops out of the gun when it fires.
 func _muzzle_fx(w: Dictionary) -> void:
 	var f: Dictionary = w.fx

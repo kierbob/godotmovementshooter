@@ -428,8 +428,11 @@ func _process(delta: float) -> void:
 	combat.fx = []
 	hud.on_events(events)
 	viewmodel.on_events(events, combat)
-	# Tracers leave from about where the gun's barrel is on screen (fx.js muzzleWorld).
-	combat_view.on_events(events, camera.global_transform * Vector3(0.18, -0.16, -0.7), player)
+	# Tracers start where the gun's barrel is drawn: a point in the world that lands on the same
+	# pixel as the viewmodel's muzzle. 1.2 m out rather than right at the lens, so the beam isn't
+	# fat where it leaves the gun.
+	var muzzle := camera.project_position(viewmodel.muzzle_screen(), 1.2)
+	combat_view.on_events(events, muzzle, player)
 	for e in events:
 		if e.type == "hit":
 			beans[e.target].flash = 0.08
