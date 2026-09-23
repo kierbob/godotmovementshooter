@@ -40,6 +40,8 @@ var pads: Array[Pad] = []
 var spawn := {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0}
 var spawns: Array = [] # every spawn point (editor maps); the dev map has one
 var targets: Array = [] # bean dummies: { x, y, z, move? }
+var trial := {} # time trial course (dev map only): start, startLineZ, killY, finish, exit, board
+var portals: Array = [] # hub portals to the time trial: { x, y, z, guns, label, sub }
 
 
 static func load_file(path: String) -> MapData:
@@ -106,6 +108,8 @@ static func load_file(path: String) -> MapData:
 	for key in ["x", "y", "z", "yaw"]:
 		m.spawn[key] = float(m.spawn.get(key, 0.0))
 	m.targets = data.get("targets", [])
+	m.trial = data.get("trial", {})
+	m.portals = data.get("portals", [])
 	return m
 
 

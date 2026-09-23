@@ -13,6 +13,7 @@ const MAPS: Array[String] = ["dev_map", "bean-street"]
 const SENS_BASE := 0.022 * PI / 180.0 # radians per mouse count at sensitivity 1 (CS2 / Apex scale)
 
 static var auto_play := false # set before reloading into another map from the menu
+static var auto_trial := "" # "off" / "on": also go straight onto that time trial after the reload
 
 var state := "menu" # "menu" | "playing" | "paused"
 var map_id := "" # which map this scene built
@@ -22,6 +23,8 @@ var combat: Combat
 var combat_view: CombatView
 var viewmodel: Viewmodel
 var sound: Sound
+var trial: TimeTrial # null on maps without a course
+var trial_view: TrialView
 var camera: Camera3D
 var hud: Hud
 var menu: Menu
@@ -102,12 +105,15 @@ func _ready() -> void:
 	add_child(menu)
 	menu.map_name = map.name
 	menu.play.connect(_on_play)
+	menu.play_trial.connect(_on_play_trial)
 	menu.resume.connect(_resume)
 	menu.to_main_menu.connect(_enter_menu)
 	menu.quit_game.connect(func() -> void: get_tree().quit())
 	menu.settings_changed.connect(_on_settings_changed)
 	combat_view.word.connect(hud.word)
-	viewmodel.word.connect(func(text: String, at: Vector2, style: String) -> void: hud.word(text, null, at, style))
+	# Gun words sit a little left of / above the muzzle so they don't cover the gun.
+	viewmodel.word.connect(func(text: String, at: Vector2, style: String) -> void:
+		hud.word(text, null, at + Vector2(-40, -50) / get_viewport().get_visible_rect().size, style))
 	viewmodel.tossed.connect(func(id: String) -> void:
 		combat_view.toss_gun(id, camera, player)
 		sound.play("throw"))
@@ -116,9 +122,18 @@ func _ready() -> void:
 	_hook_buttons(menu)
 	get_tree().node_added.connect(_hook_button) # buttons made later (menus rebuild their lists)
 
+	if not map.trial.is_empty():
+		trial = TimeTrial.new(map)
+		trial_view = TrialView.new()
+		add_child(trial_view)
+		trial_view.setup(trial)
 	if auto_play:
 		auto_play = false
 		_start_play()
+		if auto_trial != "" and trial:
+			trial.enter(player, auto_trial == "on")
+			_handle_trial_events()
+		auto_trial = ""
 	else:
 		_enter_menu()
 	_apply_args_state()
@@ -150,7 +165,9 @@ func _start_play() -> void:
 	if _shot_path == "":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	hud.set_in_game(true)
-	viewmodel.visible = true
+	if trial:
+		trial.reset()
+	_update_guns_mode()
 	menu.show_screen("")
 
 
@@ -176,6 +193,51 @@ func _on_play(id: String) -> void:
 		get_tree().reload_current_scene()
 		return
 	_start_play()
+
+
+## Straight onto a time trial from the menu (the course lives on the dev map).
+func _on_play_trial(guns: bool) -> void:
+	if map_id != "dev_map" or trial == null:
+		Settings.map = "dev_map"
+		Settings.save_settings()
+		auto_play = true
+		auto_trial = "on" if guns else "off"
+		get_tree().reload_current_scene()
+		return
+	_start_play()
+	trial.enter(player, guns)
+	_handle_trial_events()
+
+
+## Guns are off on the "guns off" time trial; everything else has them.
+func _update_guns_mode() -> void:
+	var on := trial == null or not trial.active or trial.guns
+	combat.enabled = on
+	hud.set_guns(on)
+	viewmodel.visible = on and state != "menu"
+	menu.map_name = ("TIME TRIAL · GUNS ON" if trial.guns else "TIME TRIAL · GUNS OFF") if trial and trial.active else map.name
+
+
+## Time trial events: teleports snap the camera, plus the sound and comic-word feedback.
+func _handle_trial_events() -> void:
+	for e: Dictionary in trial.events:
+		match e.type:
+			"teleport":
+				prev_pos = _player_pos()
+				yaw = float(e.to.get("yaw", yaw))
+				pitch = 0.0
+				sound.play("teleport")
+			"enter", "leave":
+				_update_guns_mode()
+			"start":
+				sound.play("go")
+				hud.word("GO!", null, Vector2(0.5, 0.32), "big")
+			"finish":
+				sound.play("finish")
+				hud.word("NEW BEST!" if e.best else "FINISH!", null, Vector2(0.5, 0.3), "head" if e.best else "big")
+			"fell":
+				hud.word("WHOOPS!", null, Vector2(0.5, 0.3), "kill")
+	trial.events.clear()
 
 
 func _on_settings_changed(what: String) -> void:
@@ -395,10 +457,17 @@ func _physics_process(_delta: float) -> void:
 	prev_pos = _player_pos()
 	if respawn_pressed:
 		respawn_pressed = false
-		_respawn()
+		if trial and trial.active:
+			trial.restart(player) # on the course, respawn = restart the run
+		else:
+			_respawn()
 	var c := _sample()
 	combat.tick(player, c, Cfg.TICK_DT) # before movement so knockback applies this tick
 	player.step(c, map, Cfg.TICK_DT)
+	if trial:
+		trial.tick(player, Cfg.TICK_DT)
+	if trial and not trial.events.is_empty():
+		_handle_trial_events()
 	if player.py < -30:
 		_respawn()
 
@@ -465,6 +534,9 @@ func _process(delta: float) -> void:
 	if state != "menu":
 		hud.update_combat(dt if state == "playing" else 0.0, combat, camera)
 		viewmodel.update(dt if state == "playing" else 0.0, combat, player, yaw)
+	if trial_view:
+		trial_view.update(dt)
+	hud.update_trial(trial)
 	_update_debug(dt, speed)
 
 	if _shot_path != "":

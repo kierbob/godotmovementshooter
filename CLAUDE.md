@@ -12,8 +12,8 @@ Useful files: `src/items.js` (weapon/ability data), `src/combat.js`, `src/hud.js
 `src/config.js`, `src/world.js`.
 
 Port only what the current step needs, not the whole web game. Guns, gun models, the combat HUD,
-the loadout screen and the cartoon effects are in; sound, bots and time trial come later, in their
-own steps.
+the loadout screen, the cartoon effects, sound and the time trial are in; bots come later, in their
+own step.
 
 ## Files
 
@@ -34,19 +34,26 @@ own steps.
   loadout 3D stage. `particles.gd` is the pooled particle system (`particles.js`).
 - `assets/fx/*.png` are baked by `tools/make_fx_textures.gd` (needs a renderer: run it under Xvfb).
   `assets/fonts/Bangers-Regular.ttf` (OFL) is the comic-word font.
+- `scripts/sound.gd` plays `assets/sounds/*.wav`, which `tools/make_sounds.gd` bakes from the web
+  game's `sound.js` synth recipes (runs headless). Variants are `name_1.wav`, `name_2.wav`...
+- `scripts/trial.gd` (time trial logic, port of `trial.js`; records in `user://trials.cfg`) and
+  `trial_view.gd` (portals, timer board, banners). The course, portals and trial settings are in
+  `data/dev_map.json` (`trial`, `portals`).
 - `scripts/map_data.gd`: loads `data/*.json` maps and does collision (matches `world.js`).
 - `scripts/world_view.gd`: map meshes, jump pads, bean dummies, clouds.
 - `scripts/menu.gd`, `ui_style.gd`, `hud.gd`, `settings.gd`: menus, styling, HUD, saved settings
   and keybinds (combat keybinds already exist).
 - `shaders/`: toon shading, sky, clouds.
 - `tests/compare.gd`: replays web-game movement (`tests/traces.json`) and checks every tick.
-  `tests/menu_test.gd` clicks through the menus headless. `tests/combat_test.gd` checks the guns.
+  `tests/menu_test.gd` clicks through the menus headless. `tests/combat_test.gd` checks the guns,
+  `tests/trial_test.gd` the time trial, `tests/sound_test.gd` the sounds.
 
 ## Rules
 
 - Movement must stay identical to the web game. After touching `player_sim.gd`, `cfg.gd` or
   collision in `map_data.gd`, run `tests/compare.gd`; it must pass.
-- After touching combat or menus, run `tests/combat_test.gd` and `tests/menu_test.gd`.
+- After touching combat or menus, run `tests/combat_test.gd` and `tests/menu_test.gd` (and
+  `tests/trial_test.gd` / `tests/sound_test.gd` for those areas).
 - Don't regenerate traces: `tools/make_traces.mjs` needs the web project next to this folder.
 - Style: a `##` doc comment at the top of each script, typed GDScript, short comments that
   explain why.
@@ -71,6 +78,8 @@ godot --headless --path . --import
 godot --headless --path . --script res://tests/compare.gd
 godot --headless --path . --script res://tests/menu_test.gd
 godot --headless --path . --script res://tests/combat_test.gd
+godot --headless --path . --script res://tests/trial_test.gd
+godot --headless --path . --script res://tests/sound_test.gd
 ```
 
 Headless runs draw nothing. To see the game, render under Xvfb (it falls back to OpenGL, so the
@@ -84,7 +93,7 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 
 1. ~~Guns and abilities~~ (done: guns, abilities, gun models, combat HUD, loadout screen).
 2. ~~Bean dummies take damage~~ (done: damage, hit flash, health bars, damage numbers).
-3. Cartoon effects (done) and sounds (still to do).
-4. Bot Arena mode and a time trial mode.
+3. ~~Cartoon effects and sounds~~ (done).
+4. Bot Arena mode (still to do) and a time trial mode (done: guns off and guns on).
 5. More menu and settings polish.
 6. Later: multiplayer.

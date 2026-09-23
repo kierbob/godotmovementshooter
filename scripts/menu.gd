@@ -5,6 +5,7 @@ extends CanvasLayer
 ## The game (main.gd) listens to the signals and decides what actually happens.
 
 signal play(map_id: String)
+signal play_trial(guns: bool) # straight onto the dev map's time trial course
 signal resume
 signal to_main_menu
 signal quit_game
@@ -23,6 +24,19 @@ const MAP_INFO := {
 		"grad": [Color("ff4fd8"), Color("7a2dff")],
 	},
 }
+## Time trial cards on the map screen (not maps you can select: they start the course right away).
+const TRIAL_INFO := {
+	"trial_off": {
+		"tag": "Time trial", "name": "Guns Off", "art": "RUN",
+		"desc": "Pure movement · slide, gap jumps, wall jumps, launcher · best time saved",
+		"grad": [Color("19c98a"), Color("1f6dff")],
+	},
+	"trial_on": {
+		"tag": "Time trial", "name": "Guns On", "art": "BOOM",
+		"desc": "Same course, guns allowed · shotgun boosts and rocket jumps · best time saved",
+		"grad": [Color("ff9a3c"), Color("ff3c7a")],
+	},
+}
 
 var screen := ""
 var listening := "" # action waiting for a new key while rebinding
@@ -37,6 +51,7 @@ var _screens := {}
 var _main_card_slot: Control
 var _hint: Label
 var _map_grid: HBoxContainer
+var _trial_grid: HBoxContainer
 var _settings_body: VBoxContainer
 var _settings_scroll: ScrollContainer
 var _side_tabs := {}
@@ -589,6 +604,10 @@ func _build_maps() -> Control:
 	_map_grid = HBoxContainer.new()
 	_map_grid.add_theme_constant_override("separation", 28)
 	col.add_child(_map_grid)
+	col.add_child(UiStyle.kicker("Time trials · on the Dev Arena course"))
+	_trial_grid = HBoxContainer.new()
+	_trial_grid.add_theme_constant_override("separation", 28)
+	col.add_child(_trial_grid)
 	s.add_child(col)
 	return s
 
@@ -602,11 +621,18 @@ func _refresh_maps() -> void:
 			Settings.save_settings()
 			show_screen("main")
 		_map_grid.add_child(_map_card(id, "SELECTED" if id == Settings.map else "", pick, id == Settings.map))
+	for c in _trial_grid.get_children():
+		c.queue_free()
+	for id: String in TRIAL_INFO:
+		var guns := id == "trial_on"
+		var card := _map_card(id, "PLAY", func() -> void: play_trial.emit(guns), false, 64)
+		card.custom_minimum_size.y = 210 # art strip + the info block (the card is a Button: it needs a real size to be clickable)
+		_trial_grid.add_child(card)
 
 
 ## Card with gradient art, a big faded label, a badge, and the map's name + blurb.
-func _map_card(id: String, badge: String, on_press: Callable, selected := false) -> Button:
-	var info: Dictionary = MAP_INFO.get(id, MAP_INFO.dev_map)
+func _map_card(id: String, badge: String, on_press: Callable, selected := false, art_h := 150) -> Button:
+	var info: Dictionary = MAP_INFO.get(id, TRIAL_INFO.get(id, MAP_INFO.dev_map))
 	var card := Button.new()
 	card.focus_mode = Control.FOCUS_NONE
 	card.custom_minimum_size = Vector2(400, 292)
@@ -628,7 +654,7 @@ func _map_card(id: String, badge: String, on_press: Callable, selected := false)
 	v.add_theme_constant_override("separation", 0)
 	card.add_child(v)
 	var art := Control.new()
-	art.custom_minimum_size.y = 150
+	art.custom_minimum_size.y = art_h
 	art.clip_contents = true
 	art.add_child(UiStyle.gradient_rect(PackedColorArray(info.grad), 2))
 	var big := UiStyle.label(info.art, 150, Color(1, 1, 1, 0.2), true)
