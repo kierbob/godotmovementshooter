@@ -277,52 +277,75 @@ func update_combat(dt: float, combat: Combat, fov_deg: float) -> void:
 	_ability_icon.queue_redraw()
 
 
-## Per-weapon crosshair (hud.js CROSSHAIRS): a dark outline pass, then a white pass.
+## Per-weapon crosshair (shapes from hud.js CROSSHAIRS). Straight lines are pixel-aligned
+## rectangles so they stay sharp, with a thin dark edge so they read on bright sky and walls.
 class Crosshair:
 	extends Control
+
+	const FILL := Color(1, 1, 1, 0.95)
+	const EDGE := Color(0.08, 0.08, 0.12, 0.7)
 
 	var shape := "cross"
 	var bloom := 0.0
 	var ring := 20.0
 
 	func _draw() -> void:
-		var c := (size / 2).round()
-		for pass_i in 2:
-			var col := Color("15151f") if pass_i == 0 else Color.WHITE
-			var w := 5.0 if pass_i == 0 else 2.2
-			var dot_extra := 1.3 if pass_i == 0 else 0.0
-			match shape:
-				"ring":
-					draw_arc(c, ring, 0, TAU, 64, col, w, true)
-					draw_circle(c, 2.4 + dot_extra, col)
-				"cross":
-					_ticks(c, 6 + bloom * 10, 8, col, w)
-				"dot":
-					draw_circle(c, 2.8 + dot_extra, col)
-					_ticks(c, 9 + bloom * 7, 4, col, w)
-				"rocket":
-					var r := 13 + bloom * 5
-					draw_arc(c, r, 0, TAU, 48, col, w, true)
-					draw_circle(c, 2 + dot_extra, col)
-					draw_line(c + Vector2(-7, r + 9), c + Vector2(7, r + 9), col, w, true)
-					draw_line(c + Vector2(-4, r + 17), c + Vector2(4, r + 17), col, w, true)
-				"scope":
-					var r := 16 + bloom * 6
-					draw_arc(c, r, 0, TAU, 48, col, w, true)
-					draw_circle(c, 1.8 + dot_extra, col)
-					for d: Vector2 in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
-						draw_line(c + d * 4, c + d * (r + 6), col, w, true)
-				"bracket":
-					var g := 12 + bloom * 9
-					var hh := 9.0
-					for sx: float in [-1.0, 1.0]:
-						draw_polyline(PackedVector2Array([c + Vector2(sx * (g - 5), -hh), c + Vector2(sx * g, -hh),
-							c + Vector2(sx * g, hh), c + Vector2(sx * (g - 5), hh)]), col, w, true)
-					draw_circle(c, 2.4 + dot_extra, col)
+		var c := (size / 2).floor()
+		match shape:
+			"ring":
+				_ring(c, ring)
+				_dot(c)
+			"cross":
+				_ticks(c, roundi(5 + bloom * 10), 7)
+			"dot":
+				_dot(c)
+				_ticks(c, roundi(8 + bloom * 7), 4)
+			"rocket":
+				var r := roundi(12 + bloom * 5)
+				_ring(c, r)
+				_dot(c)
+				_hbar(c, r + 8, 6)
+				_hbar(c, r + 14, 3)
+			"scope":
+				var r := roundi(15 + bloom * 6)
+				_ring(c, r)
+				_dot(c)
+				# short ticks on the ring, not lines through it, so the center stays clear
+				_bar(c + Vector2(-1, -r - 5), Vector2(2, 9))
+				_bar(c + Vector2(-1, r - 4), Vector2(2, 9))
+				_bar(c + Vector2(-r - 5, -1), Vector2(9, 2))
+				_bar(c + Vector2(r - 4, -1), Vector2(9, 2))
+			"bracket":
+				var g := roundi(11 + bloom * 9)
+				for sx: int in [-1, 1]:
+					var x := g if sx > 0 else -g - 2
+					_bar(c + Vector2(x, -8), Vector2(2, 16)) # upright
+					var arm := Vector2(x - 3 if sx > 0 else x, 0)
+					_bar(c + arm + Vector2(0, -8), Vector2(5, 2)) # top arm, pointing inward
+					_bar(c + arm + Vector2(0, 6), Vector2(5, 2)) # bottom arm
+				_dot(c)
 
-	func _ticks(c: Vector2, gap: float, length: float, col: Color, w: float) -> void:
-		for d: Vector2 in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
-			draw_line(c + d * gap, c + d * (gap + length), col, w, true)
+	## A filled rect with a 1 px dark edge; pos/size in whole pixels.
+	func _bar(pos: Vector2, sz: Vector2) -> void:
+		draw_rect(Rect2(pos - Vector2.ONE, sz + Vector2(2, 2)), EDGE)
+		draw_rect(Rect2(pos, sz), FILL)
+
+	func _dot(c: Vector2) -> void:
+		_bar(c - Vector2.ONE, Vector2(2, 2))
+
+	## Four lines around the center: gap from the center, length each.
+	func _ticks(c: Vector2, gap: int, length: int) -> void:
+		_bar(c + Vector2(-1, -gap - length), Vector2(2, length))
+		_bar(c + Vector2(-1, gap), Vector2(2, length))
+		_bar(c + Vector2(-gap - length, -1), Vector2(length, 2))
+		_bar(c + Vector2(gap, -1), Vector2(length, 2))
+
+	func _hbar(c: Vector2, y: int, half: int) -> void:
+		_bar(c + Vector2(-half, y), Vector2(half * 2, 2))
+
+	func _ring(c: Vector2, r: float) -> void:
+		draw_arc(c, r, 0, TAU, 96, EDGE, 3.5, true)
+		draw_arc(c, r, 0, TAU, 96, FILL, 1.6, true)
 
 	func _notification(what: int) -> void:
 		if what == NOTIFICATION_RESIZED:
