@@ -1,10 +1,16 @@
 class_name Hud
 extends CanvasLayer
 ## In-game overlay: stats panel (full / compact / off), the speed readout, and the combat HUD from
-## the web game's hud.js: a crosshair per weapon (with recoil bloom), hitmarker, weapon slots, ammo,
-## reload bar and the ability cooldown.
+## the web game's hud.js: a crosshair per weapon (with recoil bloom), hitmarker, floating damage
+## numbers, comic words ("BLAM!", "KABOOM!"), weapon slots, ammo, reload bar and the ability cooldown.
 
-const HIT_TIME := 0.18
+## Comic word styles (hud.css .comic-word): font size and fill color.
+const WORD_STYLES := {
+	"small": [30, Color("ffe14d")], "big": [48, Color("ffb020")], "head": [40, Color("ffe14d")],
+	"kill": [52, Color("ff4a4a")], "blue": [44, Color("6fe6ff")],
+}
+const WORD_LIFE := 0.8
+const NUMBER_LIFE := 0.9
 
 var debug_mode := 1 # 0 off, 1 compact, 2 full
 var _panel: PanelContainer
@@ -26,7 +32,11 @@ var _ability_name: Label
 var _in_game := false
 var _guns := true
 var _bloom := 0.0
-var _hit_t := 0.0
+var _words_layer: Control
+var _words: Array = [] # [{label, age, world, screen, jitter}]
+var _numbers: Array = [] # [{label, age, pos, drift}]
+var _comic_font: Font
+var _camera: Camera3D
 
 
 func _ready() -> void:
@@ -55,10 +65,15 @@ func _ready() -> void:
 	_cross.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_cross)
-	_hitmarker = Hitmarker.new()
+	_words_layer = Control.new()
+	_words_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_words_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_words_layer)
+	_hitmarker = Hitmarker.new() # after the words so damage numbers never cover it
 	_hitmarker.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_hitmarker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_hitmarker)
+	_comic_font = Models.font("res://assets/fonts/Bangers-Regular.ttf")
 
 	_speed = UiStyle.label("", 54)
 	_speed.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -198,6 +213,7 @@ func _apply_guns_visible() -> void:
 	var show := _in_game and _guns
 	_cross.visible = show
 	_hitmarker.visible = show
+	_words_layer.visible = show
 	_weapon_panel.visible = show
 	_ability.visible = show
 
@@ -226,15 +242,120 @@ func on_events(events: Array[Dictionary]) -> void:
 		if e.type == "shot":
 			_bloom = minf(1.0, _bloom + float(Items.WEAPONS[e.weapon].kick) * 0.8)
 		elif e.type == "hit":
-			_hit_t = HIT_TIME
-			_hitmarker.style = "kill" if e.kill else "head" if e.zone == "head" else "body"
+			_hitmarker.hit("kill" if e.kill else "head" if e.zone == "head" else "body")
+			_add_number(e)
 
 
-func update_combat(dt: float, combat: Combat, fov_deg: float) -> void:
-	# Hitmarker
-	_hit_t = maxf(0.0, _hit_t - dt)
-	_hitmarker.showing = _hit_t > 0
-	_hitmarker.queue_redraw()
+# ---------- comic words and damage numbers ----------
+
+## A comic word. world_pos (Vector3) floats it over that spot; otherwise screen_pos (0..1).
+func word(text: String, world_pos: Variant, screen_pos: Variant, style: String) -> void:
+	var st: Array = WORD_STYLES.get(style, WORD_STYLES.small)
+	var l := Label.new()
+	l.text = text
+	if _comic_font:
+		l.add_theme_font_override("font", _comic_font)
+	l.add_theme_font_size_override("font_size", st[0])
+	l.add_theme_color_override("font_color", st[1])
+	# ink outline plus a hard drop shadow, like the web's text-stroke + text-shadow
+	l.add_theme_color_override("font_outline_color", Color("15151f"))
+	l.add_theme_constant_override("outline_size", 7)
+	l.add_theme_color_override("font_shadow_color", Color("15151f"))
+	l.add_theme_constant_override("shadow_offset_x", 3)
+	l.add_theme_constant_override("shadow_offset_y", 3)
+	l.add_theme_constant_override("shadow_outline_size", 7)
+	l.rotation = deg_to_rad(randf_range(-10, 10))
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_words_layer.add_child(l)
+	l.size = l.get_minimum_size()
+	l.pivot_offset = l.size / 2
+	_words.append({"label": l, "age": 0.0, "world": world_pos, "screen": screen_pos,
+		"jitter": Vector2(randf_range(-15, 15), randf_range(-10, 10))})
+	if _words.size() > 12:
+		(_words.pop_front().label as Label).queue_free()
+	_place_word(_words.back())
+
+
+func _place_word(w: Dictionary) -> void:
+	var l: Label = w.label
+	var view := _words_layer.size
+	var at: Vector2
+	if w.world != null:
+		if _camera == null or _camera.is_position_behind(w.world):
+			l.visible = false
+			return
+		l.visible = true
+		at = _camera.unproject_position(w.world) + Vector2(0, -30 - w.age * 40)
+	else:
+		at = (w.screen as Vector2) * view + Vector2(-40, -50) # a little left/up of the muzzle
+	l.position = at + w.jitter - l.size / 2
+	# comic pop: tiny -> overshoot -> settle, then fade
+	var t: float = w.age / WORD_LIFE
+	var sc := lerpf(0.3, 1.25, t / 0.18) if t < 0.18 else lerpf(1.25, 1.0, (t - 0.18) / 0.12) if t < 0.3 else 1.0
+	l.scale = Vector2.ONE * sc
+	l.modulate.a = 1.0 if t < 0.7 else 1.0 - (t - 0.7) / 0.3
+
+
+## Damage number that pops at the hit and floats up (white body, yellow head, red kill).
+func _add_number(e: Dictionary) -> void:
+	var l := UiStyle.label(str(roundi(e.dmg)), 34 if e.kill else 32 if e.zone == "head" else 26,
+		Color("ff4a4a") if e.kill else Color("ffd84a") if e.zone == "head" else Color.WHITE)
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
+	l.add_theme_constant_override("outline_size", 5)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_words_layer.add_child(l)
+	l.size = l.get_minimum_size()
+	l.pivot_offset = l.size / 2
+	_numbers.append({"label": l, "age": 0.0, "pos": e.pos, "drift": randf_range(-20, 20)})
+	if _numbers.size() > 40:
+		(_numbers.pop_front().label as Label).queue_free()
+
+
+func _update_floaters(dt: float) -> void:
+	var keep: Array = []
+	for w: Dictionary in _words:
+		w.age += dt
+		if w.age > WORD_LIFE:
+			(w.label as Label).queue_free()
+			continue
+		_place_word(w)
+		keep.append(w)
+	_words = keep
+	keep = []
+	for n: Dictionary in _numbers:
+		n.age += dt
+		var l: Label = n.label
+		if n.age > NUMBER_LIFE:
+			l.queue_free()
+			continue
+		keep.append(n)
+		if _camera == null or _camera.is_position_behind(n.pos):
+			l.visible = false
+			continue
+		l.visible = true
+		# starts up-right of the hit so it doesn't sit on the crosshair, then floats up
+		var p := _camera.unproject_position(n.pos) + Vector2(26 + n.drift * n.age, -22 - 60 * n.age)
+		l.position = p - l.size / 2
+		l.scale = Vector2.ONE * (1.4 if n.age < 0.08 else 1.0)
+		l.modulate.a = 1.0 if n.age < 0.6 else 1.0 - (n.age - 0.6) / 0.3
+	_numbers = keep
+
+
+## Drop floating words and numbers (new run / menus).
+func clear_floaters() -> void:
+	for w: Dictionary in _words:
+		(w.label as Label).queue_free()
+	for n: Dictionary in _numbers:
+		(n.label as Label).queue_free()
+	_words.clear()
+	_numbers.clear()
+
+
+func update_combat(dt: float, combat: Combat, camera: Camera3D) -> void:
+	_camera = camera
+	var fov_deg := camera.fov
+	_hitmarker.tick(dt)
+	_update_floaters(dt)
 
 	# Weapon slots (rebuilt only when something changes)
 	var keys := [Settings.bind_label(Settings.binds.primary), Settings.bind_label(Settings.binds.secondary)]
@@ -352,24 +473,57 @@ class Crosshair:
 			queue_redraw()
 
 
-## Four short diagonal ticks around the crosshair: white on a body hit, yellow on a headshot,
-## red and longer on a kill.
+## Hitmarker: four tapered ticks around the crosshair that point in at it, pop in slightly big
+## and fade. White on a body hit, yellow and a bit bigger on a headshot, red and bigger on a kill.
 class Hitmarker:
 	extends Control
 
-	var showing := false
+	const LIFE := {"body": 0.2, "head": 0.24, "kill": 0.32}
+	const COLOR := {"body": Color.WHITE, "head": Color("ffd84a"), "kill": Color("ff4a4a")}
+
 	var style := "body"
+	var _t := -1.0 # time since the hit (< 0 = hidden)
+
+	func hit(kind: String) -> void:
+		# a kill always wins over a body hit landing in the same instant
+		if _t >= 0 and _t < 0.05 and style == "kill" and kind != "kill":
+			return
+		style = kind
+		_t = 0.0
+		queue_redraw()
+
+	func tick(dt: float) -> void:
+		if _t < 0:
+			return
+		_t += dt
+		if _t > LIFE[style]:
+			_t = -1.0
+		queue_redraw()
 
 	func _draw() -> void:
-		if not showing:
+		if _t < 0:
 			return
-		var c := (size / 2).round()
-		var col := Color("ff4a4a") if style == "kill" else Color("ffd84a") if style == "head" else Color.WHITE
-		var half := 6.5 if style == "kill" else 4.5
+		var c := (size / 2).floor()
+		var life: float = LIFE[style]
+		var big := 1.35 if style == "kill" else 1.15 if style == "head" else 1.0
+		var pop := 1.0 + 0.45 * maxf(0.0, 1.0 - _t / 0.07) # starts big, snaps in
+		var alpha := 1.0 if _t < life * 0.5 else 1.0 - (_t - life * 0.5) / (life * 0.5)
+		var inner := 8.0 * big * pop
+		var outer := inner + 10.0 * big
+		var col: Color = COLOR[style]
+		col.a = alpha
+		var edge := Color(0.06, 0.06, 0.1, 0.75 * alpha)
 		for i in 4:
 			var d := Vector2.from_angle(PI / 4 + i * PI / 2)
-			draw_line(c + d * (10 - half), c + d * (10 + half), Color(0, 0, 0, 0.6), 4.0, true)
-			draw_line(c + d * (10 - half), c + d * (10 + half), col, 2.0, true)
+			var side := d.orthogonal()
+			# wedge: thin at the inside, thicker at the outside
+			var tip := c + d * inner
+			var w := 2.2 * big
+			var pts := PackedVector2Array([tip - side * 0.6, tip + side * 0.6, c + d * outer + side * w, c + d * outer - side * w])
+			var grow := PackedVector2Array([tip - side * 1.8 - d * 1.2, tip + side * 1.8 - d * 1.2,
+				c + d * (outer + 1.4) + side * (w + 1.4), c + d * (outer + 1.4) - side * (w + 1.4)])
+			draw_colored_polygon(grow, edge)
+			draw_colored_polygon(pts, col)
 
 
 ## Round ability icon: key letter, a dark pie that shrinks as the cooldown runs out, yellow ring

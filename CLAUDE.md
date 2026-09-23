@@ -11,8 +11,9 @@ read-only for reference: `git clone --depth 1 https://github.com/kierbob/movemen
 Useful files: `src/items.js` (weapon/ability data), `src/combat.js`, `src/hud.js`, `src/player.js`,
 `src/config.js`, `src/world.js`.
 
-Port only what the current step needs, not the whole web game. Guns, gun models, the combat HUD and
-the loadout screen are in; bots, time trial, effects and sound come later, in their own steps.
+Port only what the current step needs, not the whole web game. Guns, gun models, the combat HUD,
+the loadout screen and the cartoon effects are in; sound, bots and time trial come later, in their
+own steps.
 
 ## Files
 
@@ -27,8 +28,12 @@ the loadout screen are in; bots, time trial, effects and sound come later, in th
 - `scripts/combat.gd`: guns, projectiles, damage and knockback (port of `combat.js`, no bots yet).
   Ticks before `player.step`, like the web game. Uses Vector3 (spread is random, so no bit-exact
   match needed); knockback goes through `PlayerSim.apply_impulse`.
-- `scripts/models.gd`, `viewmodel.gd`, `combat_view.gd`, `showcase.gd`: gun models (toon look),
-  the first-person gun (its own SubViewport), projectiles/blasts, and the loadout 3D stage.
+- `scripts/models.gd`, `viewmodel.gd`, `combat_view.gd`, `showcase.gd`: gun models (toon look,
+  smooth-normal outline shells), the first-person gun and its muzzle effects (its own SubViewport),
+  world effects (port of `fx.js`: projectiles, tracers, bullet holes, explosions, gun toss), and the
+  loadout 3D stage. `particles.gd` is the pooled particle system (`particles.js`).
+- `assets/fx/*.png` are baked by `tools/make_fx_textures.gd` (needs a renderer: run it under Xvfb).
+  `assets/fonts/Bangers-Regular.ttf` (OFL) is the comic-word font.
 - `scripts/map_data.gd`: loads `data/*.json` maps and does collision (matches `world.js`).
 - `scripts/world_view.gd`: map meshes, jump pads, bean dummies, clouds.
 - `scripts/menu.gd`, `ui_style.gd`, `hud.gd`, `settings.gd`: menus, styling, HUD, saved settings
@@ -78,9 +83,8 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 ## Roadmap
 
 1. ~~Guns and abilities~~ (done: guns, abilities, gun models, combat HUD, loadout screen).
-2. Bean dummies take damage: the damage logic is in `combat.gd`; still to do are damage numbers
-   and health bars.
-3. Cartoon effects and sounds.
+2. ~~Bean dummies take damage~~ (done: damage, hit flash, health bars, damage numbers).
+3. Cartoon effects (done) and sounds (still to do).
 4. Bot Arena mode and a time trial mode.
 5. More menu and settings polish.
 6. Later: multiplayer.

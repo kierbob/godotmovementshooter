@@ -34,6 +34,23 @@ static func load_glb(file: String) -> Node3D:
 	return scene.instantiate() as Node3D if scene else null
 
 
+## A texture from the project. Uses Godot's imported copy when there is one; otherwise reads the
+## PNG directly, so a fresh download still works before the editor has imported anything.
+static func texture(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	var img := Image.load_from_file(ProjectSettings.globalize_path(path))
+	return ImageTexture.create_from_image(img) if img else null
+
+
+## Same idea for fonts (.ttf).
+static func font(path: String) -> Font:
+	if ResourceLoader.exists(path):
+		return load(path) as Font
+	var f := FontFile.new()
+	return f if f.load_dynamic_font(ProjectSettings.globalize_path(path)) == OK else null
+
+
 ## Swap the model's PBR materials for toon ones (keeping the palette texture) and add outlines.
 ## outline is in the model's own units (so divide by its scale).
 static func toonify(root: Node, outline: float) -> void:
@@ -179,6 +196,23 @@ static func viewmodel(id: String) -> Node3D:
 	const CANT := 0.08
 	holder.rotation.y = CANT
 	holder.set_meta("muzzle", muzzle.rotated(Vector3.UP, CANT))
+	return holder
+
+
+## World-size gun (the one you chuck away when reloading): `length` long along its barrel,
+## centered on its middle so it spins nicely. Null if the model didn't load.
+static func held_gun(id: String, length: float) -> Node3D:
+	var model := load_glb(Items.MODELS[id].file)
+	if model == null:
+		return null
+	var holder := Node3D.new()
+	holder.add_child(model)
+	var box := bounds(model)
+	var s := length / maxf(box.size.z, 1e-3)
+	model.scale *= s
+	box = bounds(model)
+	model.position -= box.get_center()
+	toonify(model, 0.012 / s)
 	return holder
 
 

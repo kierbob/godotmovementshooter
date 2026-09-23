@@ -13,6 +13,8 @@ class_name Items
 ##   knockback   m/s pushed opposite to where you aim when firing (mobility)
 ##   kick        how hard the gun model recoils
 ##   crosshair   "ring" | "cross" | "dot" | "rocket" | "scope" | "bracket" (drawn by hud.gd)
+##   fx          cartoon muzzle effects: POW star size, action lines, comic words (+ chance to show
+##               one per shot), shell casing color (null = no shell)
 ##   projectile  for type "projectile" (see below)
 ##
 ## Projectile fields:
@@ -29,18 +31,21 @@ const WEAPONS := {
 		"desc": "Close-range blast. Shoot the floor to launch yourself.",
 		"type": "hitscan", "auto": false, "damage": 9.0, "head_mult": 1.25, "pellets": 10, "spread": 5.0,
 		"fire_rate": 1.3, "mag": 4, "reload": 1.5, "range": 60.0, "knockback": 16.0, "kick": 1.0, "crosshair": "ring",
+		"fx": {"star": 0.34, "lines": true, "words": ["BLAM!", "KA-BLAM!", "POW!"], "word_chance": 1.0, "shell": Color("e0483a")},
 	},
 	"rifle": {
 		"id": "rifle", "slot": "primary", "name": "Pulse Rifle",
 		"desc": "Full-auto all-rounder. Accurate at range.",
 		"type": "hitscan", "auto": true, "damage": 14.0, "head_mult": 1.5, "pellets": 1, "spread": 0.6,
 		"fire_rate": 10.0, "mag": 30, "reload": 1.1, "range": 200.0, "knockback": 0.0, "kick": 0.25, "crosshair": "cross",
+		"fx": {"star": 0.13, "lines": false, "words": ["RAT-TAT!", "PEW!"], "word_chance": 0.12, "shell": Color("ffc23d")},
 	},
 	"rocket": {
 		"id": "rocket", "slot": "primary", "name": "Rocket Launcher",
 		"desc": "Splash damage. Aim at your feet and jump for a rocket jump.",
 		"type": "projectile", "auto": false, "fire_rate": 1.1, "mag": 2, "reload": 1.8, "knockback": 0.0, "kick": 0.8,
 		"crosshair": "rocket",
+		"fx": {"star": 0.4, "lines": true, "words": ["FWOOSH!", "THOOMP!"], "word_chance": 1.0, "shell": null},
 		"projectile": {
 			"speed": 38.0, "up": 0.0, "gravity": 0.0, "radius": 0.15, "impact": "explode",
 			"explode": {"radius": 4.5, "damage": 85.0, "knockback": 13.0},
@@ -51,30 +56,35 @@ const WEAPONS := {
 		"desc": "Two heavy rounds. Headshots kill, and each shot shoves you back hard.",
 		"type": "hitscan", "auto": false, "damage": 75.0, "head_mult": 2.0, "pellets": 1, "spread": 0.0,
 		"fire_rate": 1.25, "mag": 2, "reload": 1.8, "range": 400.0, "knockback": 13.0, "kick": 1.2, "crosshair": "scope",
+		"fx": {"star": 0.36, "lines": true, "words": ["KRAK!", "BOOM!", "KA-CHOW!"], "word_chance": 1.0, "shell": Color("e0b03a")},
 	},
 	"pistol": {
 		"id": "pistol", "slot": "secondary", "name": "Sidearm",
 		"desc": "Reliable semi-auto. Rewards headshots.",
 		"type": "hitscan", "auto": false, "damage": 20.0, "head_mult": 2.0, "pellets": 1, "spread": 0.3,
 		"fire_rate": 6.0, "mag": 12, "reload": 1.1, "range": 150.0, "knockback": 0.0, "kick": 0.35, "crosshair": "dot",
+		"fx": {"star": 0.18, "lines": false, "words": ["BANG!", "PEW!"], "word_chance": 0.35, "shell": Color("ffc23d")},
 	},
 	"smg": {
 		"id": "smg", "slot": "secondary", "name": "Buzz SMG",
 		"desc": "Sprays fast. Great for finishing people mid-air.",
 		"type": "hitscan", "auto": true, "damage": 8.0, "head_mult": 1.4, "pellets": 1, "spread": 1.6,
 		"fire_rate": 16.0, "mag": 32, "reload": 1.4, "range": 80.0, "knockback": 0.0, "kick": 0.18, "crosshair": "cross",
+		"fx": {"star": 0.11, "lines": false, "words": ["BRRT!", "PEW!"], "word_chance": 0.08, "shell": Color("ffc23d")},
 	},
 	"kickpistol": {
 		"id": "kickpistol", "slot": "secondary", "name": "Kick Pistol",
 		"desc": "Heavy hand cannon. Every shot shoves you backwards — a mini boost.",
 		"type": "hitscan", "auto": false, "damage": 30.0, "head_mult": 1.5, "pellets": 1, "spread": 0.2,
 		"fire_rate": 2.5, "mag": 6, "reload": 1.3, "range": 120.0, "knockback": 6.5, "kick": 0.8, "crosshair": "bracket",
+		"fx": {"star": 0.3, "lines": true, "words": ["KA-POW!", "BLAM!"], "word_chance": 0.8, "shell": Color("ffc23d")},
 	},
 	"deagle": {
 		"id": "deagle", "slot": "secondary", "name": "Deagle",
 		"desc": "No push, all punch. One tap to the head.",
 		"type": "hitscan", "auto": false, "damage": 50.0, "head_mult": 2.0, "pellets": 1, "spread": 0.1,
 		"fire_rate": 2.8, "mag": 7, "reload": 1.4, "range": 180.0, "knockback": 0.0, "kick": 0.9, "crosshair": "dot",
+		"fx": {"star": 0.28, "lines": true, "words": ["BANG!", "KA-BLAM!"], "word_chance": 0.7, "shell": Color("ffc23d")},
 	},
 }
 
