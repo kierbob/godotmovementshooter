@@ -25,7 +25,7 @@ var camera: Camera3D
 var hud: Hud
 var menu: Menu
 var clouds: Node3D
-var beans: Array[Node3D] = [] # one per combat target, same order
+var beans: Array[Dictionary] = [] # one per combat target, same order: {node, mats, fill, flash}
 var env: Environment
 var sun: DirectionalLight3D
 var sky_mat: ShaderMaterial
@@ -102,6 +102,9 @@ func _ready() -> void:
 	menu.to_main_menu.connect(_enter_menu)
 	menu.quit_game.connect(func() -> void: get_tree().quit())
 	menu.settings_changed.connect(_on_settings_changed)
+	combat_view.word.connect(hud.word)
+	viewmodel.word.connect(func(text: String, at: Vector2, style: String) -> void: hud.word(text, null, at, style))
+	viewmodel.tossed.connect(func(id: String) -> void: combat_view.toss_gun(id, camera, player))
 
 	if auto_play:
 		auto_play = false
@@ -132,6 +135,7 @@ func _start_play() -> void:
 	combat.set_loadout(Settings.loadout)
 	combat.reset_targets()
 	combat_view.clear()
+	hud.clear_floaters()
 	if _shot_path == "":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	hud.set_in_game(true)
@@ -257,7 +261,26 @@ func _build_beans() -> void:
 		var node := WorldView.make_bean()
 		node.position = t.pos
 		add_child(node)
-		beans.append(node)
+		var mats := [(node.get_child(0) as MeshInstance3D).material_override, (node.get_child(1) as MeshInstance3D).material_override]
+		# Health bar over the head (the bean turns to face you, so the bar does too).
+		var bar := Node3D.new()
+		bar.position.y = 2.2
+		for part: Array in [[Vector2(0.84, 0.1), Color(0.07, 0.07, 0.07, 0.7), 0.0], [Vector2(0.8, 0.07), Color("5ee06a"), 0.001]]:
+			var q := QuadMesh.new()
+			q.size = part[0]
+			var mi := MeshInstance3D.new()
+			mi.mesh = q
+			mi.position.z = part[2]
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			var m := StandardMaterial3D.new()
+			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			m.albedo_color = part[1]
+			if part[1].a < 1:
+				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mi.material_override = m
+			bar.add_child(mi)
+		node.add_child(bar)
+		beans.append({"node": node, "mats": mats, "fill": bar.get_child(1), "flash": 0.0})
 
 
 # ---------- input ----------
@@ -392,8 +415,11 @@ func _process(delta: float) -> void:
 		camera.fov = _ease(camera.fov, Settings.fov + speed_t * 15, 6, dt)
 		camera.position = pos + Vector3(0, eye, 0)
 		camera.rotation = Vector3(pitch, yaw, roll) # Godot's default Euler order is YXZ, same as the web game
+		if combat_view.shake > 0 and state == "playing":
+			var sh := combat_view.shake
+			camera.position += Vector3(randf() - 0.5, randf() - 0.5, randf() - 0.5) * sh
 
-	_update_beans(cur if state != "menu" else camera.position)
+	_update_beans(cur if state != "menu" else camera.position, dt)
 	clouds.rotation.y += dt * 0.004
 	top_speed = maxf(top_speed, speed)
 	hud.set_speed(speed, top_speed)
@@ -402,10 +428,14 @@ func _process(delta: float) -> void:
 	combat.fx = []
 	hud.on_events(events)
 	viewmodel.on_events(events, combat)
-	combat_view.on_events(events)
+	# Tracers leave from about where the gun's barrel is on screen (fx.js muzzleWorld).
+	combat_view.on_events(events, camera.global_transform * Vector3(0.18, -0.16, -0.7), player)
+	for e in events:
+		if e.type == "hit":
+			beans[e.target].flash = 0.08
 	combat_view.update(dt if state == "playing" else 0.0, combat)
 	if state != "menu":
-		hud.update_combat(dt, combat, camera.fov)
+		hud.update_combat(dt if state == "playing" else 0.0, combat, camera)
 		viewmodel.update(dt if state == "playing" else 0.0, combat, player, yaw)
 	_update_debug(dt, speed)
 
@@ -420,14 +450,25 @@ func _ease(cur: float, target: float, rate: float, dt: float) -> float:
 	return cur + (target - cur) * minf(1.0, dt * rate)
 
 
-## Combat moves the dummies (sliding ones) and decides when they're down.
-func _update_beans(look_at_pos: Vector3) -> void:
+## Combat moves the dummies (sliding ones) and decides when they're down. Hit dummies flash white
+## for a moment; the bar over their head shows health (green, yellow, red).
+func _update_beans(look_at_pos: Vector3, dt: float) -> void:
 	for i in beans.size():
-		var node := beans[i]
+		var b := beans[i]
+		var node: Node3D = b.node
 		var t := combat.targets[i]
 		node.position = t.pos
 		node.visible = not t.dead
 		node.rotation.y = atan2(look_at_pos.x - t.pos.x, look_at_pos.z - t.pos.z) # dummies turn to face you
+		var frac := t.hp / t.max_hp
+		var fill: MeshInstance3D = b.fill
+		fill.scale.x = maxf(0.001, frac)
+		fill.position.x = -0.4 * (1 - frac)
+		(fill.material_override as StandardMaterial3D).albedo_color = \
+			Color("5ee06a") if frac > 0.5 else Color("f2c14e") if frac > 0.25 else Color("e5534b")
+		b.flash = maxf(0.0, b.flash - dt)
+		for m: ShaderMaterial in b.mats:
+			m.set_shader_parameter("emission_boost", 2.5 if b.flash > 0 else 0.0)
 
 
 func _update_debug(dt: float, speed: float) -> void:

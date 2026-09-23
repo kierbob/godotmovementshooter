@@ -49,8 +49,14 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   hitmarkers, weapon slots, ammo, reload bar and the ability cooldown.
 - **Loadout screen**: pick a primary, secondary and ability, with a 3D preview you can spin,
   stats and item thumbnails. Saved with your settings.
-- **Bean dummies** stop shots, take damage (headshots count), go down at 0 HP and pop back 2.5 s
-  later.
+- **Bean dummies** stop shots, take damage (headshots count), flash white when hit, show a health
+  bar, go down at 0 HP and pop back 2.5 s later.
+- **Cartoon effects** (the web game's `fx.js`): muzzle flash, POW star and action lines, smoke puffs
+  and shell casings; tracers, bullet holes and chip puffs on walls; bean-juice splats; explosions
+  with a fireball, smoke, debris, a shockwave ring and a flash of light; smoke trails behind
+  rockets and grenades; the reload throws the empty gun, which spins and bounces away; camera
+  shake. Comic words ("BLAM!", "KABOOM!", "SPLAT!", "BONK!") in the Bangers font, floating damage
+  numbers and a punchy hitmarker (white body, yellow headshot, red kill).
 
 ## Proving the movement matches the web game
 
@@ -74,9 +80,7 @@ godot --headless --path . --script res://tests/combat_test.gd
 
 ## Next
 
-1. Dummy damage feedback: floating damage numbers and health bars (the logic is in already).
-2. Cartoon effects and sounds: muzzle flashes, tracers, impact puffs, the web game's explosions,
-   the gun you toss away on reload, and all the audio.
-3. Bot Arena mode and a time trial mode.
-4. More menu and settings polish.
-5. Later: multiplayer.
+1. Sounds (the web game's `sound.js`).
+2. Bot Arena mode and a time trial mode.
+3. More menu and settings polish.
+4. Later: multiplayer.
