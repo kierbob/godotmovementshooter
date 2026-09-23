@@ -37,10 +37,16 @@ var _words: Array = [] # [{label, age, world, screen, jitter}]
 var _numbers: Array = [] # [{label, age, pos, drift}]
 var _comic_font: Font
 var _camera: Camera3D
+var _plain_dot: Control
+var _trial_box: VBoxContainer
+var _trial_mode: Label
+var _trial_time: Label
+var _trial_best: Label
 
 
 func _ready() -> void:
 	layer = 5
+	_comic_font = Models.font("res://assets/fonts/Bangers-Regular.ttf")
 	var mono := SystemFont.new()
 	mono.font_names = PackedStringArray(["Consolas", "Cascadia Mono", "Courier New"])
 
@@ -73,7 +79,6 @@ func _ready() -> void:
 	_hitmarker.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_hitmarker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_hitmarker)
-	_comic_font = Models.font("res://assets/fonts/Bangers-Regular.ttf")
 
 	# Small and low: it's a readout, not the main event.
 	_speed = UiStyle.label("", 30)
@@ -99,7 +104,62 @@ func _ready() -> void:
 
 	_build_weapon_panel()
 	_build_ability()
+	_build_trial()
+	_plain_dot = PlainDot.new()
+	_plain_dot.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_plain_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_plain_dot)
 	set_in_game(false)
+
+
+# ---------- time trial clock (top center) ----------
+
+func _build_trial() -> void:
+	_trial_box = VBoxContainer.new()
+	_trial_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_trial_box.offset_left = -300
+	_trial_box.offset_right = 300
+	_trial_box.offset_top = 10
+	_trial_box.offset_bottom = 130
+	_trial_box.add_theme_constant_override("separation", -4)
+	_trial_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_trial_box)
+	_trial_mode = _comic(20, Color("ffe14d"))
+	_trial_time = _comic(60, Color("9ff0ff"))
+	_trial_best = _comic(18, Color("d8def5"))
+	for l: Label in [_trial_mode, _trial_time, _trial_best]:
+		_trial_box.add_child(l)
+	_trial_box.visible = false
+
+
+## Comic-font label with an ink outline and drop shadow (the web's .trial-timer text).
+func _comic(size: int, color: Color) -> Label:
+	var l := Label.new()
+	if _comic_font:
+		l.add_theme_font_override("font", _comic_font)
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", color)
+	l.add_theme_color_override("font_outline_color", Color("15151f"))
+	l.add_theme_constant_override("outline_size", maxi(4, size / 8))
+	l.add_theme_color_override("font_shadow_color", Color("15151f"))
+	l.add_theme_constant_override("shadow_offset_x", 3)
+	l.add_theme_constant_override("shadow_offset_y", 3)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+
+## Big clock at the top while you're on the time trial course (hud.js updateTrial).
+func update_trial(trial: TimeTrial) -> void:
+	var show := trial != null and trial.active and _in_game
+	_trial_box.visible = show
+	if not show:
+		return
+	_trial_mode.text = "TIME TRIAL · GUNS ON" if trial.guns else "TIME TRIAL · GUNS OFF"
+	_trial_time.text = TimeTrial.format_time(trial.time if trial.running else maxf(0.0, trial.last[trial.mode()]))
+	_trial_time.add_theme_color_override("font_color", Color.WHITE if trial.running else Color("9ff0ff"))
+	_trial_best.text = "BEST %s  ·  %s RESTART" % [TimeTrial.format_time(trial.best[trial.mode()]),
+		Settings.bind_label(Settings.binds.respawn).to_upper()]
 
 
 # ---------- weapon panel (bottom right) ----------
@@ -214,9 +274,12 @@ func _apply_guns_visible() -> void:
 	var show := _in_game and _guns
 	_cross.visible = show
 	_hitmarker.visible = show
-	_words_layer.visible = show
+	_words_layer.visible = _in_game # comic words ("GO!", "FINISH!") show in guns-off modes too
 	_weapon_panel.visible = show
 	_ability.visible = show
+	_plain_dot.visible = _in_game and not _guns
+	if not _in_game:
+		_trial_box.visible = false
 
 
 func set_speed(speed: float, top: float) -> void:
@@ -288,7 +351,7 @@ func _place_word(w: Dictionary) -> void:
 		l.visible = true
 		at = _camera.unproject_position(w.world) + Vector2(0, -30 - w.age * 40)
 	else:
-		at = (w.screen as Vector2) * view + Vector2(-40, -50) # a little left/up of the muzzle
+		at = (w.screen as Vector2) * view
 	l.position = at + w.jitter - l.size / 2
 	# comic pop: tiny -> overshoot -> settle, then fade
 	var t: float = w.age / WORD_LIFE
@@ -525,6 +588,20 @@ class Hitmarker:
 				c + d * (outer + 1.4) + side * (w + 1.4), c + d * (outer + 1.4) - side * (w + 1.4)])
 			draw_colored_polygon(grow, edge)
 			draw_colored_polygon(pts, col)
+
+
+## Guns-off modes: just a small dot to aim your movement (hud.css .plain-dot).
+class PlainDot:
+	extends Control
+
+	func _draw() -> void:
+		var c := (size / 2).floor()
+		draw_circle(c, 3.0, Color(0.08, 0.08, 0.12, 0.7))
+		draw_circle(c, 2.0, Color.WHITE)
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_RESIZED:
+			queue_redraw()
 
 
 ## Round ability icon: key letter, a dark pie that shrinks as the cooldown runs out, yellow ring

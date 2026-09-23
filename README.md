@@ -7,7 +7,8 @@ Godot 4.6 port of the web game (`../movement-shooter`). Single player for now; m
 - Double-click `play.bat` (uses `Downloads\Godot_v4.6.2-stable_win64.exe\...`), or
 - open this folder in Godot 4.6 and press **F5**.
 
-Main menu → pick a map (and your guns under **Loadout**) → **Play**. **Esc** pauses (Resume / Settings / Main Menu / Quit).
+Main menu → pick a map (and your guns under **Loadout**) → **Play**. The map screen also has the
+two **time trials** (guns off / guns on); in the Dev Arena you can walk into their portals too. **Esc** pauses (Resume / Settings / Main Menu / Quit).
 Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are saved to
 `%APPDATA%/Godot/app_userdata/Movement Shooter/settings.cfg`.
 
@@ -22,7 +23,7 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 | R | reload |
 | 1 / 2 / mouse wheel | primary / secondary weapon |
 | Q | ability (grenade / knife / impulse charge) |
-| K | respawn |
+| K | respawn (on the time trial: restart the run) |
 | Esc | pause menu |
 | F2 | next map (dev shortcut) |
 | F4 | stats panel (full / compact / off) |
@@ -50,13 +51,23 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 - **Loadout screen**: pick a primary, secondary and ability, with a 3D preview you can spin,
   stats and item thumbnails. Saved with your settings.
 - **Bean dummies** stop shots, take damage (headshots count), flash white when hit, show a health
-  bar, go down at 0 HP and pop back 2.5 s later.
+  bar with their HP (e.g. "105 / 150"), go down at 0 HP and pop back 2.5 s later.
 - **Cartoon effects** (the web game's `fx.js`): muzzle flash, POW star and action lines, smoke puffs
   and shell casings; tracers, bullet holes and chip puffs on walls; bean-juice splats; explosions
   with a fireball, smoke, debris, a shockwave ring and a flash of light; smoke trails behind
   rockets and grenades; the reload throws the empty gun, which spins and bounces away; camera
   shake. Comic words ("BLAM!", "KABOOM!", "SPLAT!", "BONK!") in the Bangers font, floating damage
   numbers and a punchy hitmarker (white body, yellow headshot, red kill).
+- **Sounds** (the web game's `sound.js`): every gun, hits / headshots / kills, wall impacts,
+  explosions, throws, weapon switch, the reload toss and catch, jumps, wall jumps, landings, slides,
+  jump pads, time trial cues and menu clicks. They're the web game's synth recipes, baked to
+  `assets/sounds/*.wav` by `tools/make_sounds.gd`; swap any WAV for a real recording. Explosions
+  and impacts pan and fade with distance. The volume slider controls them.
+- **Time trial** (the web game's `trial.js`): a course far off the Dev Arena (slide under a bar, gap
+  jumps, a jump pad, a wall-jump gap, a slide-jump gap, a launcher to the finish). Two modes with
+  their own records: **guns off** (pure movement) and **guns on** (shotgun boosts, rocket jumps).
+  The clock starts at the start line and stops in the checkered finish gate; falling off or
+  pressing K restarts; best and last times show on the timer board and the HUD and are saved.
 
 ## Proving the movement matches the web game
 
@@ -72,15 +83,18 @@ godot --headless --path . --script res://tests/compare.gd
 `tests/menu_test.gd` clicks through the menus headless (play, pause, settings, rebinding, loadout,
 map switch). `tests/combat_test.gd` checks the guns: fire rate, reloads, switching, hits and
 headshots on the dummies, knockback, rocket jumps, abilities and shots against ramps.
+`tests/trial_test.gd` checks the time trial (portals, start line, finish, falling off, records,
+guns off/on) and `tests/sound_test.gd` checks every sound is there and plays.
 
 ```
 godot --headless --path . --script res://tests/menu_test.gd
 godot --headless --path . --script res://tests/combat_test.gd
+godot --headless --path . --script res://tests/trial_test.gd
+godot --headless --path . --script res://tests/sound_test.gd
 ```
 
 ## Next
 
-1. Sounds (the web game's `sound.js`).
-2. Bot Arena mode and a time trial mode.
-3. More menu and settings polish.
-4. Later: multiplayer.
+1. Bot Arena mode: bean bots that move, aim and shoot back; your health, dying and respawning.
+2. More menu and settings polish (a mode picker once the modes exist).
+3. Later: multiplayer.

@@ -13,6 +13,7 @@ const MAPS: Array[String] = ["dev_map", "bean-street"]
 const SENS_BASE := 0.022 * PI / 180.0 # radians per mouse count at sensitivity 1 (CS2 / Apex scale)
 
 static var auto_play := false # set before reloading into another map from the menu
+static var auto_trial := "" # "off" / "on": also go straight onto that time trial after the reload
 
 var state := "menu" # "menu" | "playing" | "paused"
 var map_id := "" # which map this scene built
@@ -21,6 +22,9 @@ var player: PlayerSim
 var combat: Combat
 var combat_view: CombatView
 var viewmodel: Viewmodel
+var sound: Sound
+var trial: TimeTrial # null on maps without a course
+var trial_view: TrialView
 var camera: Camera3D
 var hud: Hud
 var menu: Menu
@@ -47,6 +51,7 @@ var reload_pressed := false
 var ability_pressed := false
 var slot_pressed := "" # "primary" / "secondary"
 var cycle := 0 # mouse wheel
+var _last_move_t := -1.0 # newest movement event that already made a sound
 
 var _debug_timer := 0.0
 var _frames := 0
@@ -79,6 +84,8 @@ func _ready() -> void:
 	Settings.apply_quality(get_viewport())
 	viewmodel = Viewmodel.new()
 	add_child(viewmodel)
+	sound = Sound.new()
+	add_child(sound)
 	viewmodel.set_msaa(Settings.QUALITY[Settings.quality].msaa)
 
 	camera = Camera3D.new()
@@ -98,17 +105,35 @@ func _ready() -> void:
 	add_child(menu)
 	menu.map_name = map.name
 	menu.play.connect(_on_play)
+	menu.play_trial.connect(_on_play_trial)
 	menu.resume.connect(_resume)
 	menu.to_main_menu.connect(_enter_menu)
 	menu.quit_game.connect(func() -> void: get_tree().quit())
 	menu.settings_changed.connect(_on_settings_changed)
 	combat_view.word.connect(hud.word)
-	viewmodel.word.connect(func(text: String, at: Vector2, style: String) -> void: hud.word(text, null, at, style))
-	viewmodel.tossed.connect(func(id: String) -> void: combat_view.toss_gun(id, camera, player))
+	# Gun words sit a little left of / above the muzzle so they don't cover the gun.
+	viewmodel.word.connect(func(text: String, at: Vector2, style: String) -> void:
+		hud.word(text, null, at + Vector2(-40, -50) / get_viewport().get_visible_rect().size, style))
+	viewmodel.tossed.connect(func(id: String) -> void:
+		combat_view.toss_gun(id, camera, player)
+		sound.play("throw"))
+	viewmodel.reload_caught.connect(func() -> void: sound.play("switch"))
+	# Every button in the menus clicks (web: any <button>).
+	_hook_buttons(menu)
+	get_tree().node_added.connect(_hook_button) # buttons made later (menus rebuild their lists)
 
+	if not map.trial.is_empty():
+		trial = TimeTrial.new(map)
+		trial_view = TrialView.new()
+		add_child(trial_view)
+		trial_view.setup(trial)
 	if auto_play:
 		auto_play = false
 		_start_play()
+		if auto_trial != "" and trial:
+			trial.enter(player, auto_trial == "on")
+			_handle_trial_events()
+		auto_trial = ""
 	else:
 		_enter_menu()
 	_apply_args_state()
@@ -133,13 +158,16 @@ func _start_play() -> void:
 	eye = Cfg.PLAYER_EYE_HEIGHT
 	prev_pos = _player_pos()
 	combat.set_loadout(Settings.loadout)
+	_last_move_t = -1.0 # a new PlayerSim starts its clock at 0
 	combat.reset_targets()
 	combat_view.clear()
 	hud.clear_floaters()
 	if _shot_path == "":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	hud.set_in_game(true)
-	viewmodel.visible = true
+	if trial:
+		trial.reset()
+	_update_guns_mode()
 	menu.show_screen("")
 
 
@@ -165,6 +193,51 @@ func _on_play(id: String) -> void:
 		get_tree().reload_current_scene()
 		return
 	_start_play()
+
+
+## Straight onto a time trial from the menu (the course lives on the dev map).
+func _on_play_trial(guns: bool) -> void:
+	if map_id != "dev_map" or trial == null:
+		Settings.map = "dev_map"
+		Settings.save_settings()
+		auto_play = true
+		auto_trial = "on" if guns else "off"
+		get_tree().reload_current_scene()
+		return
+	_start_play()
+	trial.enter(player, guns)
+	_handle_trial_events()
+
+
+## Guns are off on the "guns off" time trial; everything else has them.
+func _update_guns_mode() -> void:
+	var on := trial == null or not trial.active or trial.guns
+	combat.enabled = on
+	hud.set_guns(on)
+	viewmodel.visible = on and state != "menu"
+	menu.map_name = ("TIME TRIAL · GUNS ON" if trial.guns else "TIME TRIAL · GUNS OFF") if trial and trial.active else map.name
+
+
+## Time trial events: teleports snap the camera, plus the sound and comic-word feedback.
+func _handle_trial_events() -> void:
+	for e: Dictionary in trial.events:
+		match e.type:
+			"teleport":
+				prev_pos = _player_pos()
+				yaw = float(e.to.get("yaw", yaw))
+				pitch = 0.0
+				sound.play("teleport")
+			"enter", "leave":
+				_update_guns_mode()
+			"start":
+				sound.play("go")
+				hud.word("GO!", null, Vector2(0.5, 0.32), "big")
+			"finish":
+				sound.play("finish")
+				hud.word("NEW BEST!" if e.best else "FINISH!", null, Vector2(0.5, 0.3), "head" if e.best else "big")
+			"fell":
+				hud.word("WHOOPS!", null, Vector2(0.5, 0.3), "kill")
+	trial.events.clear()
 
 
 func _on_settings_changed(what: String) -> void:
@@ -279,8 +352,18 @@ func _build_beans() -> void:
 				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			mi.material_override = m
 			bar.add_child(mi)
+		# HP number above the bar, so you can see exactly what each shot did.
+		var hp := Label3D.new()
+		hp.position.y = 0.17
+		hp.pixel_size = 0.0055
+		hp.font = Models.font("res://assets/fonts/Bangers-Regular.ttf")
+		hp.font_size = 44
+		hp.outline_size = 12
+		hp.outline_modulate = Color("15151f")
+		hp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		bar.add_child(hp)
 		node.add_child(bar)
-		beans.append({"node": node, "mats": mats, "fill": bar.get_child(1), "flash": 0.0})
+		beans.append({"node": node, "mats": mats, "fill": bar.get_child(1), "hp_label": hp, "flash": 0.0, "shown_hp": -1})
 
 
 # ---------- input ----------
@@ -374,10 +457,17 @@ func _physics_process(_delta: float) -> void:
 	prev_pos = _player_pos()
 	if respawn_pressed:
 		respawn_pressed = false
-		_respawn()
+		if trial and trial.active:
+			trial.restart(player) # on the course, respawn = restart the run
+		else:
+			_respawn()
 	var c := _sample()
 	combat.tick(player, c, Cfg.TICK_DT) # before movement so knockback applies this tick
 	player.step(c, map, Cfg.TICK_DT)
+	if trial:
+		trial.tick(player, Cfg.TICK_DT)
+	if trial and not trial.events.is_empty():
+		_handle_trial_events()
 	if player.py < -30:
 		_respawn()
 
@@ -437,9 +527,16 @@ func _process(delta: float) -> void:
 		if e.type == "hit":
 			beans[e.target].flash = 0.08
 	combat_view.update(dt if state == "playing" else 0.0, combat)
+	sound.listener = camera.global_position
+	_play_combat_sounds(events)
+	if state == "playing":
+		_play_movement_sounds()
 	if state != "menu":
 		hud.update_combat(dt if state == "playing" else 0.0, combat, camera)
 		viewmodel.update(dt if state == "playing" else 0.0, combat, player, yaw)
+	if trial_view:
+		trial_view.update(dt)
+	hud.update_trial(trial)
 	_update_debug(dt, speed)
 
 	if _shot_path != "":
@@ -447,6 +544,54 @@ func _process(delta: float) -> void:
 		if _frame == _shot_frames:
 			get_viewport().get_texture().get_image().save_png(_shot_path)
 			get_tree().quit()
+
+
+# ---------- sounds (web main.js playCombatSounds / playMovementSounds) ----------
+
+func _play_combat_sounds(events: Array[Dictionary]) -> void:
+	for e in events:
+		match e.type:
+			"shot": sound.play(e.weapon, {"gap": 0.0})
+			"hit": sound.play("kill" if e.kill else "headshot" if e.zone == "head" else "hit", {"gap": 0.03})
+			"impact": sound.play("impact", {"pos": e.pos, "gap": 0.03})
+			"explosion": sound.play("impulse" if e.kind == "impulse" else "explosion", {"pos": e.pos, "gap": 0.0})
+			"throw": sound.play("knifeThrow" if e.ability == "knife" else "throw")
+			"switch": sound.play("switch")
+			# (reload sounds come from the gun toss animation: throw, then catch)
+
+
+## Movement sounds come from the player's event log (jump, land, slide...).
+func _play_movement_sounds() -> void:
+	for e: Dictionary in player.events:
+		if e.t <= _last_move_t:
+			continue
+		_last_move_t = e.t
+		var n: String = e.name
+		if n == "wall jump":
+			sound.play("wallJump")
+		elif n.ends_with("jump"):
+			sound.play("jump")
+		elif n == "land":
+			var air := String(e.detail).get_slice("after ", 1).to_float()
+			if air > 0.15:
+				var k := minf(1.0, air / 1.2)
+				sound.play("land", {"vol": (0.2 + 0.3 * k) / 0.5}) # baked at full strength
+		elif n == "slide" or n == "land slide":
+			sound.play("slide")
+		elif n == "jump pad":
+			sound.play("pad")
+
+
+func _hook_buttons(n: Node) -> void:
+	_hook_button(n)
+	for c in n.get_children():
+		_hook_buttons(c)
+
+
+func _hook_button(n: Node) -> void:
+	if n is BaseButton and not n.has_meta("clicks"):
+		n.set_meta("clicks", true)
+		(n as BaseButton).pressed.connect(func() -> void: sound.play("ui", {"gap": 0.05}))
 
 
 func _ease(cur: float, target: float, rate: float, dt: float) -> float:
@@ -469,6 +614,10 @@ func _update_beans(look_at_pos: Vector3, dt: float) -> void:
 		fill.position.x = -0.4 * (1 - frac)
 		(fill.material_override as StandardMaterial3D).albedo_color = \
 			Color("5ee06a") if frac > 0.5 else Color("f2c14e") if frac > 0.25 else Color("e5534b")
+		var hp_now := ceili(t.hp)
+		if hp_now != b.shown_hp:
+			b.shown_hp = hp_now
+			(b.hp_label as Label3D).text = "%d / %d" % [hp_now, roundi(t.max_hp)]
 		b.flash = maxf(0.0, b.flash - dt)
 		for m: ShaderMaterial in b.mats:
 			m.set_shader_parameter("emission_boost", 2.5 if b.flash > 0 else 0.0)
