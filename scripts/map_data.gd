@@ -1,8 +1,9 @@
 class_name MapData
 extends RefCounted
-## Map geometry + gameplay markers, loaded from the web game's JSON: either the dev map export
-## (data/dev_map.json, boxes as min/max) or a map from the web editor (boxes as center/size).
-## The collision helpers mirror src/world.js exactly.
+## Map geometry + gameplay markers. Maps are scenes you edit in the Godot editor (maps/*.tscn, see
+## MapRoot), read by load_map(). load_file() reads the web game's JSON (the dev map export with
+## boxes as min/max, or a web editor map with boxes as center/size); tools/json_to_map.gd turns
+## one into a map scene. The collision helpers mirror src/world.js exactly.
 
 
 ## An axis-aligned box. A ramp is a box whose top slopes: it rises toward +axis (ramp_dir 1) or
@@ -42,6 +43,99 @@ var spawns: Array = [] # every spawn point (editor maps); the dev map has one
 var targets: Array = [] # bean dummies: { x, y, z, move? }
 var trial := {} # time trial course (dev map only): start, startLineZ, killY, finish, exit, board
 var portals: Array = [] # hub portals to the time trial: { x, y, z, guns, label, sub }
+var arena := {} # bot arena layout (for the future Bot Arena mode)
+
+const MAPS_DIR := "res://maps/"
+
+
+## Map ids (file names in maps/), the dev map first.
+static func list() -> Array[String]:
+	var out: Array[String] = []
+	var dir := DirAccess.open(MAPS_DIR)
+	if dir:
+		for f in dir.get_files():
+			f = f.trim_suffix(".remap") # exported builds
+			if f.ends_with(".tscn") and not out.has(f.get_basename()):
+				out.append(f.get_basename())
+	out.sort()
+	if out.has("dev_map"):
+		out.erase("dev_map")
+		out.push_front("dev_map")
+	return out
+
+
+## The map's root node settings (name, card text and colors) without building it.
+static func info(id: String) -> Dictionary:
+	var root := _instance(id)
+	if root == null:
+		return {}
+	var d := {"name": root.map_name, "tag": root.tag, "desc": root.desc, "art": root.art,
+		"grad": [root.grad_from, root.grad_to]}
+	root.free()
+	return d
+
+
+static func _instance(id: String, path := "") -> MapRoot:
+	if path == "":
+		path = MAPS_DIR + id + ".tscn"
+	var ps := load(path) as PackedScene
+	if ps == null:
+		push_error("No map scene at %s" % path)
+		return null
+	var root := ps.instantiate() as MapRoot
+	if root == null:
+		push_error("%s: the root node needs the MapRoot script" % path)
+	return root
+
+
+## Read a map scene (maps/<id>.tscn, or `path`). Boxes keep scene-tree order (collision checks
+## them in map order).
+static func load_map(id: String, path := "") -> MapData:
+	var m := MapData.new()
+	var root := _instance(id, path)
+	if root == null:
+		return m
+	m.name = root.map_name
+	m.arena = root.arena.duplicate(true)
+	_collect(root, m)
+	if m.spawns.is_empty():
+		m.spawns = [{"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0}]
+	m.spawn = m.spawns[0]
+	root.free()
+	return m
+
+
+static func _collect(n: Node, m: MapData) -> void:
+	for c in n.get_children():
+		if c is MapTrial:
+			m.trial = (c as MapTrial).to_dict()
+			_collect_boxes_only(c, m) # the course's own start/exit aren't hub spawns/portals
+			continue
+		if c is MapVolume:
+			pass # triggers aren't solid
+		elif c is MapBox:
+			m.boxes.append((c as MapBox).to_box())
+		elif c is MapPad:
+			m.pads.append((c as MapPad).to_pad())
+		elif c is MapSpawn:
+			var sp := c as MapSpawn
+			m.spawns.append({"x": sp.at[0], "y": sp.at[1], "z": sp.at[2], "yaw": sp.yaw})
+		elif c is MapTarget:
+			m.targets.append((c as MapTarget).to_dict())
+		elif c is MapPortal:
+			m.portals.append((c as MapPortal).to_dict())
+		_collect(c, m)
+
+
+static func _collect_boxes_only(n: Node, m: MapData) -> void:
+	for c in n.get_children():
+		if c is MapBox and not c is MapVolume:
+			m.boxes.append((c as MapBox).to_box())
+		elif c is MapPad:
+			m.pads.append((c as MapPad).to_pad())
+		elif c is MapTarget:
+			m.targets.append((c as MapTarget).to_dict())
+		_collect_boxes_only(c, m)
 
 
 static func load_file(path: String) -> MapData:
@@ -110,6 +204,7 @@ static func load_file(path: String) -> MapData:
 	m.targets = data.get("targets", [])
 	m.trial = data.get("trial", {})
 	m.portals = data.get("portals", [])
+	m.arena = data.get("arena", {})
 	return m
 
 

@@ -34,8 +34,9 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 - **Movement**: a line-for-line port of the web game's `src/player.js` (sprint, slide, wall jumps,
   ramps, jump pads, momentum), fixed 120 Hz ticks with smooth camera interpolation. Mouse look uses
   Godot's raw mouse input.
-- **Maps**: the dev arena (exported from the web game) and Bean Street, loaded from the same JSON
-  files the web editor makes (`data/`).
+- **Maps**: the dev arena and Bean Street, as scenes you edit in the Godot editor (`maps/`, see
+  "Editing maps" below). They were converted from the web game's maps with every number kept
+  exact, so movement is identical.
 - **Look**: toon shading (3 light bands + sky/ground fill), Candy Pastel sky, clouds, shadows.
 - **Guns and abilities** (`scripts/items.gd`, `scripts/combat.gd`): a port of the web game's
   `items.js` / `combat.js`. Primaries: Boomstick, Pulse Rifle, Rocket Launcher, Long Shot.
@@ -69,11 +70,36 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   The clock starts at the start line and stops in the checkered finish gate; falling off or
   pressing K restarts; best and last times show on the timer board and the HUD and are saved.
 
+## Editing maps
+
+Open `maps/dev_map.tscn` or `maps/bean-street.tscn` in the Godot editor. Every piece is a node:
+
+- **MapBox**: a solid box. Move it and scale it with the normal gizmos (position = center, scale =
+  size in meters). In the Inspector: `kind` (its color: floor, wall, block, plat...) and `ramp`
+  (a sloped top rising toward x+, x-, z+ or z-). Don't rotate boxes: collision is axis-aligned
+  (the editor shows a warning if you do). Ctrl+D duplicates a box to make a new one.
+- **MapPad**: jump pad (radius, launch speed, directional launchers).
+- **MapSpawn**: where you start; turn it to set which way you face. The first one is used.
+- **MapTarget**: a bean dummy (optionally sliding back and forth).
+- **MapPortal**: the hub portals to the time trial (guns on / off).
+- **MapTrial** (Dev Arena): the course's Start, Exit portal, Finish zone and timer Board, plus the
+  start line and fall-off height. The course itself is ordinary boxes under it.
+- The root (**MapRoot**) holds the map's name and its card text and colors for the map screen.
+
+Group nodes under plain Node3Ds however you like; moving a group moves everything in it. Save
+(Ctrl+S) and press F5. Positions snap to the millimeter; turn on Godot's grid snap for tidy
+numbers. A new map: duplicate a `.tscn` in `maps/` and rename it; it shows up on the map screen.
+
+Maps from the web game's map editor can be brought in with
+`godot --headless --path . --script res://tools/json_to_map.gd -- <map.json> <id> [name]`.
+
 ## Proving the movement matches the web game
 
 `tools/make_traces.mjs` records 16 movement runs with the web game's real code (needs Node and the
 web project next to this folder). `check-movement.bat` (or `tests/compare.gd`) replays them in Godot:
-before every tick it copies the web game's exact player state, runs one tick, and compares.
+before every tick it copies the web game's exact player state, runs one tick, and compares. The
+runs were recorded on the original maps, kept as frozen copies in `tests/maps/*.json`, so editing
+`maps/` never breaks this check.
 
 ```
 node tools/make_traces.mjs
@@ -84,13 +110,15 @@ godot --headless --path . --script res://tests/compare.gd
 map switch). `tests/combat_test.gd` checks the guns: fire rate, reloads, switching, hits and
 headshots on the dummies, knockback, rocket jumps, abilities and shots against ramps.
 `tests/trial_test.gd` checks the time trial (portals, start line, finish, falling off, records,
-guns off/on) and `tests/sound_test.gd` checks every sound is there and plays.
+guns off/on), `tests/sound_test.gd` checks every sound is there and plays, and
+`tests/map_test.gd` checks map scenes (JSON to scene is exact, maps load, editing rewrites values).
 
 ```
 godot --headless --path . --script res://tests/menu_test.gd
 godot --headless --path . --script res://tests/combat_test.gd
 godot --headless --path . --script res://tests/trial_test.gd
 godot --headless --path . --script res://tests/sound_test.gd
+godot --headless --path . --script res://tests/map_test.gd
 ```
 
 ## Next

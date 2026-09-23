@@ -33,7 +33,7 @@ func _init() -> void:
 func run() -> void:
 	TimeTrial.path = "user://trials_test.cfg"
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TimeTrial.path))
-	var map := MapData.load_file("res://data/dev_map.json")
+	var map := MapData.load_file("res://tests/maps/dev_map.json")
 	check("the dev map has a course and two portals", not map.trial.is_empty() and map.portals.size() == 2)
 	var t := TimeTrial.new(map)
 	var p := PlayerSim.new(0.0, 0.0, 30.0)

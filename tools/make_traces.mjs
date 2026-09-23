@@ -101,7 +101,7 @@ scenarios.push(record('dev: random inputs A', 'dev_map', W.SPAWN, 12, randomBrai
 scenarios.push(record('dev: random inputs B', 'dev_map', { x: 0, y: 3.2, z: 0 }, 12, randomBrain(98765)));
 
 // ---------- Bean Street (has ramps) ----------
-W.loadCustomMap(JSON.parse(readFileSync(join(here, '..', 'data', 'bean-street.json'), 'utf8')));
+W.loadCustomMap(JSON.parse(readFileSync(join(here, '..', 'tests', 'maps', 'bean-street.json'), 'utf8')));
 scenarios.push(record('bean: house ramp up', 'bean-street', { x: -12.9, y: 0, z: 3.8 }, 1.3,
   (p, t) => (t < 0.62 ? { forward: 1, yaw: E } : { forward: 1, yaw: 0 })));
 scenarios.push(record('bean: launch ramp into window', 'bean-street', { x: -36.3, y: 0, z: 0 }, 2.2,

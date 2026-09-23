@@ -8,7 +8,7 @@ func _init() -> void:
 	for sc: Dictionary in data.scenarios:
 		if sc.name != args[0]:
 			continue
-		var m := MapData.load_file("res://data/%s.json" % sc.map)
+		var m := MapData.load_file("res://tests/maps/%s.json" % sc.map)
 		var p := PlayerSim.new(sc.start.x, sc.start.y, sc.start.z)
 		for i in int(args[2]) + 1:
 			var tk: Dictionary = sc.ticks[i]

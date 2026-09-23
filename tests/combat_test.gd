@@ -57,7 +57,7 @@ func pitch_to(y: float, dist: float) -> float:
 
 func _init() -> void:
 	seed(1) # spread is random; keep runs repeatable
-	map = MapData.load_file("res://data/dev_map.json")
+	map = MapData.load_file("res://tests/maps/dev_map.json")
 	var shotgun := {"primary": "shotgun", "secondary": "pistol", "ability": "frag"}
 
 	# ---- firing, fire rate, ammo ----
@@ -176,7 +176,7 @@ func _init() -> void:
 	check("can't throw again while recharging", combat.projectiles.size() == 0)
 
 	# ---- ramps (Bean Street): rays hit the sloped top, not the bounding box ----
-	var street := MapData.load_file("res://data/bean-street.json")
+	var street := MapData.load_file("res://tests/maps/bean-street.json")
 	var walls := Combat.new(street.boxes, [])
 	var ramps := 0
 	var on_slope := 0
