@@ -5,6 +5,7 @@ class_name Models
 
 const DIR := "res://assets/models/weapons/"
 const INK := Color("15151f") # outline color (web outline.js)
+const OUTLINE := preload("res://shaders/outline.gdshader")
 const STAGE_FIT := 1.7 # longest side of every model on the loadout stage
 
 static var _cache := {} # file -> PackedScene (null if it failed), instanced for every use
@@ -82,12 +83,18 @@ static func add_outline(mi: MeshInstance3D, thickness: float) -> void:
 	o.name = "Outline"
 	o.mesh = shell(mi.mesh, thickness)
 	o.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var m := StandardMaterial3D.new()
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.albedo_color = INK
-	m.cull_mode = BaseMaterial3D.CULL_FRONT
-	o.material_override = m
+	o.material_override = _outline_material(thickness)
 	mi.add_child(o)
+
+
+## Ink material for outline shells (shaders/outline.gdshader). The shell is pushed back 3x its
+## thickness so it only shows around the silhouette, never over the model.
+static func _outline_material(thickness: float) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = OUTLINE
+	m.set_shader_parameter("ink", INK)
+	m.set_shader_parameter("push", thickness * 3.0)
+	return m
 
 
 ## The mesh with vertices at the same spot merged, each pushed out by `thickness` along the
