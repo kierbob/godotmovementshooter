@@ -83,6 +83,31 @@ func _init() -> void:
 	menu.to_main_menu.emit()
 	await frames()
 	check("main menu from pause", game.state == "menu" and menu.screen == "main")
+
+	# loadout: pick a primary and an ability, and they're what you play with
+	(menu._top_tabs.loadout as Button).pressed.emit()
+	await frames()
+	check("LOADOUT tab opens the loadout screen", menu.screen == "loadout" and menu._top.visible)
+	var rocket_tile: Button = menu._items_row.get_child(2) # shotgun, rifle, rocket, sniper
+	rocket_tile.pressed.emit()
+	await frames()
+	check("clicking a tile equips it", Settings.loadout.primary == "rocket")
+	(menu._loadout_slots.get_child(3) as Button).pressed.emit() # title, primary, secondary, ability
+	await frames()
+	(menu._items_row.get_child(1) as Button).pressed.emit() # frag, knife, impulse
+	await frames()
+	check("ability slot lists abilities and equips one", menu.loadout_slot == "ability" and Settings.loadout.ability == "knife")
+	cf = ConfigFile.new()
+	check("loadout is saved", cf.load(Settings.path) == OK and cf.get_value("loadout", "primary", "") == "rocket")
+	key(KEY_ESCAPE)
+	await frames()
+	check("Esc in loadout goes back to the main menu", menu.screen == "main")
+	menu.play.emit("dev_map")
+	await frames()
+	check("you play with the chosen loadout", game.combat.slots.primary.id == "rocket" and game.combat.ability.id == "knife")
+	menu.to_main_menu.emit()
+	await frames()
+
 	menu.play.emit("bean-street")
 	await frames(8)
 	game = current_scene

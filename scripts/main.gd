@@ -1,6 +1,7 @@
 extends Node3D
-## Game entry. Builds the map, runs the movement sim at a fixed 120 Hz (Godot physics ticks), draws
-## the first-person camera in between ticks, and switches between the menu / playing / paused.
+## Game entry. Builds the map, runs the movement + combat sim at a fixed 120 Hz (Godot physics
+## ticks), draws the first-person camera and gun in between ticks, and switches between the
+## menu / playing / paused.
 ##
 ## Command-line options (after `--`), handy for testing:
 ##   --map=bean-street        start on another map from data/
@@ -17,11 +18,14 @@ var state := "menu" # "menu" | "playing" | "paused"
 var map_id := "" # which map this scene built
 var map: MapData
 var player: PlayerSim
+var combat: Combat
+var combat_view: CombatView
+var viewmodel: Viewmodel
 var camera: Camera3D
 var hud: Hud
 var menu: Menu
 var clouds: Node3D
-var beans: Array = [] # [{ node, base: Vector3, move: Dictionary }]
+var beans: Array[Node3D] = [] # one per combat target, same order
 var env: Environment
 var sun: DirectionalLight3D
 var sky_mat: ShaderMaterial
@@ -32,13 +36,17 @@ var pitch := 0.0
 var eye := Cfg.PLAYER_EYE_HEIGHT
 var roll := 0.0
 var top_speed := 0.0
-var sim_time := 0.0
 var menu_time := 0.0
 
 # Presses since the last tick (a quick tap between two ticks still counts).
 var jump_pressed := false
 var slide_pressed := false
 var respawn_pressed := false
+var fire_pressed := false
+var reload_pressed := false
+var ability_pressed := false
+var slot_pressed := "" # "primary" / "secondary"
+var cycle := 0 # mouse wheel
 
 var _debug_timer := 0.0
 var _frames := 0
@@ -60,12 +68,18 @@ func _ready() -> void:
 	WorldView.build_world(map, self)
 	WorldView.build_pads(map, self)
 	clouds = WorldView.build_clouds(self)
+	combat = Combat.new(map.boxes, map.targets)
+	combat_view = CombatView.new()
+	add_child(combat_view)
 	_build_beans()
 	_setup_environment()
 	Look.apply(Settings.lighting, env, sun, sky_mat, WorldView.cloud_material)
 	if _shot_path == "":
 		Settings.apply_display()
 	Settings.apply_quality(get_viewport())
+	viewmodel = Viewmodel.new()
+	add_child(viewmodel)
+	viewmodel.set_msaa(Settings.QUALITY[Settings.quality].msaa)
 
 	camera = Camera3D.new()
 	camera.fov = Settings.fov
@@ -103,6 +117,7 @@ func _enter_menu() -> void:
 	state = "menu"
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	hud.set_in_game(false)
+	viewmodel.visible = false
 	menu.show_screen("main")
 
 
@@ -114,9 +129,13 @@ func _start_play() -> void:
 	top_speed = 0.0
 	eye = Cfg.PLAYER_EYE_HEIGHT
 	prev_pos = _player_pos()
+	combat.set_loadout(Settings.loadout)
+	combat.reset_targets()
+	combat_view.clear()
 	if _shot_path == "":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	hud.set_in_game(true)
+	viewmodel.visible = true
 	menu.show_screen("")
 
 
@@ -150,6 +169,7 @@ func _on_settings_changed(what: String) -> void:
 			Settings.apply_display()
 		"quality":
 			Settings.apply_quality(get_viewport())
+			viewmodel.set_msaa(Settings.QUALITY[Settings.quality].msaa)
 		"lighting":
 			Look.apply(Settings.lighting, env, sun, sky_mat, WorldView.cloud_material)
 
@@ -233,12 +253,11 @@ func _setup_environment() -> void:
 
 
 func _build_beans() -> void:
-	for t: Dictionary in map.targets:
+	for t in combat.targets:
 		var node := WorldView.make_bean()
-		var base := Vector3(t.x, t.y, t.z)
-		node.position = base
+		node.position = t.pos
 		add_child(node)
-		beans.append({"node": node, "base": base, "move": t.get("move", {})})
+		beans.append(node)
 
 
 # ---------- input ----------
@@ -270,6 +289,21 @@ func _input(event: InputEvent) -> void:
 		slide_pressed = true
 	if event.is_action_pressed("respawn"):
 		respawn_pressed = true
+	if event.is_action_pressed("fire"):
+		fire_pressed = true
+	if event.is_action_pressed("reload"):
+		reload_pressed = true
+	if event.is_action_pressed("ability"):
+		ability_pressed = true
+	if event.is_action_pressed("primary"):
+		slot_pressed = "primary"
+	if event.is_action_pressed("secondary"):
+		slot_pressed = "secondary"
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			cycle = -1
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			cycle = 1
 	if event.is_action_pressed("stats"):
 		Settings.stats_mode = hud.cycle_debug()
 		Settings.save_settings()
@@ -291,10 +325,21 @@ func _sample() -> Cmd:
 	c.crouch = Input.is_action_pressed("crouch")
 	c.slide = Input.is_action_pressed("slide")
 	c.slide_pressed = slide_pressed
+	c.fire = Input.is_action_pressed("fire")
+	c.fire_pressed = fire_pressed
+	c.reload = reload_pressed
+	c.ability = ability_pressed
+	c.slot = slot_pressed
+	c.cycle = cycle
 	c.yaw = yaw
 	c.pitch = pitch
 	jump_pressed = false
 	slide_pressed = false
+	fire_pressed = false
+	reload_pressed = false
+	ability_pressed = false
+	slot_pressed = ""
+	cycle = 0
 	return c
 
 
@@ -307,8 +352,9 @@ func _physics_process(_delta: float) -> void:
 	if respawn_pressed:
 		respawn_pressed = false
 		_respawn()
-	player.step(_sample(), map, Cfg.TICK_DT)
-	sim_time += Cfg.TICK_DT
+	var c := _sample()
+	combat.tick(player, c, Cfg.TICK_DT) # before movement so knockback applies this tick
+	player.step(c, map, Cfg.TICK_DT)
 	if player.py < -30:
 		_respawn()
 
@@ -351,6 +397,16 @@ func _process(delta: float) -> void:
 	clouds.rotation.y += dt * 0.004
 	top_speed = maxf(top_speed, speed)
 	hud.set_speed(speed, top_speed)
+
+	var events := combat.fx
+	combat.fx = []
+	hud.on_events(events)
+	viewmodel.on_events(events, combat)
+	combat_view.on_events(events)
+	combat_view.update(dt if state == "playing" else 0.0, combat)
+	if state != "menu":
+		hud.update_combat(dt, combat, camera.fov)
+		viewmodel.update(dt if state == "playing" else 0.0, combat, player, yaw)
 	_update_debug(dt, speed)
 
 	if _shot_path != "":
@@ -364,19 +420,14 @@ func _ease(cur: float, target: float, rate: float, dt: float) -> float:
 	return cur + (target - cur) * minf(1.0, dt * rate)
 
 
+## Combat moves the dummies (sliding ones) and decides when they're down.
 func _update_beans(look_at_pos: Vector3) -> void:
-	for b: Dictionary in beans:
-		var node: Node3D = b.node
-		var p: Vector3 = b.base
-		var mv: Dictionary = b.move
-		if not mv.is_empty():
-			var off := sin(sim_time * float(mv.speed)) * float(mv.amp)
-			if mv.axis == "x":
-				p.x += off
-			else:
-				p.z += off
-		node.position = p
-		node.rotation.y = atan2(look_at_pos.x - p.x, look_at_pos.z - p.z) # dummies turn to face you
+	for i in beans.size():
+		var node := beans[i]
+		var t := combat.targets[i]
+		node.position = t.pos
+		node.visible = not t.dead
+		node.rotation.y = atan2(look_at_pos.x - t.pos.x, look_at_pos.z - t.pos.z) # dummies turn to face you
 
 
 func _update_debug(dt: float, speed: float) -> void:
@@ -401,6 +452,9 @@ func _update_debug(dt: float, speed: float) -> void:
 	lines.append("vel        %.2f  %.2f  %.2f" % [player.vx, player.vy, player.vz])
 	lines.append("yaw/pitch  %.1f°  %.1f°" % [rad_to_deg(yaw), rad_to_deg(pitch)])
 	lines.append("wall jumps %d   slide cd %.2f" % [player.wall_jumps, player.slide_cooldown])
+	var st := combat.weapon_state()
+	lines.append("weapon     %s  %d/%d%s   ability %.1f" % [combat.weapon().name, st.ammo, combat.weapon().mag,
+		"  reloading" if st.reload_t > 0 else "", combat.ability_cd])
 	lines.append("")
 	for e: Dictionary in player.events.slice(-6):
 		lines.append("%6.2f  %s  %s" % [e.t, e.name, e.detail])

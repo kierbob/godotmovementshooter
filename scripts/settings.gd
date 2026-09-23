@@ -42,6 +42,7 @@ static var quality := "balanced"
 static var lighting := "pastel"
 static var stats_mode := 1 # 0 off, 1 compact, 2 full
 static var map := "dev_map"
+static var loadout := Items.DEFAULT_LOADOUT.duplicate() # {primary, secondary, ability} item ids
 static var binds := {} # action -> "key:..." / "mouse:..."
 static var _loaded := false
 
@@ -66,6 +67,10 @@ static func load_settings() -> void:
 	lighting = l if Look.PRESETS.has(l) else lighting
 	stats_mode = cf.get_value("hud", "stats_mode", stats_mode)
 	map = cf.get_value("game", "map", map)
+	for slot: String in loadout:
+		var id: String = cf.get_value("loadout", slot, loadout[slot])
+		if Items.is_valid(slot, id):
+			loadout[slot] = id
 	for a: Array in ACTIONS:
 		var b: String = cf.get_value("binds", a[0], binds[a[0]])
 		if b.begins_with("key:") or b.begins_with("mouse:"):
@@ -84,6 +89,8 @@ static func save_settings() -> void:
 	cf.set_value("video", "lighting", lighting)
 	cf.set_value("hud", "stats_mode", stats_mode)
 	cf.set_value("game", "map", map)
+	for slot: String in loadout:
+		cf.set_value("loadout", slot, loadout[slot])
 	for a: String in binds:
 		cf.set_value("binds", a, binds[a])
 	cf.save(path)

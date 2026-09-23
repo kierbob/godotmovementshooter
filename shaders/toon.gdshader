@@ -6,6 +6,9 @@ render_mode specular_disabled;
 uniform vec4 albedo : source_color = vec4(1.0);
 uniform sampler2D albedo_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform bool use_tex = false;
+// Palette textures (the Kenney gun models) stay crisp: sampled without filtering.
+uniform sampler2D palette_tex : source_color, filter_nearest, repeat_enable;
+uniform bool use_palette = false;
 // Hemisphere ambient: sky color on up-facing surfaces, ground color on down-facing ones.
 // Global so the lighting preset (look.gd) changes every material at once. Linear colors.
 global uniform vec3 hemi_sky;
@@ -23,6 +26,9 @@ void fragment() {
 	vec3 base = albedo.rgb;
 	if (use_tex) {
 		base *= texture(albedo_tex, UV).rgb;
+	}
+	if (use_palette) {
+		base *= texture(palette_tex, UV).rgb;
 	}
 	ALBEDO = base;
 	ROUGHNESS = 1.0;

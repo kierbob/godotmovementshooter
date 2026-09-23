@@ -7,7 +7,7 @@ Godot 4.6 port of the web game (`../movement-shooter`). Single player for now; m
 - Double-click `play.bat` (uses `Downloads\Godot_v4.6.2-stable_win64.exe\...`), or
 - open this folder in Godot 4.6 and press **F5**.
 
-Main menu → pick a map → **Play**. **Esc** pauses (Resume / Settings / Main Menu / Quit).
+Main menu → pick a map (and your guns under **Loadout**) → **Play**. **Esc** pauses (Resume / Settings / Main Menu / Quit).
 Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are saved to
 `%APPDATA%/Godot/app_userdata/Movement Shooter/settings.cfg`.
 
@@ -18,6 +18,10 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 | Space | jump / wall jump |
 | C | slide |
 | Ctrl | crouch |
+| Left mouse | fire |
+| R | reload |
+| 1 / 2 / mouse wheel | primary / secondary weapon |
+| Q | ability (grenade / knife / impulse charge) |
 | K | respawn |
 | Esc | pause menu |
 | F2 | next map (dev shortcut) |
@@ -32,6 +36,21 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 - **Maps**: the dev arena (exported from the web game) and Bean Street, loaded from the same JSON
   files the web editor makes (`data/`).
 - **Look**: toon shading (3 light bands + sky/ground fill), Candy Pastel sky, clouds, shadows.
+- **Guns and abilities** (`scripts/items.gd`, `scripts/combat.gd`): a port of the web game's
+  `items.js` / `combat.js`. Primaries: Boomstick, Pulse Rifle, Rocket Launcher, Long Shot.
+  Secondaries: Sidearm, Buzz SMG, Kick Pistol, Deagle. Abilities on Q: Impact Grenade, Throwing
+  Knife, Impulse Charge. Semi/full-auto, spread and pellets, reloads (a holstered gun keeps
+  reloading), weapon switching, projectiles, explosions, and knockback through the movement code,
+  so shotgun boosts and rocket/grenade jumps work like the web game.
+- **Gun models**: Kenney's Blaster Kit (CC0, `assets/models/weapons`) in first person with the
+  web game's draw, recoil, bob, sway and reload animations, drawn in their own view so they never
+  clip into walls.
+- **Combat HUD**: a crosshair per weapon (the Boomstick's ring is its real spread), recoil bloom,
+  hitmarkers, weapon slots, ammo, reload bar and the ability cooldown.
+- **Loadout screen**: pick a primary, secondary and ability, with a 3D preview you can spin,
+  stats and item thumbnails. Saved with your settings.
+- **Bean dummies** stop shots, take damage (headshots count), go down at 0 HP and pop back 2.5 s
+  later.
 
 ## Proving the movement matches the web game
 
@@ -44,9 +63,20 @@ node tools/make_traces.mjs
 godot --headless --path . --script res://tests/compare.gd
 ```
 
-`tests/menu_test.gd` clicks through the menus headless (play, pause, settings, rebinding, map switch).
+`tests/menu_test.gd` clicks through the menus headless (play, pause, settings, rebinding, loadout,
+map switch). `tests/combat_test.gd` checks the guns: fire rate, reloads, switching, hits and
+headshots on the dummies, knockback, rocket jumps, abilities and shots against ramps.
+
+```
+godot --headless --path . --script res://tests/menu_test.gd
+godot --headless --path . --script res://tests/combat_test.gd
+```
 
 ## Next
 
-Guns and abilities, dummies taking damage, cartoon effects and sounds, then Bot Arena, time trial,
-menus and settings.
+1. Dummy damage feedback: floating damage numbers and health bars (the logic is in already).
+2. Cartoon effects and sounds: muzzle flashes, tracers, impact puffs, the web game's explosions,
+   the gun you toss away on reload, and all the audio.
+3. Bot Arena mode and a time trial mode.
+4. More menu and settings polish.
+5. Later: multiplayer.
