@@ -75,25 +75,26 @@ func _ready() -> void:
 	add_child(_hitmarker)
 	_comic_font = Models.font("res://assets/fonts/Bangers-Regular.ttf")
 
-	_speed = UiStyle.label("", 54)
+	# Small and low: it's a readout, not the main event.
+	_speed = UiStyle.label("", 30)
 	_speed.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_speed.offset_top = -130
-	_speed.offset_bottom = -70
-	_speed.offset_left = -200
-	_speed.offset_right = 200
+	_speed.offset_top = -74
+	_speed.offset_bottom = -40
+	_speed.offset_left = -120
+	_speed.offset_right = 120
 	_speed.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_speed.add_theme_color_override("font_outline_color", UiStyle.OUTLINE)
-	_speed.add_theme_constant_override("outline_size", 8)
+	_speed.add_theme_constant_override("outline_size", 6)
 	add_child(_speed)
-	_speed_sub = UiStyle.label("", 22, UiStyle.YELLOW)
+	_speed_sub = UiStyle.label("", 14, UiStyle.YELLOW)
 	_speed_sub.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_speed_sub.offset_top = -74
-	_speed_sub.offset_bottom = -44
-	_speed_sub.offset_left = -200
-	_speed_sub.offset_right = 200
+	_speed_sub.offset_top = -42
+	_speed_sub.offset_bottom = -24
+	_speed_sub.offset_left = -120
+	_speed_sub.offset_right = 120
 	_speed_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_speed_sub.add_theme_color_override("font_outline_color", UiStyle.OUTLINE)
-	_speed_sub.add_theme_constant_override("outline_size", 6)
+	_speed_sub.add_theme_constant_override("outline_size", 4)
 	add_child(_speed_sub)
 
 	_build_weapon_panel()
