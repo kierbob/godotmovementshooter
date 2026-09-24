@@ -24,11 +24,12 @@ const REGEN_DELAY := 3.0 # the player heals this long after the last hit (same a
 const REGEN_RATE := 30.0
 
 ## Every type. family groups them for the console ("spawn flyer"); hp, size (hitbox scale),
-## color; move = how ground types walk ("walk" | "sprint" | "crouch"), speed = flyer top speed.
+## color; move = how ground types walk ("walk" | "sprint" | "crouch"), max_speed = a cap on their
+## own running speed (PlayerSim only walks at 9 or sprints at 12.5), speed = flyer top speed.
 const TYPES := {
 	"charger": {"family": "runner", "name": "Charger", "hp": 120.0, "size": 1.0, "color": Color("ff7a45"), "move": "walk"},
 	"brute": {"family": "runner", "name": "Brute", "hp": 400.0, "size": 1.4, "color": Color("8a5cff"), "move": "crouch"},
-	"swarmer": {"family": "runner", "name": "Swarmer", "hp": 30.0, "size": 0.6, "color": Color("8fe36b"), "move": "sprint"},
+	"swarmer": {"family": "runner", "name": "Swarmer", "hp": 30.0, "size": 0.6, "color": Color("8fe36b"), "move": "walk", "max_speed": 6.0},
 	"gunner": {"family": "shooter", "name": "Gunner", "hp": 90.0, "size": 1.0, "color": Color("4fb3ff"), "move": "walk", "range": 14.0},
 	"lobber": {"family": "shooter", "name": "Lobber", "hp": 100.0, "size": 1.0, "color": Color("ffb13d"), "move": "walk", "range": 16.0},
 	"sniper": {"family": "shooter", "name": "Sniper", "hp": 80.0, "size": 1.0, "color": Color("e8e8f0"), "move": "walk", "range": 28.0},
@@ -245,6 +246,10 @@ func _tick_ground(e: Enemy, p: PlayerSim, dt: float) -> void:
 		e.body.vx = e.aim.x * CHARGER.dash_speed
 		e.body.vz = e.aim.z * CHARGER.dash_speed
 	e.body.step(c, map, dt)
+	# Slower than a walking player: cap their own running (not knockback: rockets still launch them).
+	var cap: float = e.def.get("max_speed", 0.0)
+	if cap > 0 and e.body.grounded and e.body.friction_grace <= 0 and e.body.horizontal_speed() > cap:
+		e.body._set_horizontal_speed(cap)
 	e.target.pos = Vector3(e.body.px, e.body.py, e.body.pz)
 
 

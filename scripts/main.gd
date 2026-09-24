@@ -1272,6 +1272,7 @@ func admin(what: String, data: Dictionary) -> String:
 			player.hp = player.max_hp
 			return "Healed"
 		"freeze":
-			enemies.frozen = not enemies.frozen
+			var f: String = data.get("on", "toggle")
+			enemies.frozen = (not enemies.frozen) if f == "toggle" else f in ["on", "1", "true"]
 			return "Enemies %s" % ("frozen" if enemies.frozen else "moving again")
 	return "?"

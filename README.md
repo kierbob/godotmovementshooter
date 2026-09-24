@@ -106,7 +106,7 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 | --- | --- | --- |
 | Runner | **Charger** | walks up, winds up (0.65 s), then dashes where you were; side-step it |
 | Runner | **Brute** | slow and tanky (400 HP), winds up 1.1 s, slams: a shockwave rolls out along the ground; jump it |
-| Runner | **Swarmer** | small, fast, 30 HP, nips at you in packs |
+| Runner | **Swarmer** | small, 30 HP, nips at you in packs (6 m/s: slower than you walk) |
 | Shooter | **Gunner** | keeps its distance, 3-shot bursts of slow shots |
 | Shooter | **Lobber** | arcing grenades that land where you stood (a red ring marks the spot) |
 | Shooter | **Sniper** | a red laser tracks you, turns white when it locks, then fires: move after the lock |
@@ -120,9 +120,11 @@ sight, shots aimed where you are (never led) and slow enough to dodge. You have 
 regenerate 3 s after the last hit, and get back up 2.5 s after being splatted (1.5 s of spawn
 protection). No automatic spawning yet: that's the director, next.
 
-**Admin console (F10):** `spawn flyer beam`, `spawn beam`, `spawn swarmer 5`, `spawn runner`
-(a random runner), `spawn flyer healer 2`... plus `killall`, `god`, `heal`, `freeze` (enemies
-stand still), `list`, `help`. Up/Down recalls what you typed. Enemies spawn 12 m in front of you.
+**Admin console (F10):** buttons for every enemy (x1 / x3 / x5, or ANY of a family) and GOD /
+FREEZE / HEAL / KILL ALL, next to a text bar that takes the same as commands: `spawn flyer beam`,
+`spawn beam`, `spawn swarmer 5`, `spawn runner` (a random runner), `killall`, `god [on/off]`,
+`heal`, `freeze [on/off]` / `unfreeze`, `list`, `help`. Up/Down recalls what you typed. Enemies
+spawn 12 m in front of you, facing you.
 
 ## Playing online
 

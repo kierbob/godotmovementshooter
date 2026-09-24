@@ -33,6 +33,8 @@ func update(en: Enemies, camera: Camera3D, dt: float) -> void:
 		var bar: Node3D = v.bar
 		if camera:
 			bar.global_rotation = Vector3(0, camera.global_rotation.y, 0)
+			# right in your face (a swarmer at your feet) the bar would cover the screen
+			bar.visible = camera.global_position.distance_to(bar.global_position) > 2.5
 		var frac: float = e.target.hp / e.target.max_hp
 		var fill: MeshInstance3D = v.fill
 		fill.scale.x = maxf(0.001, frac)
@@ -56,7 +58,7 @@ func update(en: Enemies, camera: Camera3D, dt: float) -> void:
 			_update_wave(e)
 	for id: int in _views.keys():
 		if not seen.has(id):
-			(_views[id].node as Node3D).queue_free()
+			_free_view(_views[id])
 			_views.erase(id)
 	_update_projectiles(en, dt)
 	for w: Dictionary in _waves.duplicate():
@@ -99,9 +101,17 @@ func on_events(events: Array[Dictionary]) -> void:
 			_markers.append({"node": ring, "life": float(e.time) + 0.1})
 
 
+## An enemy's model plus its laser / beam (those live outside its node, in world space).
+func _free_view(v: Dictionary) -> void:
+	(v.node as Node3D).queue_free()
+	for k in ["laser", "beam"]:
+		if v[k]:
+			(v[k] as Node3D).queue_free()
+
+
 func clear() -> void:
 	for v: Dictionary in _views.values():
-		(v.node as Node3D).queue_free()
+		_free_view(v)
 	_views.clear()
 	for mesh: Node3D in _proj.values():
 		mesh.queue_free()

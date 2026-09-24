@@ -114,6 +114,18 @@ func _init() -> void:
 		check("%s hurts a player standing in the open (%.0f damage in 8 s)" % [Enemies.TYPES[type].name, dmg], dmg > 0)
 		check("%s winds up before its first hit (%.2f s)" % [Enemies.TYPES[type].name, wt], wt >= MIN_WINDUP and wt < INF)
 
+	# swarmers: slower than you walking, so you can outrun a pack
+	setup()
+	var sw := enemies.spawn("swarmer", Vector3(0, 0, -30))
+	var top := 0.0
+	for i in int(3.0 * Cfg.TICK_RATE):
+		player.step(Cmd.new(), map, Cfg.TICK_DT)
+		enemies.tick(player, Cfg.TICK_DT)
+		top = maxf(top, sw.body.horizontal_speed())
+	enemies.events.clear()
+	check("swarmers run at most %.1f m/s (you walk at %.1f): %.2f m/s" % [Enemies.TYPES.swarmer.max_speed, Cfg.MOVE_WALK_SPEED, top],
+		top <= Enemies.TYPES.swarmer.max_speed + 0.01 and top < Cfg.MOVE_WALK_SPEED)
+
 	# through walls: sealed in a room, nothing ranged can touch you
 	for type: String in ["gunner", "lobber", "sniper", "flyer_projectile", "flyer_beam"]:
 		setup(true)
