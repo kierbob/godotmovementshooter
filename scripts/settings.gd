@@ -22,6 +22,7 @@ const ACTIONS := [
 	["respawn", "Respawn", "Other", "key:%d" % KEY_K],
 	["scoreboard", "Scoreboard (online)", "Other", "key:%d" % KEY_TAB],
 	["stats", "Stats Panel", "Other", "key:%d" % KEY_F4],
+	["console", "Admin Console", "Other", "key:%d" % KEY_F10],
 	["fullscreen", "Fullscreen", "Other", "key:%d" % KEY_F11],
 	["next_map", "Next Map (dev)", "Other", "key:%d" % KEY_F2],
 ]

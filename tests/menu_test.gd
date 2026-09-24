@@ -72,6 +72,8 @@ func _init() -> void:
 	button(menu._screens.main, "PRACTICE").pressed.emit()
 	await frames()
 	check("PRACTICE opens the practice map screen", menu.screen == "maps")
+	check("practice has the Dev Arena and both time trials", menu._map_grid.get_child_count() == 1
+		and menu._trial_grid.get_child_count() == 2)
 	key(KEY_ESCAPE)
 	await frames()
 	check("Esc on the practice screen goes back", menu.screen == "main")
@@ -122,6 +124,36 @@ func _init() -> void:
 	Settings.reset_binds()
 	Settings.apply_input()
 
+	# the admin console (F10)
+	key(KEY_ESCAPE) # resume from the settings/pause stack first
+	await frames()
+	if game.state != "playing":
+		menu.resume.emit()
+		await frames()
+	key(KEY_F10)
+	await frames()
+	check("F10 opens the admin console", game.console.is_open)
+	var out: String = game.console.execute("spawn flyer beam")
+	await frames()
+	check("'spawn flyer beam' spawns one (%s)" % out, game.enemies.list.size() == 1 and game.enemies.list[0].type == "flyer_beam")
+	game.console.execute("spawn swarmer 3")
+	check("'spawn swarmer 3' spawns three more", game.enemies.list.size() == 4)
+	var px: float = game.player.px
+	var pz: float = game.player.pz
+	Input.action_press("forward")
+	await physics_frame
+	await physics_frame
+	Input.action_release("forward")
+	check("typing in the console doesn't move you", game.player.px == px and game.player.pz == pz
+		and game.player.horizontal_speed() < 0.01)
+	game.console.execute("god")
+	check("'god' turns on god mode", game.enemies.god)
+	game.console.execute("killall")
+	check("'killall' removes them all", game.enemies.list.is_empty())
+	key(KEY_F10)
+	await frames()
+	check("F10 closes it again", not game.console.is_open)
+
 	menu.to_main_menu.emit()
 	await frames()
 	check("main menu from pause", game.state == "menu" and menu.screen == "main")
@@ -156,9 +188,9 @@ func _init() -> void:
 	await frames()
 
 	# multiplayer screen: name saved, a bad address explains itself, Esc goes back
-	button(menu._screens.main, "MULTIPLAYER").pressed.emit()
+	check("MULTIPLAYER is greyed out for now", button(menu._screens.main, "MULTIPLAYER").disabled)
+	menu.show_screen("online") # the screen itself still works
 	await frames()
-	check("MULTIPLAYER opens the multiplayer screen", menu.screen == "online")
 	Settings.player_name = "Tester"
 	Settings.save_settings()
 	menu.join_match.emit("")

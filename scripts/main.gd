@@ -83,6 +83,12 @@ var _remote_targets := {} # id -> Combat.Target: other players, so our shots sto
 var _remote_proj := {} # "owner:id" -> Combat.Projectile: other players' rockets, grenades, knives
 var _killer := "" # who got us last (death screen)
 var _built := false # the scene finished building (it yields frames while a loading screen is up)
+var enemies: Enemies
+var enemy_view: EnemyView
+var console: AdminConsole # F10
+var _respawn_t := -1.0 # solo: seconds until you're back after getting splatted (-1 = alive)
+const SOLO_RESPAWN := 2.5
+const SOLO_PROTECTION := 1.5
 var _waiting_run := false # online: loaded the stage, waiting for the others
 
 
@@ -101,11 +107,14 @@ func _ready() -> void:
 	WorldView.build_pads(map, self)
 	clouds = WorldView.build_clouds(self)
 	combat = Combat.new(map.boxes, map.targets)
+	enemies = Enemies.new(map, combat)
 	await _step(0.5, "Loading guns and effects")
 	combat_view = CombatView.new()
 	add_child(combat_view)
 	remote_view = RemoteView.new()
 	add_child(remote_view)
+	enemy_view = EnemyView.new()
+	add_child(enemy_view)
 	_build_beans()
 	_setup_environment()
 	Look.apply(Settings.lighting, env, sun, sky_mat, WorldView.cloud_material)
@@ -151,6 +160,9 @@ func _ready() -> void:
 	menu.lobby_character.connect(_on_lobby_character)
 	menu.lobby_ready.connect(_on_lobby_ready)
 	menu.lobby_leave.connect(_on_lobby_leave)
+	console = AdminConsole.new()
+	console.game = self
+	add_child(console)
 	combat_view.word.connect(hud.word)
 	# Gun words sit a little left of / above the muzzle so they don't cover the gun.
 	viewmodel.word.connect(func(text: String, at: Vector2, style: String) -> void:
@@ -241,6 +253,10 @@ func _start_play() -> void:
 	combat.set_loadout(Settings.loadout())
 	_last_move_t = -1.0 # a new PlayerSim starts its clock at 0
 	combat.reset_targets()
+	enemies.clear()
+	enemy_view.clear()
+	_respawn_t = -1.0
+	_killer = ""
 	combat_view.clear()
 	hud.clear_floaters()
 	if _shot_path == "":
@@ -279,6 +295,7 @@ func _on_play_trial(guns: bool) -> void:
 func _update_guns_mode() -> void:
 	var on := trial == null or not trial.active or trial.guns
 	combat.enabled = on
+	hud.set_online(online or not (trial and trial.active)) # health, feed, death screen
 	hud.set_guns(on)
 	viewmodel.visible = on and state != "menu"
 	menu.map_name = ("TIME TRIAL · GUNS ON" if trial.guns else "TIME TRIAL · GUNS OFF") if trial and trial.active else map.name
@@ -452,6 +469,15 @@ func _build_beans() -> void:
 func _input(event: InputEvent) -> void:
 	if not _built:
 		return
+	if event.is_action_pressed("console") and not event.is_echo():
+		_toggle_console()
+		get_viewport().set_input_as_handled()
+		return
+	if console.is_open:
+		if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
+			_toggle_console()
+			get_viewport().set_input_as_handled()
+		return # typing: the game ignores the keys
 	if menu.listening != "":
 		return # the settings screen is waiting for a new keybind
 	if event.is_action_pressed("fullscreen"):
@@ -551,14 +577,41 @@ func _physics_process(_delta: float) -> void:
 		else:
 			_respawn()
 	var c := _sample()
+	if player.dead or console.is_open:
+		c = Cmd.new() # splatted, or typing in the console: stand still
+		c.yaw = yaw
+		c.pitch = pitch
 	combat.tick(player, c, Cfg.TICK_DT) # before movement so knockback applies this tick
 	player.step(c, map, Cfg.TICK_DT)
+	if not (trial and trial.active):
+		enemies.tick(player, Cfg.TICK_DT)
+		_tick_health(Cfg.TICK_DT)
 	if trial:
 		trial.tick(player, Cfg.TICK_DT)
 	if trial and not trial.events.is_empty():
 		_handle_trial_events()
 	if player.py < -30:
 		_respawn()
+
+
+## Solo health: spawn protection and regen while alive; back at the spawn a moment after dying.
+func _tick_health(dt: float) -> void:
+	if player.dead:
+		if _respawn_t < 0:
+			_respawn_t = SOLO_RESPAWN
+		_respawn_t -= dt
+		if _respawn_t <= 0:
+			_respawn_t = -1.0
+			_respawn()
+			player.hp = player.max_hp
+			player.dead = false
+			player.invuln = SOLO_PROTECTION
+			_killer = ""
+		return
+	player.invuln = maxf(0.0, player.invuln - dt)
+	player.regen_delay = maxf(0.0, player.regen_delay - dt)
+	if player.regen_delay == 0 and player.hp < player.max_hp:
+		player.hp = minf(player.max_hp, player.hp + Enemies.REGEN_RATE * dt)
 
 
 func _respawn() -> void:
@@ -611,6 +664,15 @@ func _process(delta: float) -> void:
 		_update_online(dt)
 	else:
 		_update_beans(cur if state != "menu" else camera.position, dt)
+		enemy_view.update(enemies, camera, dt)
+		_handle_enemy_events(enemies.events)
+		enemies.events.clear()
+		if state != "menu":
+			hud.online.update(dt, player, yaw, maxf(0.0, _respawn_t), _killer, "")
+			if player.dead:
+				viewmodel.visible = false
+			elif combat.enabled:
+				viewmodel.visible = true
 	clouds.rotation.y += dt * 0.004
 	top_speed = maxf(top_speed, speed)
 	hud.set_speed(speed, top_speed)
@@ -627,6 +689,8 @@ func _process(delta: float) -> void:
 	for e in events:
 		if e.type == "hit" and e.target < beans.size():
 			beans[e.target].flash = 0.08
+		elif e.type == "hit":
+			enemy_view.flash(e.target)
 	combat_view.update(dt if state == "playing" or online else 0.0, combat, _remote_proj.values())
 	sound.listener = camera.global_position
 	_play_combat_sounds(events)
@@ -1115,3 +1179,99 @@ func _handle_net_events(evs: Array) -> void:
 
 func _player_name(id: int) -> String:
 	return str(net.roster.get(id, {}).get("name", "Someone"))
+
+
+# ---------- enemies + admin console ----------
+
+## Sounds and effects for what the enemies did this frame (EnemyView draws the rest).
+func _handle_enemy_events(evs: Array[Dictionary]) -> void:
+	if evs.is_empty():
+		return
+	enemy_view.on_events(evs)
+	for e in evs:
+		match e.type:
+			"hurt":
+				hud.online.hurt(e.dmg, e.from)
+				sound.play("hurt", {"gap": 0.06})
+				combat_view.shake = maxf(combat_view.shake, 0.03)
+			"player_died":
+				_killer = str(e.by)
+				sound.play("death")
+			"windup":
+				sound.play("dry", {"pos": e.pos, "gap": 0.05}) # the click you learn to listen for
+			"enemy_shot":
+				sound.play("smg" if e.enemy == "gunner" else "pistol", {"pos": e.pos, "gap": 0.0})
+			"lob":
+				sound.play("throw", {"pos": e.pos})
+			"snipe":
+				sound.play("sniper", {"pos": e.from, "gap": 0.0})
+				combat_view.tracer(e.from, e.to)
+			"enemy_explosion":
+				var one: Array[Dictionary] = [{"type": "explosion", "pos": e.pos, "radius": e.radius, "kind": "frag"}]
+				combat_view.on_events(one, e.pos, player)
+				sound.play("explosion", {"pos": e.pos, "gap": 0.0})
+			"enemy_impact":
+				combat_view.add_star(e.pos, 0.3, 0.08, Color("bfe6ff"))
+			"slam":
+				sound.play("explosion", {"pos": e.pos, "gap": 0.0})
+				combat_view.shake = maxf(combat_view.shake, 0.05)
+			"dash":
+				sound.play("wallJump", {"pos": _enemy_pos(e.id)})
+			"bite":
+				sound.play("hit", {"pos": _enemy_pos(e.id), "gap": 0.05})
+			"beam_on":
+				sound.play("impulse", {"pos": _enemy_pos(e.id)})
+
+
+func _enemy_pos(id: int) -> Vector3:
+	for e in enemies.list:
+		if e.id == id:
+			return e.center()
+	return camera.global_position
+
+
+func _toggle_console() -> void:
+	console.toggle()
+	if console.is_open:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif state == "playing" and _shot_path == "":
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## The admin console's commands (AdminConsole parses, this does). Returns what to print.
+func admin(what: String, data: Dictionary) -> String:
+	if state == "menu" or online:
+		return "Start a solo game first (Singleplayer or Practice)."
+	match what:
+		"spawn":
+			var type: String = data.type
+			var n: int = data.count
+			var def: Dictionary = Enemies.TYPES[type]
+			var fwd := Vector3(-sin(yaw), 0, -cos(yaw))
+			var side := Vector3(fwd.z, 0, -fwd.x)
+			for i in n:
+				var off := side * (i - (n - 1) / 2.0) * 1.6
+				var at := Vector3(player.px, player.py, player.pz) + fwd * 12.0 + off
+				if def.family == "flyer":
+					at.y = maxf(at.y, enemies._ground_under(at + Vector3(0, 20, 0))) + 4.0
+				else:
+					var g := enemies._ground_under(at + Vector3(0, 20, 0)) # drop onto whatever's there
+					at.y = g if g > -30 else player.py
+				var e := enemies.spawn(type, at)
+				e.yaw = yaw + PI # facing you
+			return "Spawned %d %s%s" % [n, def.name, "s" if n > 1 else ""]
+		"killall":
+			var k := enemies.list.size()
+			enemies.clear()
+			return "Removed %d enem%s" % [k, "y" if k == 1 else "ies"]
+		"god":
+			var on: String = data.on
+			enemies.god = (not enemies.god) if on == "toggle" else on in ["on", "1", "true"]
+			return "God mode %s" % ("ON: nothing can hurt you" if enemies.god else "off")
+		"heal":
+			player.hp = player.max_hp
+			return "Healed"
+		"freeze":
+			enemies.frozen = not enemies.frozen
+			return "Enemies %s" % ("frozen" if enemies.frozen else "moving again")
+	return "?"

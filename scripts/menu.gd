@@ -19,6 +19,8 @@ signal settings_changed(what: String) # "video" | "quality" | "lighting" | "audi
 
 ## Map cards come from each map scene's root (MapRoot: name, tag, desc, art, colors).
 var map_info := {} # id -> {name, tag, desc, art, grad}
+## Maps on the practice screen (stages are for runs).
+const PRACTICE_MAPS := ["dev_map"]
 ## Time trial cards on the map screen (not maps you can select: they start the course right away).
 const TRIAL_INFO := {
 	"trial_off": {
@@ -170,6 +172,17 @@ func _build_main() -> Control:
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		b.custom_minimum_size.x = 420
+		if t[0] == "MULTIPLAYER":
+			# Parked while the solo roguelite comes together (the code is still there).
+			b.disabled = true
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 0)
+			row.add_child(b)
+			var soon := UiStyle.label("COMING LATER", 20, UiStyle.MUTED)
+			soon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			row.add_child(soon)
+			col.add_child(row)
+			continue
 		col.add_child(b)
 	var quit := UiStyle.button("QUIT", "DangerNav", func() -> void: quit_game.emit())
 	quit.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -223,8 +236,9 @@ func _build_maps() -> Control:
 func _refresh_maps() -> void:
 	for c in _map_grid.get_children():
 		c.queue_free()
-	for id: String in map_info:
-		_map_grid.add_child(_map_card(id, "PLAY", func() -> void: play.emit(id)))
+	for id: String in PRACTICE_MAPS:
+		if map_info.has(id):
+			_map_grid.add_child(_map_card(id, "PLAY", func() -> void: play.emit(id)))
 	for c in _trial_grid.get_children():
 		c.queue_free()
 	for id: String in TRIAL_INFO:
