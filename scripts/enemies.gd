@@ -88,13 +88,14 @@ class Enemy:
 var map: MapData
 var combat: Combat
 var list: Array[Enemy] = []
-var projectiles: Array[Dictionary] = [] # {pos, vel, radius, damage, kind, gravity, splash, owner, alive}
+var projectiles: Array[Dictionary] = [] # {id, pos, vel, radius, damage, kind, gravity, splash, owner, alive}
 var events: Array[Dictionary] = [] # for the view and sounds; main clears it every frame
 var god := false # admin: the player can't be hurt
 var frozen := false # admin: enemies stand still and don't attack
 var time := 0.0
 var player_center := Vector3.ZERO # where the player was this tick (the view aims beams at it)
 var _next_id := 10000
+var _next_shot := 1 # enemy projectile ids (the view keys its meshes on these: a Dictionary changes as it flies)
 var _rng := RandomNumberGenerator.new()
 
 
@@ -564,7 +565,7 @@ func _healer(e: Enemy, p: PlayerSim, dt: float) -> Vector3:
 
 func _fire(e: Enemy, from: Vector3, at: Vector3, speed: float, dmg: float, radius: float, kind: String) -> void:
 	var d := (at - from).normalized()
-	projectiles.append({"pos": from + d * 0.6, "vel": d * speed, "radius": radius, "damage": dmg, "kind": kind,
+	projectiles.append({"id": _shot_id(), "pos": from + d * 0.6, "vel": d * speed, "radius": radius, "damage": dmg, "kind": kind,
 		"gravity": 0.0, "splash": 0.0, "owner": e.def.name, "alive": true, "age": 0.0})
 	events.append({"type": "enemy_shot", "id": e.id, "enemy": e.type, "pos": from})
 
@@ -575,7 +576,7 @@ func _lob(e: Enemy, from: Vector3, at: Vector3) -> void:
 	var t := clampf(flat.length() / 14.0, 0.8, 1.6)
 	var g: float = LOBBER.gravity
 	var vel := Vector3(flat.x / t, (at.y - from.y + 0.5 * g * t * t) / t, flat.y / t)
-	projectiles.append({"pos": from, "vel": vel, "radius": 0.25, "damage": LOBBER.damage, "kind": "lob",
+	projectiles.append({"id": _shot_id(), "pos": from, "vel": vel, "radius": 0.25, "damage": LOBBER.damage, "kind": "lob",
 		"gravity": g, "splash": LOBBER.radius, "owner": e.def.name, "alive": true, "age": 0.0})
 	events.append({"type": "lob", "id": e.id, "pos": from, "land": at, "time": t})
 
@@ -628,6 +629,11 @@ func _tick_projectiles(p: PlayerSim, dt: float) -> void:
 			continue
 		pr.pos = from + step
 	projectiles = projectiles.filter(func(pr: Dictionary) -> bool: return pr.alive)
+
+
+func _shot_id() -> int:
+	_next_shot += 1
+	return _next_shot
 
 
 func _explode(at: Vector3, pr: Dictionary, p: PlayerSim) -> void:

@@ -176,6 +176,25 @@ func _init() -> void:
 	game.console.execute("god off")
 	check("'god off' turns god mode off", not game.enemies.god)
 
+	# shooters firing: every shot has exactly one mesh, and they go away when the shots do
+	game.console.execute("god on")
+	for t in ["lobber", "gunner", "flyer projectile"]:
+		game.console.execute("spawn " + t)
+	var most_meshes := 0
+	var most_shots := 0
+	t0 = Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 6000:
+		await process_frame
+		most_meshes = maxi(most_meshes, game.enemy_view._proj.size())
+		most_shots = maxi(most_shots, game.enemies.projectiles.size())
+	game.console.execute("killall")
+	await frames(3)
+	# (the old bug keyed meshes on the shot Dictionary, whose hash changes as it flies: a new mesh
+	# every frame, piling up, and an error when cleaning up)
+	check("enemy shots get one mesh each, no pile-up (most meshes %d, most shots %d), all gone after" % [most_meshes, most_shots],
+		most_meshes > 0 and most_meshes <= most_shots + 2 and game.enemy_view._proj.is_empty())
+	game.console.execute("god off")
+
 	# the buttons next to the text bar do the same, without typing
 	button(game.console._panel, "BEAM").pressed.emit()
 	await frames()

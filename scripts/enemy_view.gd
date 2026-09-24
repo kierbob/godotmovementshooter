@@ -10,7 +10,7 @@ extends Node3D
 const BAR_Y := 2.25
 
 var _views := {} # enemy id -> {node, body, mats, fill, bang, laser, beam, spin, flash}
-var _proj := {} # projectile Dictionary -> mesh
+var _proj := {} # projectile id -> mesh (not the Dictionary itself: its hash changes as it moves)
 var _markers: Array = [] # [{node, life}] lobber landing rings
 var _waves: Array = [] # [{node, id}] brute shockwaves
 var _time := 0.0
@@ -373,8 +373,9 @@ func _update_wave(e: Enemies.Enemy) -> void:
 func _update_projectiles(en: Enemies, dt: float) -> void:
 	var seen := {}
 	for pr: Dictionary in en.projectiles:
-		seen[pr] = true
-		var mesh: MeshInstance3D = _proj.get(pr)
+		var id: int = pr.id
+		seen[id] = true
+		var mesh: MeshInstance3D = _proj.get(id)
 		if mesh == null:
 			mesh = MeshInstance3D.new()
 			var s := SphereMesh.new()
@@ -388,12 +389,12 @@ func _update_projectiles(en: Enemies, dt: float) -> void:
 			mesh.material_override = _glow_mat(col)
 			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			add_child(mesh)
-			_proj[pr] = mesh
+			_proj[id] = mesh
 		mesh.position = pr.pos
-	for pr: Variant in _proj.keys():
-		if not seen.has(pr):
-			(_proj[pr] as Node3D).queue_free()
-			_proj.erase(pr)
+	for id: int in _proj.keys():
+		if not seen.has(id):
+			(_proj[id] as Node3D).queue_free()
+			_proj.erase(id)
 
 
 static func _find(en: Enemies, id: int) -> Enemies.Enemy:
