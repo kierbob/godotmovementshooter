@@ -96,6 +96,25 @@ func run() -> void:
 		check("%s: every spawn is clear of walls and stands on something" % id, bad.is_empty())
 		if not bad.is_empty():
 			print("      bad spawns: ", bad)
+		# ramp meshes: every triangle faces outward (Godot culls the back), slopes face up
+		var ramps := 0
+		var wrong := 0
+		for b in m.boxes:
+			if b.ramp_axis < 0:
+				continue
+			ramps += 1
+			var st := SurfaceTool.new()
+			st.begin(Mesh.PRIMITIVE_TRIANGLES)
+			WorldView._add_ramp(st, b)
+			var arr := st.commit_to_arrays()
+			var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+			var n: PackedVector3Array = arr[Mesh.ARRAY_NORMAL]
+			for i in range(0, v.size(), 3):
+				var front := -(v[i + 1] - v[i]).cross(v[i + 2] - v[i]) # Godot's front faces wind clockwise
+				var slope := absf(n[i].y) > 0.01 and absf(n[i].y) < 0.99
+				if front.dot(n[i]) <= 0 or (slope and n[i].y < 0):
+					wrong += 1
+		check("%s: all %d ramps face outward (none invisible from outside)" % [id, ramps], wrong == 0)
 	var dev := MapData.load_map("dev_map")
 	check("the dev map has its time trial and both portals", not dev.trial.is_empty() and dev.portals.size() == 2)
 
