@@ -167,6 +167,11 @@ func remote_shot(e: Dictionary, gun: Vector3) -> void:
 		_add_tracer(gun, end)
 
 
+## A tracer line (enemy snipers use it too).
+func tracer(from: Vector3, to: Vector3) -> void:
+	_add_tracer(from, to)
+
+
 func _add_tracer(from: Vector3, to: Vector3) -> void:
 	var t: Dictionary = _tracers[_next_tracer % _tracers.size()]
 	_next_tracer += 1

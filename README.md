@@ -13,9 +13,11 @@ items that stack). The menus already work that way:
 
 - **SINGLEPLAYER** → the lobby: pick your character (Brawler, Bomber, Sharpshooter; each is a
   fixed kit), press **READY** → the loading screen → stage 1 (Bean Town for now).
-- **MULTIPLAYER** → host or join a lobby (see "Playing online").
-- **PRACTICE** → free play on any map with the dummies, and the two **time trials** (guns off /
-  guns on); in the Dev Arena you can walk into their portals too.
+- **MULTIPLAYER**: greyed out for now (the code is there, parked while the solo game comes
+  together).
+- **PRACTICE** → the Dev Arena (free play with the dummies) and the two **time trials** (guns
+  off / guns on); in the Dev Arena you can walk into their portals too.
+- **F10** opens the admin console (see "Enemies").
 - **SETTINGS**, **QUIT**. **Esc** pauses in game (Resume / Settings / Main Menu / Quit).
 Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are saved to
 `%APPDATA%/Godot/app_userdata/Movement Shooter/settings.cfg`.
@@ -36,6 +38,7 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 | Esc | pause menu |
 | F2 | next map (dev shortcut) |
 | F4 | stats panel (full / compact / off) |
+| F10 | admin console (spawn enemies, god mode...) |
 | F11 | fullscreen |
 
 ## What's in
@@ -74,6 +77,8 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 - **Lobby and loading screen**: Risk of Rain style. Everyone ready → (online: a 3 s countdown) →
   a loading card with the stage number, name, progress and tips, which stays up while the stage
   loads and, online, until everyone has loaded.
+- **Enemies** (see "Enemies" below): 9 types in 3 families, with solo health, regen and
+  respawning.
 - **Bean dummies** stop shots, take damage (headshots count), flash white when hit, show a health
   bar with their HP (e.g. "105 / 150"), go down at 0 HP and pop back 2.5 s later.
 - **Cartoon effects** (the web game's `fx.js`): muzzle flash, POW star and action lines, smoke puffs
@@ -92,6 +97,32 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   their own records: **guns off** (pure movement) and **guns on** (shotgun boosts, rocket jumps).
   The clock starts at the start line and stops in the checkered finish gate; falling off or
   pressing K restarts; best and last times show on the timer board and the HUD and are saved.
+
+## Enemies
+
+`scripts/enemies.gd` (logic), `scripts/enemy_view.gd` (looks). Three families, three variants each:
+
+| Family | Variant | What it does |
+| --- | --- | --- |
+| Runner | **Charger** | walks up, winds up (0.65 s), then dashes where you were; side-step it |
+| Runner | **Brute** | slow and tanky (400 HP), winds up 1.1 s, slams: a shockwave rolls out along the ground; jump it |
+| Runner | **Swarmer** | small, fast, 30 HP, nips at you in packs |
+| Shooter | **Gunner** | keeps its distance, 3-shot bursts of slow shots |
+| Shooter | **Lobber** | arcing grenades that land where you stood (a red ring marks the spot) |
+| Shooter | **Sniper** | a red laser tracks you, turns white when it locks, then fires: move after the lock |
+| Flyer | **Projectile** | circles you and fires dodgeable orbs |
+| Flyer | **Beam** | Moira-style lock-on beam up close; breaks if you get out of range or behind cover |
+| Flyer | **Healer** | never hurts you; heals the most hurt enemy with a green beam, runs from you |
+
+Fair-play rules every attack follows (tests/enemy_test.gd checks them): a visible windup (red
+"!", glow, a click) of at least 0.25 s before anything can hurt you, no attack without line of
+sight, shots aimed where you are (never led) and slow enough to dodge. You have 100 HP,
+regenerate 3 s after the last hit, and get back up 2.5 s after being splatted (1.5 s of spawn
+protection). No automatic spawning yet: that's the director, next.
+
+**Admin console (F10):** `spawn flyer beam`, `spawn beam`, `spawn swarmer 5`, `spawn runner`
+(a random runner), `spawn flyer healer 2`... plus `killall`, `god`, `heal`, `freeze` (enemies
+stand still), `list`, `help`. Up/Down recalls what you typed. Enemies spawn 12 m in front of you.
 
 ## Playing online
 
@@ -174,6 +205,8 @@ headshots on the dummies, knockback, rocket jumps, abilities and shots against r
 `tests/trial_test.gd` checks the time trial (portals, start line, finish, falling off, records,
 guns off/on), `tests/sound_test.gd` checks every sound is there and plays, and
 `tests/map_test.gd` checks map scenes (JSON to scene is exact, maps load, editing rewrites values).
+`tests/enemy_test.gd` checks every enemy plays fair (windups, line of sight, dodging, the beam
+breaking, the healer only healing, guns killing them) and the console's commands.
 `tests/net_test.gd` checks multiplayer: packing, the host's simulation matching your prediction
 exactly, damage / kills / respawns, knockback on other players, lag compensation, corrections
 under lag, and a real host and client over localhost.
@@ -185,15 +218,16 @@ godot --headless --path . --script res://tests/trial_test.gd
 godot --headless --path . --script res://tests/sound_test.gd
 godot --headless --path . --script res://tests/map_test.gd
 godot --headless --path . --script res://tests/net_test.gd
+godot --headless --path . --script res://tests/enemy_test.gd
 ```
 
 ## Next
 
 The roguelite, in this order:
 
-1. Enemies: three bean types (melee charger, ranged shooter, flyer) and a spawn director that
-   ramps up over time.
-2. Solo health, dying and "run over".
+1. ~~Enemies~~ (done: 9 types, admin console). Next: the spawn director (enemies arrive over
+   time, harder as the clock runs), tuning from playtests.
+2. "Run over" when you die in a run (solo health and dying are in).
 3. Gold, chests and stacking items (movement-themed: speed, extra wall jumps, slide damage...).
 4. Run structure: teleporter + boss wave, then the next stage (the loading screen is ready for
    it), a difficulty clock.

@@ -66,6 +66,14 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   (`_online_tick`, `_reconcile`) and handles host events. `PlayerSim.save_state/load_state` and
   its impulse log exist for this. Anything that changes the player's state on the host but not
   on their screen (like resetting their guns) makes the two drift: keep them in step.
+- Enemies: `scripts/enemies.gd` (Enemies: logic for the 9 types in `TYPES` / `FAMILIES`,
+  attacks, enemy projectiles, hurting the player; ground types move with PlayerSim, flyers steer
+  and get pushed out of walls; each enemy is a Combat target of kind "enemy" so the guns hit it),
+  `scripts/enemy_view.gd` (models, health bars, "!" windups, lasers/beams/rings/shots),
+  `scripts/admin_console.gd` (F10: spawn/killall/god/heal/freeze/list; `parse_spawn`). main.gd
+  ticks enemies after the player (not on time trials) and runs solo health (`_tick_health`).
+  Fair-play rules for every attack are in the enemies.gd header; `tests/enemy_test.gd` checks
+  them, so keep it passing when adding or tuning enemies.
 - `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
 - `scripts/world_view.gd`: map meshes, jump pads, bean dummies, clouds.
 - `scripts/menu.gd`, `ui_style.gd`, `hud.gd`, `settings.gd`: menus, styling, HUD, saved settings
@@ -81,7 +89,8 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   logic tests use those too; `tests/map_test.gd` checks the map scenes.
   `tests/menu_test.gd` clicks through the menus headless. `tests/combat_test.gd` checks the guns,
   `tests/trial_test.gd` the time trial, `tests/sound_test.gd` the sounds, `tests/net_test.gd`
-  multiplayer (codec, server matches prediction, combat, lag comp, a real ENet host + client).
+  multiplayer (codec, server matches prediction, combat, lag comp, a real ENet host + client),
+  `tests/enemy_test.gd` the enemies (fairness, every type, console parsing).
 
 ## Rules
 
@@ -120,6 +129,7 @@ godot --headless --path . --script res://tests/trial_test.gd
 godot --headless --path . --script res://tests/sound_test.gd
 godot --headless --path . --script res://tests/map_test.gd
 godot --headless --path . --script res://tests/net_test.gd
+godot --headless --path . --script res://tests/enemy_test.gd
 ```
 
 To try two real games against each other, start one with `-- --host=7777` and another with
@@ -139,7 +149,7 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 3. ~~Cartoon effects and sounds~~ (done).
 4. ~~Time trial~~ (done: guns off and guns on). ~~Risk of Rain style menus~~ (done: characters,
    lobby, loading screen).
-5. Roguelite: enemies + spawn director, solo health/death, gold + chests + stacking items,
-   teleporter/boss/next stage, more stages, character passives. (Bot Arena folds into enemies.)
+5. Roguelite: ~~enemies~~ (9 types + F10 admin console), spawn director, run over on death,
+   gold + chests + stacking items, teleporter/boss/next stage, more stages, character passives.
 6. ~~Multiplayer~~ (first version done: host/join, FFA, prediction, lag compensation). Later:
    teams, match rules, dedicated server.

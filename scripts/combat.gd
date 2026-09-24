@@ -23,9 +23,10 @@ const DUMMY_RESPAWN := 2.5
 
 class Target:
 	var id := 0 # dummies: their index; online players: their peer id
-	var kind := "dummy" # "dummy" | "player" (server side, has a body) | "remote" (client side)
+	var kind := "dummy" # "dummy" | "enemy" | "player" (server side, has a body) | "remote" (client side)
 	var name := ""
 	var body: PlayerSim = null # a real player: explosions push it, spawn protection applies
+	var size := 1.0 # hitbox scale (a small swarmer, a big brute)
 	var base := Vector3.ZERO
 	var pos := Vector3.ZERO
 	var move := {} # {axis: "x"|"z", amp, speed} for sliding dummies
@@ -342,10 +343,10 @@ func raycast(o: Vector3, d: Vector3, max_t: float, pad := 0.0, with_targets := t
 			if tg.dead:
 				continue
 			for part: Dictionary in DUMMY_PARTS:
-				var a: Vector3 = tg.pos + part.a
-				var b: Vector3 = tg.pos + part.b
+				var a: Vector3 = tg.pos + part.a * tg.size
+				var b: Vector3 = tg.pos + part.b * tg.size
 				# Heads only get half the padding so body throws don't turn into free headshots.
-				var r: float = part.r + (pad * 0.5 if part.zone == "head" else pad)
+				var r: float = part.r * tg.size + (pad * 0.5 if part.zone == "head" else pad)
 				var t := ray_capsule(o, d, a, b, r, best.t if best else max_t)
 				if t >= 0:
 					var point := o + d * t
@@ -369,9 +370,9 @@ func _closest_zone(target: Target, o: Vector3, d: Vector3, t0: float, pad: float
 	for i in 13:
 		var p := o + d * (t0 + (i / 12.0) * (pad * 2 + 0.8))
 		for part: Dictionary in DUMMY_PARTS:
-			var a: Vector3 = target.pos + part.a
-			var b: Vector3 = target.pos + part.b
-			var gap: float = (p - closest_on_segment(p, a, b)).length() - part.r
+			var a: Vector3 = target.pos + part.a * target.size
+			var b: Vector3 = target.pos + part.b * target.size
+			var gap: float = (p - closest_on_segment(p, a, b)).length() - part.r * target.size
 			if gap < best_gap:
 				best_gap = gap
 				best_zone = part.zone
@@ -509,9 +510,9 @@ func _explode(pos: Vector3, e: Dictionary, p: PlayerSim, kind: String) -> void:
 			continue
 		var d_min := INF
 		for part: Dictionary in DUMMY_PARTS:
-			var a: Vector3 = t.pos + part.a
-			var b: Vector3 = t.pos + part.b
-			d_min = minf(d_min, maxf(0.0, (pos - closest_on_segment(pos, a, b)).length() - part.r))
+			var a: Vector3 = t.pos + part.a * t.size
+			var b: Vector3 = t.pos + part.b * t.size
+			d_min = minf(d_min, maxf(0.0, (pos - closest_on_segment(pos, a, b)).length() - part.r * t.size))
 		if d_min < e.radius:
 			var dmg: float = e.damage * (1 - 0.6 * (d_min / e.radius))
 			damage_target(t, dmg, "body", t.pos + Vector3(0, 1.2, 0))
