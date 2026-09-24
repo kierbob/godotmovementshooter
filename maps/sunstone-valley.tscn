@@ -1,0 +1,3511 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/map/map_root.gd" id="1_5cw0f"]
+[ext_resource type="Script" path="res://scripts/map/map_box.gd" id="2_e5yd8"]
+[ext_resource type="Script" path="res://scripts/map/map_pad.gd" id="3_irwad"]
+[ext_resource type="Script" path="res://scripts/map/map_spawn.gd" id="4_bb17s"]
+
+[node name="SunstoneValley" type="Node3D" unique_id=1833882276]
+script = ExtResource("1_5cw0f")
+map_name = "Sunstone Valley"
+tag = "Stage 1"
+desc = "A wide valley · ruins under a floating sunstone, mesas, a canyon, a ski slope and an old fort"
+art = "VALLEY"
+grad_from = Color(1, 0.7019608, 0.2784314, 1)
+grad_to = Color(0.8784314, 0.32156864, 0.47843137, 1)
+view_scale = 1.6
+
+[node name="Ground" type="Node3D" parent="." unique_id=1379088323]
+
+[node name="Grass1" type="Node3D" parent="Ground" unique_id=1718693806]
+transform = Transform3D(252, 0, 0, 0, 1, 0, 0, 0, 86, 0, -0.5, -83)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-126, -1, -126, 126, 0, -40)
+web_box = PackedFloat64Array()
+
+[node name="Grass2" type="Node3D" parent="Ground" unique_id=1029716689]
+transform = Transform3D(176, 0, 0, 0, 1, 0, 0, 0, 150, -38, -0.5, 35)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-126, -1, -40, 50, 0, 110)
+web_box = PackedFloat64Array()
+
+[node name="Grass3" type="Node3D" parent="Ground" unique_id=188119632]
+transform = Transform3D(50, 0, 0, 0, 1, 0, 0, 0, 150, 101, -0.5, 35)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(76, -1, -40, 126, 0, 110)
+web_box = PackedFloat64Array()
+
+[node name="Grass4" type="Node3D" parent="Ground" unique_id=1272893997]
+transform = Transform3D(252, 0, 0, 0, 1, 0, 0, 0, 16, 0, -0.5, 118)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-126, -1, 110, 126, 0, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliffs" type="Node3D" parent="." unique_id=126394153]
+
+[node name="North" type="Node3D" parent="Cliffs" unique_id=1187493459]
+
+[node name="Cliff1" type="Node3D" parent="Cliffs/North" unique_id=1836114835]
+transform = Transform3D(20, 0, 0, 0, 39, 0, 0, 0, 17.277, -116, 8.5, -117.361496)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, -126, -106, 28, -108.723)
+web_box = PackedFloat64Array()
+
+[node name="Cliff2" type="Node3D" parent="Cliffs/North" unique_id=1640943888]
+transform = Transform3D(20, 0, 0, 0, 41, 0, 0, 0, 16.144997, -96, 9.5, -117.927505)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-106, -11, -126, -86, 30, -109.855)
+web_box = PackedFloat64Array()
+
+[node name="Cliff3" type="Node3D" parent="Cliffs/North" unique_id=1188853675]
+transform = Transform3D(14, 0, 0, 0, 37, 0, 0, 0, 19.245003, -79, 7.5, -116.3775)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-86, -11, -126, -72, 26, -106.755)
+web_box = PackedFloat64Array()
+
+[node name="Cliff3Shelf" type="Node3D" parent="Cliffs/North" unique_id=1303563047]
+transform = Transform3D(7.883995, 0, 0, 0, 18.814, 0, 0, 0, 2.4929962, -79.257996, -1.5929999, -105.5085)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-83.2, -11, -106.755, -75.316, 7.814, -104.262)
+web_box = PackedFloat64Array()
+
+[node name="Cliff4" type="Node3D" parent="Cliffs/North" unique_id=1967002851]
+transform = Transform3D(20, 0, 0, 0, 45, 0, 0, 0, 17.247002, -62, 11.5, -117.376495)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-72, -11, -126, -52, 34, -108.753)
+web_box = PackedFloat64Array()
+
+[node name="Cliff4Shelf" type="Node3D" parent="Cliffs/North" unique_id=516272160]
+transform = Transform3D(12.594002, 0, 0, 0, 17.677, 0, 0, 0, 3.8320007, -61.703, -2.1615, -106.837)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-68, -11, -108.753, -55.406, 6.677, -104.921)
+web_box = PackedFloat64Array()
+
+[node name="Cliff5" type="Node3D" parent="Cliffs/North" unique_id=252908308]
+transform = Transform3D(14, 0, 0, 0, 35, 0, 0, 0, 19.809998, -45, 6.5, -116.095)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-52, -11, -126, -38, 24, -106.19)
+web_box = PackedFloat64Array()
+
+[node name="Cliff5Shelf" type="Node3D" parent="Cliffs/North" unique_id=1769892307]
+transform = Transform3D(5.6070023, 0, 0, 0, 19.705, 0, 0, 0, 2.253006, -46.3965, -1.1475, -105.0635)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-49.2, -11, -106.19, -43.593, 8.705, -103.937)
+web_box = PackedFloat64Array()
+
+[node name="Cliff6" type="Node3D" parent="Cliffs/North" unique_id=1205800608]
+transform = Transform3D(12, 0, 0, 0, 37, 0, 0, 0, 17.046997, -32, 7.5, -117.4765)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-38, -11, -126, -26, 26, -108.953)
+web_box = PackedFloat64Array()
+
+[node name="Cliff7" type="Node3D" parent="Cliffs/North" unique_id=470587817]
+transform = Transform3D(14, 0, 0, 0, 39, 0, 0, 0, 20.362, -19, 8.5, -115.819)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-26, -11, -126, -12, 28, -105.638)
+web_box = PackedFloat64Array()
+
+[node name="Cliff7Shelf" type="Node3D" parent="Cliffs/North" unique_id=725103308]
+transform = Transform3D(8.228001, 0, 0, 0, 17.193, 0, 0, 0, 3.751999, -19.086, -2.4035, -103.762)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-23.2, -11, -105.638, -14.972, 6.193, -101.886)
+web_box = PackedFloat64Array()
+
+[node name="Cliff8" type="Node3D" parent="Cliffs/North" unique_id=716095606]
+transform = Transform3D(14, 0, 0, 0, 45, 0, 0, 0, 20.705002, -5, 11.5, -115.6475)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-12, -11, -126, 2, 34, -105.295)
+web_box = PackedFloat64Array()
+
+[node name="Cliff8Shelf" type="Node3D" parent="Cliffs/North" unique_id=1962578125]
+transform = Transform3D(5.691, 0, 0, 0, 21.791, 0, 0, 0, 2.7659988, -6.3545, -0.10449982, -103.912)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-9.2, -11, -105.295, -3.509, 10.791, -102.529)
+web_box = PackedFloat64Array()
+
+[node name="Cliff9" type="Node3D" parent="Cliffs/North" unique_id=1355321127]
+transform = Transform3D(18, 0, 0, 0, 37, 0, 0, 0, 16.830002, 11, 7.5, -117.585)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(2, -11, -126, 20, 26, -109.17)
+web_box = PackedFloat64Array()
+
+[node name="Cliff9Shelf" type="Node3D" parent="Cliffs/North" unique_id=1144123410]
+transform = Transform3D(10.365, 0, 0, 0, 17.991001, 0, 0, 0, 3.6349945, 10.7825, -2.0045, -107.3525)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(5.6, -11, -109.17, 15.965, 6.991, -105.535)
+web_box = PackedFloat64Array()
+
+[node name="Cliff10" type="Node3D" parent="Cliffs/North" unique_id=1486457554]
+transform = Transform3D(20, 0, 0, 0, 39, 0, 0, 0, 19.39, 30, 8.5, -116.305)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(20, -11, -126, 40, 28, -106.61)
+web_box = PackedFloat64Array()
+
+[node name="Cliff10Shelf" type="Node3D" parent="Cliffs/North" unique_id=2073248342]
+transform = Transform3D(12.179001, 0, 0, 0, 18.132, 0, 0, 0, 2.6119995, 30.0895, -1.934, -105.304)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(24, -11, -106.61, 36.179, 7.132, -103.998)
+web_box = PackedFloat64Array()
+
+[node name="Cliff11" type="Node3D" parent="Cliffs/North" unique_id=1519414313]
+transform = Transform3D(14, 0, 0, 0, 45, 0, 0, 0, 18.405998, 47, 11.5, -116.797)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(40, -11, -126, 54, 34, -107.594)
+web_box = PackedFloat64Array()
+
+[node name="Cliff11Shelf" type="Node3D" parent="Cliffs/North" unique_id=1193339887]
+transform = Transform3D(9.587002, 0, 0, 0, 17.537, 0, 0, 0, 3.8779984, 47.5935, -2.2315, -105.655)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(42.8, -11, -107.594, 52.387, 6.537, -103.716)
+web_box = PackedFloat64Array()
+
+[node name="Cliff12" type="Node3D" parent="Cliffs/North" unique_id=980530393]
+transform = Transform3D(16, 0, 0, 0, 35, 0, 0, 0, 20.223999, 62, 6.5, -115.888)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(54, -11, -126, 70, 24, -105.776)
+web_box = PackedFloat64Array()
+
+[node name="Cliff13" type="Node3D" parent="Cliffs/North" unique_id=1621941961]
+transform = Transform3D(18, 0, 0, 0, 43, 0, 0, 0, 17.831001, 79, 10.5, -117.0845)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(70, -11, -126, 88, 32, -108.169)
+web_box = PackedFloat64Array()
+
+[node name="Cliff14" type="Node3D" parent="Cliffs/North" unique_id=1645624705]
+transform = Transform3D(18, 0, 0, 0, 37, 0, 0, 0, 16.234001, 97, 7.5, -117.882996)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(88, -11, -126, 106, 26, -109.766)
+web_box = PackedFloat64Array()
+
+[node name="Cliff15" type="Node3D" parent="Cliffs/North" unique_id=404921234]
+transform = Transform3D(14, 0, 0, 0, 37, 0, 0, 0, 16.595001, 113, 7.5, -117.7025)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(106, -11, -126, 120, 26, -109.405)
+web_box = PackedFloat64Array()
+
+[node name="Cliff16" type="Node3D" parent="Cliffs/North" unique_id=846577047]
+transform = Transform3D(6, 0, 0, 0, 39, 0, 0, 0, 17.722, 123, 8.5, -117.139)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(120, -11, -126, 126, 28, -108.278)
+web_box = PackedFloat64Array()
+
+[node name="South" type="Node3D" parent="Cliffs" unique_id=2035291392]
+
+[node name="Cliff1" type="Node3D" parent="Cliffs/South" unique_id=2040421225]
+transform = Transform3D(16, 0, 0, 0, 35, 0, 0, 0, 19.877998, -118, 6.5, 116.061005)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, 106.122, -110, 24, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff2" type="Node3D" parent="Cliffs/South" unique_id=1703752693]
+transform = Transform3D(16, 0, 0, 0, 35, 0, 0, 0, 20.297997, -102, 6.5, 115.851)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-110, -11, 105.702, -94, 24, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff2Shelf" type="Node3D" parent="Cliffs/South" unique_id=254638726]
+transform = Transform3D(8.8619995, 0, 0, 0, 21.869999, 0, 0, 0, 2.4169998, -102.369, -0.06500006, 104.4935)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-106.8, -11, 103.285, -97.938, 10.87, 105.702)
+web_box = PackedFloat64Array()
+
+[node name="Cliff3" type="Node3D" parent="Cliffs/South" unique_id=324427900]
+transform = Transform3D(16, 0, 0, 0, 39, 0, 0, 0, 20.589996, -86, 8.5, 115.705)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-94, -11, 105.41, -78, 28, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff3Shelf" type="Node3D" parent="Cliffs/South" unique_id=1903927035]
+transform = Transform3D(9.693001, 0, 0, 0, 20.216, 0, 0, 0, 2.1850052, -85.95351, -0.8920002, 104.317505)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-90.8, -11, 103.225, -81.107, 9.216, 105.41)
+web_box = PackedFloat64Array()
+
+[node name="Cliff4" type="Node3D" parent="Cliffs/South" unique_id=1806323220]
+transform = Transform3D(16, 0, 0, 0, 35, 0, 0, 0, 16.887001, -70, 6.5, 117.5565)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-78, -11, 109.113, -62, 24, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff5" type="Node3D" parent="Cliffs/South" unique_id=1734436025]
+transform = Transform3D(16, 0, 0, 0, 37, 0, 0, 0, 20.984001, -54, 7.5, 115.507996)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-62, -11, 105.016, -46, 26, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff6" type="Node3D" parent="Cliffs/South" unique_id=1280299236]
+transform = Transform3D(12, 0, 0, 0, 43, 0, 0, 0, 20.932999, -40, 10.5, 115.5335)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-46, -11, 105.067, -34, 32, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff7" type="Node3D" parent="Cliffs/South" unique_id=109669396]
+transform = Transform3D(12, 0, 0, 0, 43, 0, 0, 0, 17.186996, -28, 10.5, 117.4065)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-34, -11, 108.813, -22, 32, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff7Shelf" type="Node3D" parent="Cliffs/South" unique_id=1376766761]
+transform = Transform3D(5.3240013, 0, 0, 0, 17.501, 0, 0, 0, 3.302002, -28.938, -2.2495, 107.162)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-31.6, -11, 105.511, -26.276, 6.501, 108.813)
+web_box = PackedFloat64Array()
+
+[node name="Cliff8" type="Node3D" parent="Cliffs/South" unique_id=815540453]
+transform = Transform3D(12, 0, 0, 0, 39, 0, 0, 0, 20.008003, -16, 8.5, 115.996)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-22, -11, 105.992, -10, 28, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff9" type="Node3D" parent="Cliffs/South" unique_id=889135254]
+transform = Transform3D(14, 0, 0, 0, 43, 0, 0, 0, 20.906998, -3, 10.5, 115.5465)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-10, -11, 105.093, 4, 32, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff10" type="Node3D" parent="Cliffs/South" unique_id=1372319576]
+transform = Transform3D(18, 0, 0, 0, 41, 0, 0, 0, 16.532997, 13, 9.5, 117.733505)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(4, -11, 109.467, 22, 30, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff10Shelf" type="Node3D" parent="Cliffs/South" unique_id=1932341560]
+transform = Transform3D(7.9620004, 0, 0, 0, 16.353, 0, 0, 0, 2.8410034, 11.581, -2.8235, 108.0465)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(7.6, -11, 106.626, 15.562, 5.353, 109.467)
+web_box = PackedFloat64Array()
+
+[node name="Cliff11" type="Node3D" parent="Cliffs/South" unique_id=70868612]
+transform = Transform3D(20, 0, 0, 0, 43, 0, 0, 0, 20.261002, 32, 10.5, 115.8695)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(22, -11, 105.739, 42, 32, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff12" type="Node3D" parent="Cliffs/South" unique_id=752944852]
+transform = Transform3D(18, 0, 0, 0, 39, 0, 0, 0, 19.444, 51, 8.5, 116.278)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(42, -11, 106.556, 60, 28, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff13" type="Node3D" parent="Cliffs/South" unique_id=976795029]
+transform = Transform3D(16, 0, 0, 0, 37, 0, 0, 0, 18.349998, 68, 7.5, 116.825)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(60, -11, 107.65, 76, 26, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff13Shelf" type="Node3D" parent="Cliffs/South" unique_id=1351530361]
+transform = Transform3D(7.260998, 0, 0, 0, 20.932, 0, 0, 0, 3.064003, 66.8305, -0.5339999, 106.118)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(63.2, -11, 104.586, 70.461, 9.932, 107.65)
+web_box = PackedFloat64Array()
+
+[node name="Cliff14" type="Node3D" parent="Cliffs/South" unique_id=1550647341]
+transform = Transform3D(18, 0, 0, 0, 37, 0, 0, 0, 20.338997, 85, 7.5, 115.830505)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(76, -11, 105.661, 94, 26, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff14Shelf" type="Node3D" parent="Cliffs/South" unique_id=1472167124]
+transform = Transform3D(11.884003, 0, 0, 0, 17.633999, 0, 0, 0, 3.564003, 85.542, -2.183, 103.879)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(79.6, -11, 102.097, 91.484, 6.634, 105.661)
+web_box = PackedFloat64Array()
+
+[node name="Cliff15" type="Node3D" parent="Cliffs/South" unique_id=956903299]
+transform = Transform3D(16, 0, 0, 0, 39, 0, 0, 0, 16.316002, 102, 8.5, 117.841995)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(94, -11, 109.684, 110, 28, 126)
+web_box = PackedFloat64Array()
+
+[node name="Cliff16" type="Node3D" parent="Cliffs/South" unique_id=828136629]
+transform = Transform3D(16, 0, 0, 0, 39, 0, 0, 0, 19.797997, 118, 8.5, 116.101)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(110, -11, 106.202, 126, 28, 126)
+web_box = PackedFloat64Array()
+
+[node name="West" type="Node3D" parent="Cliffs" unique_id=1699202580]
+
+[node name="Cliff1" type="Node3D" parent="Cliffs/West" unique_id=814322629]
+transform = Transform3D(20.176003, 0, 0, 0, 39, 0, 0, 0, 16, -115.912, 8.5, -102)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, -110, -105.824, 28, -94)
+web_box = PackedFloat64Array()
+
+[node name="Cliff2" type="Node3D" parent="Cliffs/West" unique_id=1198970924]
+transform = Transform3D(20.783997, 0, 0, 0, 39, 0, 0, 0, 16, -115.608, 8.5, -86)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, -94, -105.216, 28, -78)
+web_box = PackedFloat64Array()
+
+[node name="Cliff3" type="Node3D" parent="Cliffs/West" unique_id=1092374332]
+transform = Transform3D(20.259003, 0, 0, 0, 41, 0, 0, 0, 20, -115.8705, 9.5, -68)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, -78, -105.741, 30, -58)
+web_box = PackedFloat64Array()
+
+[node name="Cliff4" type="Node3D" parent="Cliffs/West" unique_id=276563997]
+transform = Transform3D(17.629997, 0, 0, 0, 39, 0, 0, 0, 16, -117.185, 8.5, -50)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, -58, -108.37, 28, -42)
+web_box = PackedFloat64Array()
+
+[node name="Cliff5" type="Node3D" parent="Cliffs/West" unique_id=1069637599]
+transform = Transform3D(19.237, 0, 0, 0, 39, 0, 0, 0, 20, -116.3815, 8.5, -32)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, -42, -106.763, 28, -22)
+web_box = PackedFloat64Array()
+
+[node name="Cliff5Shelf" type="Node3D" parent="Cliffs/West" unique_id=667545567]
+transform = Transform3D(3.475998, 0, 0, 0, 19.864, 0, 0, 0, 12.969, -105.025, -1.0679998, -31.5155)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-106.763, -11, -38, -103.287, 8.864, -25.031)
+web_box = PackedFloat64Array()
+
+[node name="Cliff6" type="Node3D" parent="Cliffs/West" unique_id=1932976742]
+transform = Transform3D(20.612, 0, 0, 0, 37, 0, 0, 0, 16, -115.694, 7.5, -14)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, -22, -105.388, 26, -6)
+web_box = PackedFloat64Array()
+
+[node name="Cliff7" type="Node3D" parent="Cliffs/West" unique_id=206619642]
+transform = Transform3D(20.880997, 0, 0, 0, 39, 0, 0, 0, 18, -115.5595, 8.5, 3)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, -6, -105.119, 28, 12)
+web_box = PackedFloat64Array()
+
+[node name="Cliff8" type="Node3D" parent="Cliffs/West" unique_id=516895955]
+transform = Transform3D(20.901001, 0, 0, 0, 37, 0, 0, 0, 20, -115.5495, 7.5, 22)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, 12, -105.099, 26, 32)
+web_box = PackedFloat64Array()
+
+[node name="Cliff9" type="Node3D" parent="Cliffs/West" unique_id=185795762]
+transform = Transform3D(17.414001, 0, 0, 0, 35, 0, 0, 0, 18, -117.293, 6.5, 41)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, 32, -108.586, 24, 50)
+web_box = PackedFloat64Array()
+
+[node name="Cliff10" type="Node3D" parent="Cliffs/West" unique_id=1840299538]
+transform = Transform3D(16.859001, 0, 0, 0, 43, 0, 0, 0, 18, -117.570496, 10.5, 59)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, 50, -109.141, 32, 68)
+web_box = PackedFloat64Array()
+
+[node name="Cliff11" type="Node3D" parent="Cliffs/West" unique_id=2134145055]
+transform = Transform3D(17.513, 0, 0, 0, 43, 0, 0, 0, 18, -117.2435, 10.5, 77)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, 68, -108.487, 32, 86)
+web_box = PackedFloat64Array()
+
+[node name="Cliff12" type="Node3D" parent="Cliffs/West" unique_id=1212999178]
+transform = Transform3D(19.601997, 0, 0, 0, 35, 0, 0, 0, 16, -116.199005, 6.5, 94)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, 86, -106.398, 24, 102)
+web_box = PackedFloat64Array()
+
+[node name="Cliff12Shelf" type="Node3D" parent="Cliffs/West" unique_id=1649994881]
+transform = Transform3D(3.248001, 0, 0, 0, 19.519001, 0, 0, 0, 7.2680054, -104.774, -1.2405, 92.834)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-106.398, -11, 89.2, -103.15, 8.519, 96.468)
+web_box = PackedFloat64Array()
+
+[node name="Cliff13" type="Node3D" parent="Cliffs/West" unique_id=125469460]
+transform = Transform3D(19.154, 0, 0, 0, 35, 0, 0, 0, 8, -116.423004, 6.5, 106)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-126, -11, 102, -106.846, 24, 110)
+web_box = PackedFloat64Array()
+
+[node name="East" type="Node3D" parent="Cliffs" unique_id=618038789]
+
+[node name="Cliff1" type="Node3D" parent="Cliffs/East" unique_id=1664943241]
+transform = Transform3D(16.829002, 0, 0, 0, 37, 0, 0, 0, 14, 117.585495, 7.5, -103)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(109.171, -11, -110, 126, 26, -96)
+web_box = PackedFloat64Array()
+
+[node name="Cliff1Shelf" type="Node3D" parent="Cliffs/East" unique_id=1407434552]
+transform = Transform3D(2.9649963, 0, 0, 0, 21.807999, 0, 0, 0, 7.903, 107.6885, -0.096000195, -103.2485)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(106.206, -11, -107.2, 109.171, 10.808, -99.297)
+web_box = PackedFloat64Array()
+
+[node name="Cliff2" type="Node3D" parent="Cliffs/East" unique_id=1693974157]
+transform = Transform3D(18.327003, 0, 0, 0, 41, 0, 0, 0, 18, 116.8365, 9.5, -87)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(107.673, -11, -96, 126, 30, -78)
+web_box = PackedFloat64Array()
+
+[node name="Cliff3" type="Node3D" parent="Cliffs/East" unique_id=862063255]
+transform = Transform3D(18.950996, 0, 0, 0, 37, 0, 0, 0, 12, 116.524506, 7.5, -72)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(107.049, -11, -78, 126, 26, -66)
+web_box = PackedFloat64Array()
+
+[node name="Cliff4" type="Node3D" parent="Cliffs/East" unique_id=1207657772]
+transform = Transform3D(16.002998, 0, 0, 0, 41, 0, 0, 0, 16, 117.998505, 9.5, -58)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(109.997, -11, -66, 126, 30, -50)
+web_box = PackedFloat64Array()
+
+[node name="Cliff5" type="Node3D" parent="Cliffs/East" unique_id=1236660433]
+transform = Transform3D(20.332, 0, 0, 0, 45, 0, 0, 0, 18, 115.834, 11.5, -41)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(105.668, -11, -50, 126, 34, -32)
+web_box = PackedFloat64Array()
+
+[node name="Cliff6" type="Node3D" parent="Cliffs/East" unique_id=1026808582]
+transform = Transform3D(20.821999, 0, 0, 0, 43, 0, 0, 0, 16, 115.589005, 10.5, -24)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(105.178, -11, -32, 126, 32, -16)
+web_box = PackedFloat64Array()
+
+[node name="Cliff7" type="Node3D" parent="Cliffs/East" unique_id=791042224]
+transform = Transform3D(17.475998, 0, 0, 0, 43, 0, 0, 0, 12, 117.262, 10.5, -10)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(108.524, -11, -16, 126, 32, -4)
+web_box = PackedFloat64Array()
+
+[node name="Cliff7Shelf" type="Node3D" parent="Cliffs/East" unique_id=1615429371]
+transform = Transform3D(3.9169998, 0, 0, 0, 19.485, 0, 0, 0, 7.747, 106.565506, -1.2575002, -9.7265005)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(104.607, -11, -13.6, 108.524, 8.485, -5.853)
+web_box = PackedFloat64Array()
+
+[node name="Cliff8" type="Node3D" parent="Cliffs/East" unique_id=1913760308]
+transform = Transform3D(18.045998, 0, 0, 0, 43, 0, 0, 0, 18, 116.977005, 10.5, 5)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(107.954, -11, -4, 126, 32, 14)
+web_box = PackedFloat64Array()
+
+[node name="Cliff9" type="Node3D" parent="Cliffs/East" unique_id=1284945663]
+transform = Transform3D(18.336998, 0, 0, 0, 37, 0, 0, 0, 16, 116.8315, 7.5, 22)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(107.663, -11, 14, 126, 26, 30)
+web_box = PackedFloat64Array()
+
+[node name="Cliff10" type="Node3D" parent="Cliffs/East" unique_id=1142793559]
+transform = Transform3D(18.385002, 0, 0, 0, 37, 0, 0, 0, 20, 116.807495, 7.5, 40)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(107.615, -11, 30, 126, 26, 50)
+web_box = PackedFloat64Array()
+
+[node name="Cliff11" type="Node3D" parent="Cliffs/East" unique_id=543791910]
+transform = Transform3D(16.454002, 0, 0, 0, 45, 0, 0, 0, 20, 117.772995, 11.5, 60)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(109.546, -11, 50, 126, 34, 70)
+web_box = PackedFloat64Array()
+
+[node name="Cliff11Shelf" type="Node3D" parent="Cliffs/East" unique_id=2094427601]
+transform = Transform3D(3.1319962, 0, 0, 0, 16.647999, 0, 0, 0, 11.691002, 107.979996, -2.676, 59.8455)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(106.414, -11, 54, 109.546, 5.648, 65.691)
+web_box = PackedFloat64Array()
+
+[node name="Cliff12" type="Node3D" parent="Cliffs/East" unique_id=854264866]
+transform = Transform3D(17.626999, 0, 0, 0, 43, 0, 0, 0, 14, 117.1865, 10.5, 77)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(108.373, -11, 70, 126, 32, 84)
+web_box = PackedFloat64Array()
+
+[node name="Cliff12Shelf" type="Node3D" parent="Cliffs/East" unique_id=1381962903]
+transform = Transform3D(2.453003, 0, 0, 0, 18.59, 0, 0, 0, 6.8239975, 107.1465, -1.7049999, 76.212006)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(105.92, -11, 72.8, 108.373, 7.59, 79.624)
+web_box = PackedFloat64Array()
+
+[node name="Cliff13" type="Node3D" parent="Cliffs/East" unique_id=989988256]
+transform = Transform3D(17.918999, 0, 0, 0, 37, 0, 0, 0, 18, 117.0405, 7.5, 93)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(108.081, -11, 84, 126, 26, 102)
+web_box = PackedFloat64Array()
+
+[node name="Cliff14" type="Node3D" parent="Cliffs/East" unique_id=1019009492]
+transform = Transform3D(19.705002, 0, 0, 0, 39, 0, 0, 0, 8, 116.1475, 8.5, 106)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(106.295, -11, 102, 126, 28, 110)
+web_box = PackedFloat64Array()
+
+[node name="Barriers" type="Node3D" parent="." unique_id=1815296614]
+
+[node name="BarrierNorth" type="Node3D" parent="Barriers" unique_id=1283625004]
+transform = Transform3D(254, 0, 0, 0, 102, 0, 0, 0, 1, 0, 39, -126.5)
+script = ExtResource("2_e5yd8")
+kind = "barrier"
+box = PackedFloat64Array(-127, -12, -127, 127, 90, -126)
+web_box = PackedFloat64Array()
+
+[node name="BarrierSouth" type="Node3D" parent="Barriers" unique_id=1241597790]
+transform = Transform3D(254, 0, 0, 0, 102, 0, 0, 0, 1, 0, 39, 126.5)
+script = ExtResource("2_e5yd8")
+kind = "barrier"
+box = PackedFloat64Array(-127, -12, 126, 127, 90, 127)
+web_box = PackedFloat64Array()
+
+[node name="BarrierWest" type="Node3D" parent="Barriers" unique_id=549302754]
+transform = Transform3D(1, 0, 0, 0, 102, 0, 0, 0, 252, -126.5, 39, 0)
+script = ExtResource("2_e5yd8")
+kind = "barrier"
+box = PackedFloat64Array(-127, -12, -126, -126, 90, 126)
+web_box = PackedFloat64Array()
+
+[node name="BarrierEast" type="Node3D" parent="Barriers" unique_id=472608035]
+transform = Transform3D(1, 0, 0, 0, 102, 0, 0, 0, 252, 126.5, 39, 0)
+script = ExtResource("2_e5yd8")
+kind = "barrier"
+box = PackedFloat64Array(126, -12, -126, 127, 90, 126)
+web_box = PackedFloat64Array()
+
+[node name="Highlands" type="Node3D" parent="." unique_id=145971595]
+
+[node name="Plateau" type="Node3D" parent="Highlands" unique_id=49509095]
+
+[node name="Rock1" type="Node3D" parent="Highlands/Plateau" unique_id=1512659682]
+transform = Transform3D(154, 0, 0, 0, 9.4, 0, 0, 0, 8, -33, 4.7, -106)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-110, 0, -110, 44, 9.4, -102)
+web_box = PackedFloat64Array()
+
+[node name="Rock2" type="Node3D" parent="Highlands/Plateau" unique_id=929330283]
+transform = Transform3D(62, 0, 0, 0, 9.4, 0, 0, 0, 14, -79, 4.7, -95)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-110, 0, -102, -48, 9.4, -88)
+web_box = PackedFloat64Array()
+
+[node name="Rock3" type="Node3D" parent="Highlands/Plateau" unique_id=1210433039]
+transform = Transform3D(70, 0, 0, 0, 9.4, 0, 0, 0, 14, 9, 4.7, -95)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-26, 0, -102, 44, 9.4, -88)
+web_box = PackedFloat64Array()
+
+[node name="Rock4" type="Node3D" parent="Highlands/Plateau" unique_id=109677165]
+transform = Transform3D(70, 0, 0, 0, 9.4, 0, 0, 0, 20, -75, 4.7, -78)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-110, 0, -88, -40, 9.4, -68)
+web_box = PackedFloat64Array()
+
+[node name="Rock5" type="Node3D" parent="Highlands/Plateau" unique_id=1807178730]
+transform = Transform3D(78, 0, 0, 0, 9.4, 0, 0, 0, 20, 5, 4.7, -78)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-34, 0, -88, 44, 9.4, -68)
+web_box = PackedFloat64Array()
+
+[node name="Grass1" type="Node3D" parent="Highlands/Plateau" unique_id=1624142782]
+transform = Transform3D(154, 0, 0, 0, 0.6000004, 0, 0, 0, 11, -33, 9.7, -104.5)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-110, 9.4, -110, 44, 10, -99)
+web_box = PackedFloat64Array()
+
+[node name="Grass2" type="Node3D" parent="Highlands/Plateau" unique_id=549217299]
+transform = Transform3D(64, 0, 0, 0, 0.6000004, 0, 0, 0, 4, -78, 9.7, -97)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-110, 9.4, -99, -46, 10, -95)
+web_box = PackedFloat64Array()
+
+[node name="Grass3" type="Node3D" parent="Highlands/Plateau" unique_id=843988164]
+transform = Transform3D(86, 0, 0, 0, 0.6000004, 0, 0, 0, 4, 1, 9.7, -97)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-42, 9.4, -99, 44, 10, -95)
+web_box = PackedFloat64Array()
+
+[node name="Grass4" type="Node3D" parent="Highlands/Plateau" unique_id=2008566688]
+transform = Transform3D(154, 0, 0, 0, 0.6000004, 0, 0, 0, 27, -33, 9.7, -81.5)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-110, 9.4, -95, 44, 10, -68)
+web_box = PackedFloat64Array()
+
+[node name="Cave" type="Node3D" parent="Highlands" unique_id=1078869029]
+
+[node name="TunnelRoof" type="Node3D" parent="Highlands/Cave" unique_id=2021068170]
+transform = Transform3D(6, 0, 0, 0, 4.3999996, 0, 0, 0, 20, -37, 7.2, -78)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-40, 5, -88, -34, 9.4, -68)
+web_box = PackedFloat64Array()
+
+[node name="ChamberRoof1" type="Node3D" parent="Highlands/Cave" unique_id=923724095]
+transform = Transform3D(22, 0, 0, 0, 1.3999996, 0, 0, 0, 3, -37, 8.7, -100.5)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-48, 8, -102, -26, 9.4, -99)
+web_box = PackedFloat64Array()
+
+[node name="ChamberRoof2" type="Node3D" parent="Highlands/Cave" unique_id=959613083]
+transform = Transform3D(2, 0, 0, 0, 1.3999996, 0, 0, 0, 4, -47, 8.7, -97)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-48, 8, -99, -46, 9.4, -95)
+web_box = PackedFloat64Array()
+
+[node name="ChamberRoof3" type="Node3D" parent="Highlands/Cave" unique_id=38187650]
+transform = Transform3D(16, 0, 0, 0, 1.3999996, 0, 0, 0, 4, -34, 8.7, -97)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-42, 8, -99, -26, 9.4, -95)
+web_box = PackedFloat64Array()
+
+[node name="ChamberRoof4" type="Node3D" parent="Highlands/Cave" unique_id=1415004783]
+transform = Transform3D(22, 0, 0, 0, 1.3999996, 0, 0, 0, 7, -37, 8.7, -91.5)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-48, 8, -95, -26, 9.4, -88)
+web_box = PackedFloat64Array()
+
+[node name="Crystal1" type="Node3D" parent="Highlands/Cave" unique_id=351894149]
+transform = Transform3D(1.2000008, 0, 0, 0, 3.2, 0, 0, 0, 1.199997, -29, 1.6, -100.5)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-29.6, 0, -101.1, -28.4, 3.2, -99.9)
+web_box = PackedFloat64Array()
+
+[node name="Crystal2" type="Node3D" parent="Highlands/Cave" unique_id=1872306191]
+transform = Transform3D(1, 0, 0, 0, 2.4, 0, 0, 0, 1, -27.5, 1.2, -97.5)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-28, 0, -98, -27, 2.4, -97)
+web_box = PackedFloat64Array()
+
+[node name="Crystal3" type="Node3D" parent="Highlands/Cave" unique_id=919498825]
+transform = Transform3D(0.9000015, 0, 0, 0, 1.8, 0, 0, 0, 0.8999939, -46.5, 0.9, -89.5)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-46.95, 0, -89.95, -46.05, 1.8, -89.05)
+web_box = PackedFloat64Array()
+
+[node name="SkylightPad" type="Node3D" parent="Highlands/Cave" unique_id=295513452]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44, 0, -95.5)
+script = ExtResource("3_irwad")
+launch = 22.0
+forward = 4.0
+directional = true
+at = PackedFloat64Array(-44, 0, -95.5)
+
+[node name="Ramps" type="Node3D" parent="Highlands" unique_id=1686379356]
+
+[node name="RampWest" type="Node3D" parent="Highlands/Ramps" unique_id=503107962]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 25, -79, 5, -55.5)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+ramp = "z-"
+box = PackedFloat64Array(-84, 0, -68, -74, 10, -43)
+web_box = PackedFloat64Array()
+
+[node name="RampEast" type="Node3D" parent="Highlands/Ramps" unique_id=1355385932]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 25, 39, 5, -55.5)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+ramp = "z-"
+box = PackedFloat64Array(34, 0, -68, 44, 10, -43)
+web_box = PackedFloat64Array()
+
+[node name="WatchPost" type="Node3D" parent="Highlands" unique_id=1391324106]
+
+[node name="Base" type="Node3D" parent="Highlands/WatchPost" unique_id=2011454897]
+transform = Transform3D(12, 0, 0, 0, 0.39999962, 0, 0, 0, 12, -2, 10.2, -86)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-8, 10, -92, 4, 10.4, -80)
+web_box = PackedFloat64Array()
+
+[node name="Column1" type="Node3D" parent="Highlands/WatchPost" unique_id=427510658]
+transform = Transform3D(1.1999998, 0, 0, 0, 5, 0, 0, 0, 1.199997, -7.4, 12.9, -91.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-8, 10.4, -92, -6.8, 15.4, -90.8)
+web_box = PackedFloat64Array()
+
+[node name="Column2" type="Node3D" parent="Highlands/WatchPost" unique_id=1910487813]
+transform = Transform3D(1.2, 0, 0, 0, 3.2000008, 0, 0, 0, 1.199997, 3.4, 12, -91.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(2.8, 10.4, -92, 4, 13.6, -90.8)
+web_box = PackedFloat64Array()
+
+[node name="Column3" type="Node3D" parent="Highlands/WatchPost" unique_id=444286941]
+transform = Transform3D(1.1999998, 0, 0, 0, 2.2000008, 0, 0, 0, 1.199997, -7.4, 11.5, -80.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-8, 10.4, -81.2, -6.8, 12.6, -80)
+web_box = PackedFloat64Array()
+
+[node name="Column4" type="Node3D" parent="Highlands/WatchPost" unique_id=136510661]
+transform = Transform3D(1.2, 0, 0, 0, 6, 0, 0, 0, 1.199997, 3.4, 13.4, -80.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(2.8, 10.4, -81.2, 4, 16.4, -80)
+web_box = PackedFloat64Array()
+
+[node name="Lintel" type="Node3D" parent="Highlands/WatchPost" unique_id=1575074679]
+transform = Transform3D(12, 0, 0, 0, 0.80000114, 0, 0, 0, 1.199997, -2, 15.8, -91.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-8, 15.4, -92, 4, 16.2, -90.8)
+web_box = PackedFloat64Array()
+
+[node name="Mesas" type="Node3D" parent="." unique_id=1109354137]
+
+[node name="MesaWest" type="Node3D" parent="Mesas" unique_id=1620139941]
+
+[node name="Mesa" type="Node3D" parent="Mesas/MesaWest" unique_id=19993810]
+transform = Transform3D(12, 0, 0, 0, 17.4, 0, 0, 0, 12, -26, 8.7, -50)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-32, 0, -56, -20, 17.4, -44)
+web_box = PackedFloat64Array()
+
+[node name="MesaTop" type="Node3D" parent="Mesas/MesaWest" unique_id=245906090]
+transform = Transform3D(12, 0, 0, 0, 0.6000004, 0, 0, 0, 12, -26, 17.7, -50)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-32, 17.4, -56, -20, 18, -44)
+web_box = PackedFloat64Array()
+
+[node name="Ledge" type="Node3D" parent="Mesas/MesaWest" unique_id=876076756]
+transform = Transform3D(10, 0, 0, 0, 0.6000004, 0, 0, 0, 6, -26, 8.7, -41)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-31, 8.4, -44, -21, 9, -38)
+web_box = PackedFloat64Array()
+
+[node name="PadFromPlateau" type="Node3D" parent="Mesas/MesaWest" unique_id=782489069]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 10, -71)
+script = ExtResource("3_irwad")
+launch = 20.0
+forward = 16.0
+directional = true
+dir_z = 1.0
+at = PackedFloat64Array(-26, 10, -71)
+
+[node name="PadToMid" type="Node3D" parent="Mesas/MesaWest" unique_id=2092615147]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.5, 18, -53)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 13.0
+directional = true
+dir_x = 1.0
+dir_z = 0.0
+at = PackedFloat64Array(-23.5, 18, -53)
+
+[node name="PadToLedge" type="Node3D" parent="Mesas/MesaWest" unique_id=1911868152]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, -34)
+script = ExtResource("3_irwad")
+launch = 22.0
+forward = 6.0
+directional = true
+at = PackedFloat64Array(-28, 0, -34)
+
+[node name="LedgePad" type="Node3D" parent="Mesas/MesaWest" unique_id=310451898]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23, 9, -39.5)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 5.0
+directional = true
+at = PackedFloat64Array(-23, 9, -39.5)
+
+[node name="MesaMid" type="Node3D" parent="Mesas" unique_id=981376582]
+
+[node name="Mesa" type="Node3D" parent="Mesas/MesaMid" unique_id=247216067]
+transform = Transform3D(12, 0, 0, 0, 27.4, 0, 0, 0, 12, 0, 13.7, -56)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-6, 0, -62, 6, 27.4, -50)
+web_box = PackedFloat64Array()
+
+[node name="MesaTop" type="Node3D" parent="Mesas/MesaMid" unique_id=107807545]
+transform = Transform3D(12, 0, 0, 0, 0.6000004, 0, 0, 0, 12, 0, 27.7, -56)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-6, 27.4, -62, 6, 28, -50)
+web_box = PackedFloat64Array()
+
+[node name="ShrineLeft" type="Node3D" parent="Mesas/MesaMid" unique_id=12304370]
+transform = Transform3D(1.2, 0, 0, 0, 3, 0, 0, 0, 1.2000008, -3.4, 29.5, -59.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-4, 28, -60, -2.8, 31, -58.8)
+web_box = PackedFloat64Array()
+
+[node name="ShrineRight" type="Node3D" parent="Mesas/MesaMid" unique_id=734885467]
+transform = Transform3D(1.2, 0, 0, 0, 3, 0, 0, 0, 1.2000008, 3.4, 29.5, -59.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(2.8, 28, -60, 4, 31, -58.8)
+web_box = PackedFloat64Array()
+
+[node name="ShrineTop" type="Node3D" parent="Mesas/MesaMid" unique_id=1991792753]
+transform = Transform3D(8.8, 0, 0, 0, 0.79999924, 0, 0, 0, 2, 0, 31.4, -59.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-4.4, 31, -60.4, 4.4, 31.8, -58.4)
+web_box = PackedFloat64Array()
+
+[node name="Shard" type="Node3D" parent="Mesas/MesaMid" unique_id=921776926]
+transform = Transform3D(1.2, 0, 0, 0, 2.2000008, 0, 0, 0, 1.2000008, 0, 29.1, -59.199997)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-0.6, 28, -59.8, 0.6, 30.2, -58.6)
+web_box = PackedFloat64Array()
+
+[node name="MesaEast" type="Node3D" parent="Mesas" unique_id=601133891]
+
+[node name="Mesa" type="Node3D" parent="Mesas/MesaEast" unique_id=564117903]
+transform = Transform3D(12, 0, 0, 0, 17.4, 0, 0, 0, 12, 26, 8.7, -50)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(20, 0, -56, 32, 17.4, -44)
+web_box = PackedFloat64Array()
+
+[node name="MesaTop" type="Node3D" parent="Mesas/MesaEast" unique_id=1630628853]
+transform = Transform3D(12, 0, 0, 0, 0.6000004, 0, 0, 0, 12, 26, 17.7, -50)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(20, 17.4, -56, 32, 18, -44)
+web_box = PackedFloat64Array()
+
+[node name="Ledge" type="Node3D" parent="Mesas/MesaEast" unique_id=344602604]
+transform = Transform3D(10, 0, 0, 0, 0.6000004, 0, 0, 0, 6, 26, 8.7, -41)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(21, 8.4, -44, 31, 9, -38)
+web_box = PackedFloat64Array()
+
+[node name="PadFromPlateau" type="Node3D" parent="Mesas/MesaEast" unique_id=1546389175]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 10, -71)
+script = ExtResource("3_irwad")
+launch = 20.0
+forward = 16.0
+directional = true
+dir_z = 1.0
+at = PackedFloat64Array(26, 10, -71)
+
+[node name="PadToMid" type="Node3D" parent="Mesas/MesaEast" unique_id=569296930]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.5, 18, -53)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 13.0
+directional = true
+dir_x = -1.0
+dir_z = 0.0
+at = PackedFloat64Array(23.5, 18, -53)
+
+[node name="PadToLedge" type="Node3D" parent="Mesas/MesaEast" unique_id=1246711473]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, -34)
+script = ExtResource("3_irwad")
+launch = 22.0
+forward = 6.0
+directional = true
+at = PackedFloat64Array(28, 0, -34)
+
+[node name="LedgePad" type="Node3D" parent="Mesas/MesaEast" unique_id=1106090686]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 9, -39.5)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 5.0
+directional = true
+at = PackedFloat64Array(23, 9, -39.5)
+
+[node name="SkyBridge" type="Node3D" parent="Mesas" unique_id=1945226649]
+transform = Transform3D(40, 0, 0, 0, 0.39999962, 0, 0, 0, 2, 0, 17.8, -48)
+script = ExtResource("2_e5yd8")
+kind = "wood"
+box = PackedFloat64Array(-20, 17.6, -49, 20, 18, -47)
+web_box = PackedFloat64Array()
+
+[node name="BridgePost1" type="Node3D" parent="Mesas" unique_id=543198065]
+transform = Transform3D(0.29999924, 0, 0, 0, 1.2000008, 0, 0, 0, 0.20000076, -19.85, 18.6, -49.1)
+script = ExtResource("2_e5yd8")
+kind = "trim"
+box = PackedFloat64Array(-20, 18, -49.2, -19.7, 19.2, -49)
+web_box = PackedFloat64Array()
+
+[node name="BridgePost2" type="Node3D" parent="Mesas" unique_id=204366381]
+transform = Transform3D(0.29999924, 0, 0, 0, 1.2000008, 0, 0, 0, 0.20000076, -19.85, 18.6, -46.9)
+script = ExtResource("2_e5yd8")
+kind = "trim"
+box = PackedFloat64Array(-20, 18, -47, -19.7, 19.2, -46.8)
+web_box = PackedFloat64Array()
+
+[node name="BridgePost3" type="Node3D" parent="Mesas" unique_id=1078914222]
+transform = Transform3D(0.29999924, 0, 0, 0, 1.2000008, 0, 0, 0, 0.20000076, 19.85, 18.6, -49.1)
+script = ExtResource("2_e5yd8")
+kind = "trim"
+box = PackedFloat64Array(19.7, 18, -49.2, 20, 19.2, -49)
+web_box = PackedFloat64Array()
+
+[node name="BridgePost4" type="Node3D" parent="Mesas" unique_id=390851584]
+transform = Transform3D(0.29999924, 0, 0, 0, 1.2000008, 0, 0, 0, 0.20000076, 19.85, 18.6, -46.9)
+script = ExtResource("2_e5yd8")
+kind = "trim"
+box = PackedFloat64Array(19.7, 18, -47, 20, 19.2, -46.8)
+web_box = PackedFloat64Array()
+
+[node name="SunstoneRuins" type="Node3D" parent="." unique_id=1533518576]
+
+[node name="Plaza" type="Node3D" parent="SunstoneRuins" unique_id=768662507]
+
+[node name="Step1" type="Node3D" parent="SunstoneRuins/Plaza" unique_id=301596515]
+transform = Transform3D(48, 0, 0, 0, 0.4, 0, 0, 0, 48, 0, 0.2, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-24, 0, -24, 24, 0.4, 24)
+web_box = PackedFloat64Array()
+
+[node name="Step2" type="Node3D" parent="SunstoneRuins/Plaza" unique_id=615626035]
+transform = Transform3D(46, 0, 0, 0, 0.4, 0, 0, 0, 46, 0, 0.6, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-23, 0.4, -23, 23, 0.8, 23)
+web_box = PackedFloat64Array()
+
+[node name="Step3" type="Node3D" parent="SunstoneRuins/Plaza" unique_id=82462419]
+transform = Transform3D(44, 0, 0, 0, 0.40000004, 0, 0, 0, 44, 0, 1, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-22, 0.8, -22, 22, 1.2, 22)
+web_box = PackedFloat64Array()
+
+[node name="Pillars" type="Node3D" parent="SunstoneRuins" unique_id=1195845738]
+
+[node name="PillarNE" type="Node3D" parent="SunstoneRuins/Pillars" unique_id=1927321687]
+transform = Transform3D(6, 0, 0, 0, 20.8, 0, 0, 0, 6, 15, 11.6, -15)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(12, 1.2, -18, 18, 22, -12)
+web_box = PackedFloat64Array()
+
+[node name="LedgeNE" type="Node3D" parent="SunstoneRuins/Pillars" unique_id=1838363859]
+transform = Transform3D(9, 0, 0, 0, 1, 0, 0, 0, 6, 22.5, 11.5, -15)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(18, 11, -18, 27, 12, -12)
+web_box = PackedFloat64Array()
+
+[node name="PillarSE" type="Node3D" parent="SunstoneRuins/Pillars" unique_id=527069415]
+transform = Transform3D(6, 0, 0, 0, 20.8, 0, 0, 0, 6, 15, 11.6, 15)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(12, 1.2, 12, 18, 22, 18)
+web_box = PackedFloat64Array()
+
+[node name="LedgeSE" type="Node3D" parent="SunstoneRuins/Pillars" unique_id=2130635651]
+transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 9, 15, 11.5, 22.5)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(12, 11, 18, 18, 12, 27)
+web_box = PackedFloat64Array()
+
+[node name="PillarSW" type="Node3D" parent="SunstoneRuins/Pillars" unique_id=1813902410]
+transform = Transform3D(6, 0, 0, 0, 20.8, 0, 0, 0, 6, -15, 11.6, 15)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-18, 1.2, 12, -12, 22, 18)
+web_box = PackedFloat64Array()
+
+[node name="LedgeSW" type="Node3D" parent="SunstoneRuins/Pillars" unique_id=285626332]
+transform = Transform3D(9, 0, 0, 0, 1, 0, 0, 0, 6, -22.5, 11.5, 15)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-27, 11, 12, -18, 12, 18)
+web_box = PackedFloat64Array()
+
+[node name="PillarNW" type="Node3D" parent="SunstoneRuins/Pillars" unique_id=176770691]
+transform = Transform3D(6, 0, 0, 0, 20.8, 0, 0, 0, 6, -15, 11.6, -15)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-18, 1.2, -18, -12, 22, -12)
+web_box = PackedFloat64Array()
+
+[node name="LedgeNW" type="Node3D" parent="SunstoneRuins/Pillars" unique_id=1675298585]
+transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 9, -15, 11.5, -22.5)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-18, 11, -27, -12, 12, -18)
+web_box = PackedFloat64Array()
+
+[node name="Pads" type="Node3D" parent="SunstoneRuins" unique_id=1139759614]
+
+[node name="GroundToLedgeNE" type="Node3D" parent="SunstoneRuins/Pads" unique_id=472760281]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, -15)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_x = -1.0
+dir_z = 0.0
+at = PackedFloat64Array(35, 0, -15)
+
+[node name="LedgeToCrownNE" type="Node3D" parent="SunstoneRuins/Pads" unique_id=1909268573]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 12, -15)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_x = -1.0
+dir_z = 0.0
+at = PackedFloat64Array(26, 12, -15)
+
+[node name="GroundToLedgeSE" type="Node3D" parent="SunstoneRuins/Pads" unique_id=1855383991]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 35)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+at = PackedFloat64Array(15, 0, 35)
+
+[node name="LedgeToCrownSE" type="Node3D" parent="SunstoneRuins/Pads" unique_id=2091603862]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 12, 26)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+at = PackedFloat64Array(15, 12, 26)
+
+[node name="GroundToLedgeSW" type="Node3D" parent="SunstoneRuins/Pads" unique_id=906854707]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 0, 15)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_x = 1.0
+dir_z = 0.0
+at = PackedFloat64Array(-35, 0, 15)
+
+[node name="LedgeToCrownSW" type="Node3D" parent="SunstoneRuins/Pads" unique_id=726030640]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 12, 15)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_x = 1.0
+dir_z = 0.0
+at = PackedFloat64Array(-26, 12, 15)
+
+[node name="GroundToLedgeNW" type="Node3D" parent="SunstoneRuins/Pads" unique_id=1302537603]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, -35)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_z = 1.0
+at = PackedFloat64Array(-15, 0, -35)
+
+[node name="LedgeToCrownNW" type="Node3D" parent="SunstoneRuins/Pads" unique_id=138210813]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 12, -26)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_z = 1.0
+at = PackedFloat64Array(-15, 12, -26)
+
+[node name="CrownToSunstoneNE" type="Node3D" parent="SunstoneRuins/Pads" unique_id=56070935]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 24, 0)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_x = -1.0
+dir_z = 0.0
+at = PackedFloat64Array(15, 24, 0)
+
+[node name="CrownToSunstoneSE" type="Node3D" parent="SunstoneRuins/Pads" unique_id=117471560]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 24, 15)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+at = PackedFloat64Array(0, 24, 15)
+
+[node name="CrownToSunstoneSW" type="Node3D" parent="SunstoneRuins/Pads" unique_id=1356451960]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 24, 0)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_x = 1.0
+dir_z = 0.0
+at = PackedFloat64Array(-15, 24, 0)
+
+[node name="CrownToSunstoneNW" type="Node3D" parent="SunstoneRuins/Pads" unique_id=742097242]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 24, -15)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_z = 1.0
+at = PackedFloat64Array(0, 24, -15)
+
+[node name="Crown" type="Node3D" parent="SunstoneRuins" unique_id=2120446606]
+
+[node name="North" type="Node3D" parent="SunstoneRuins/Crown" unique_id=274782147]
+transform = Transform3D(36, 0, 0, 0, 2, 0, 0, 0, 6, 0, 23, -15)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-18, 22, -18, 18, 24, -12)
+web_box = PackedFloat64Array()
+
+[node name="South" type="Node3D" parent="SunstoneRuins/Crown" unique_id=128552098]
+transform = Transform3D(36, 0, 0, 0, 2, 0, 0, 0, 6, 0, 23, 15)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-18, 22, 12, 18, 24, 18)
+web_box = PackedFloat64Array()
+
+[node name="West" type="Node3D" parent="SunstoneRuins/Crown" unique_id=1098224636]
+transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 24, -15, 23, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-18, 22, -12, -12, 24, 12)
+web_box = PackedFloat64Array()
+
+[node name="East" type="Node3D" parent="SunstoneRuins/Crown" unique_id=654150732]
+transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 24, 15, 23, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(12, 22, -12, 18, 24, 12)
+web_box = PackedFloat64Array()
+
+[node name="MerlonNE1" type="Node3D" parent="SunstoneRuins/Crown" unique_id=1138557171]
+transform = Transform3D(1.1999998, 0, 0, 0, 1.2000008, 0, 0, 0, 1.2000008, -7.9, 24.6, -17.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-8.5, 24, -18, -7.3, 25.2, -16.8)
+web_box = PackedFloat64Array()
+
+[node name="MerlonNE2" type="Node3D" parent="SunstoneRuins/Crown" unique_id=664973861]
+transform = Transform3D(1.1999998, 0, 0, 0, 1.2000008, 0, 0, 0, 1.2000008, 7.9, 24.6, -17.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(7.3, 24, -18, 8.5, 25.2, -16.8)
+web_box = PackedFloat64Array()
+
+[node name="MerlonSE1" type="Node3D" parent="SunstoneRuins/Crown" unique_id=448591205]
+transform = Transform3D(1.2000008, 0, 0, 0, 1.2000008, 0, 0, 0, 1.1999998, 17.4, 24.6, -7.9)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(16.8, 24, -8.5, 18, 25.2, -7.3)
+web_box = PackedFloat64Array()
+
+[node name="MerlonSE2" type="Node3D" parent="SunstoneRuins/Crown" unique_id=1969301929]
+transform = Transform3D(1.2000008, 0, 0, 0, 1.2000008, 0, 0, 0, 1.1999998, 17.4, 24.6, 7.9)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(16.8, 24, 7.3, 18, 25.2, 8.5)
+web_box = PackedFloat64Array()
+
+[node name="MerlonSW1" type="Node3D" parent="SunstoneRuins/Crown" unique_id=714989720]
+transform = Transform3D(1.1999998, 0, 0, 0, 1.2000008, 0, 0, 0, 1.2000008, 7.9, 24.6, 17.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(7.3, 24, 16.8, 8.5, 25.2, 18)
+web_box = PackedFloat64Array()
+
+[node name="MerlonSW2" type="Node3D" parent="SunstoneRuins/Crown" unique_id=571415610]
+transform = Transform3D(1.1999998, 0, 0, 0, 1.2000008, 0, 0, 0, 1.2000008, -7.9, 24.6, 17.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-8.5, 24, 16.8, -7.3, 25.2, 18)
+web_box = PackedFloat64Array()
+
+[node name="MerlonNW1" type="Node3D" parent="SunstoneRuins/Crown" unique_id=782895196]
+transform = Transform3D(1.2000008, 0, 0, 0, 1.2000008, 0, 0, 0, 1.1999998, -17.4, 24.6, 7.9)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-18, 24, 7.3, -16.8, 25.2, 8.5)
+web_box = PackedFloat64Array()
+
+[node name="MerlonNW2" type="Node3D" parent="SunstoneRuins/Crown" unique_id=523700196]
+transform = Transform3D(1.2000008, 0, 0, 0, 1.2000008, 0, 0, 0, 1.1999998, -17.4, 24.6, -7.9)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-18, 24, -8.5, -16.8, 25.2, -7.3)
+web_box = PackedFloat64Array()
+
+[node name="Sunstone" type="Node3D" parent="SunstoneRuins" unique_id=36048735]
+
+[node name="Platform1" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=325690426]
+transform = Transform3D(1.4, 0, 0, 0, 1.5, 0, 0, 0, 1.4, 0, 25.75, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-0.7, 25, -0.7, 0.7, 26.5, 0.7)
+web_box = PackedFloat64Array()
+
+[node name="Platform2" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=71692673]
+transform = Transform3D(3, 0, 0, 0, 1.5, 0, 0, 0, 3, 0, 27.25, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-1.5, 26.5, -1.5, 1.5, 28, 1.5)
+web_box = PackedFloat64Array()
+
+[node name="Platform3" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=2022309555]
+transform = Transform3D(4.8, 0, 0, 0, 2, 0, 0, 0, 4.8, 0, 29, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-2.4, 28, -2.4, 2.4, 30, 2.4)
+web_box = PackedFloat64Array()
+
+[node name="Platform4" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=2082669499]
+transform = Transform3D(6.4, 0, 0, 0, 2, 0, 0, 0, 6.4, 0, 31, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-3.2, 30, -3.2, 3.2, 32, 3.2)
+web_box = PackedFloat64Array()
+
+[node name="Platform5" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=1523863781]
+transform = Transform3D(8, 0, 0, 0, 2, 0, 0, 0, 8, 0, 33, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-4, 32, -4, 4, 34, 4)
+web_box = PackedFloat64Array()
+
+[node name="Platform6" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=1095846121]
+transform = Transform3D(9, 0, 0, 0, 1, 0, 0, 0, 9, 0, 34.5, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-4.5, 34, -4.5, 4.5, 35, 4.5)
+web_box = PackedFloat64Array()
+
+[node name="Gem1" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=277973904]
+transform = Transform3D(1.6, 0, 0, 0, 1.5, 0, 0, 0, 1.6, 0, 40.75, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-0.8, 40, -0.8, 0.8, 41.5, 0.8)
+web_box = PackedFloat64Array()
+
+[node name="Gem2" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=1746366483]
+transform = Transform3D(4, 0, 0, 0, 1.5, 0, 0, 0, 4, 0, 42.25, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-2, 41.5, -2, 2, 43, 2)
+web_box = PackedFloat64Array()
+
+[node name="Gem3" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=1155682747]
+transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 6, 0, 44, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-3, 43, -3, 3, 45, 3)
+web_box = PackedFloat64Array()
+
+[node name="Gem4" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=100679254]
+transform = Transform3D(7.6, 0, 0, 0, 4, 0, 0, 0, 7.6, 0, 47, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-3.8, 45, -3.8, 3.8, 49, 3.8)
+web_box = PackedFloat64Array()
+
+[node name="Gem5" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=2018633298]
+transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 6, 0, 50, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-3, 49, -3, 3, 51, 3)
+web_box = PackedFloat64Array()
+
+[node name="Gem6" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=1465669904]
+transform = Transform3D(4, 0, 0, 0, 1.5, 0, 0, 0, 4, 0, 51.75, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-2, 51, -2, 2, 52.5, 2)
+web_box = PackedFloat64Array()
+
+[node name="Gem7" type="Node3D" parent="SunstoneRuins/Sunstone" unique_id=833418194]
+transform = Transform3D(1.6, 0, 0, 0, 1.5, 0, 0, 0, 1.6, 0, 53.25, 0)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-0.8, 52.5, -0.8, 0.8, 54, 0.8)
+web_box = PackedFloat64Array()
+
+[node name="Altar" type="Node3D" parent="SunstoneRuins" unique_id=550805898]
+transform = Transform3D(6, 0, 0, 0, 0.39999998, 0, 0, 0, 6, 0, 1.4000001, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-3, 1.2, -3, 3, 1.6, 3)
+web_box = PackedFloat64Array()
+
+[node name="Columns" type="Node3D" parent="SunstoneRuins" unique_id=612680177]
+
+[node name="Column1" type="Node3D" parent="SunstoneRuins/Columns" unique_id=268798343]
+transform = Transform3D(2, 0, 0, 0, 2.9999998, 0, 0, 0, 2, 0, 2.6999998, -8)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-1, 1.2, -9, 1, 4.2, -7)
+web_box = PackedFloat64Array()
+
+[node name="Column2" type="Node3D" parent="SunstoneRuins/Columns" unique_id=330206072]
+transform = Transform3D(2, 0, 0, 0, 5, 0, 0, 0, 2, 8, 3.6999998, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(7, 1.2, -1, 9, 6.2, 1)
+web_box = PackedFloat64Array()
+
+[node name="Column3" type="Node3D" parent="SunstoneRuins/Columns" unique_id=821496541]
+transform = Transform3D(2, 0, 0, 0, 2.3999999, 0, 0, 0, 2, 0, 2.4, 8)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-1, 1.2, 7, 1, 3.6, 9)
+web_box = PackedFloat64Array()
+
+[node name="Column4" type="Node3D" parent="SunstoneRuins/Columns" unique_id=471153060]
+transform = Transform3D(2, 0, 0, 0, 3.9999998, 0, 0, 0, 2, -8, 3.1999998, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-9, 1.2, -1, -7, 5.2, 1)
+web_box = PackedFloat64Array()
+
+[node name="Fallen1" type="Node3D" parent="SunstoneRuins/Columns" unique_id=1858678321]
+transform = Transform3D(6, 0, 0, 0, 1.5999999, 0, 0, 0, 1.5999999, 7, 2, 5.8)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(4, 1.2, 5, 10, 2.8, 6.6)
+web_box = PackedFloat64Array()
+
+[node name="Fallen2" type="Node3D" parent="SunstoneRuins/Columns" unique_id=1247150260]
+transform = Transform3D(1.5999999, 0, 0, 0, 1.5999999, 0, 0, 0, 6, -5.8, 2, -7)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-6.6, 1.2, -10, -5, 2.8, -4)
+web_box = PackedFloat64Array()
+
+[node name="SkyIsles" type="Node3D" parent="." unique_id=1186152070]
+
+[node name="IsleNE" type="Node3D" parent="SkyIsles" unique_id=80183003]
+
+[node name="Root" type="Node3D" parent="SkyIsles/IsleNE" unique_id=348339159]
+transform = Transform3D(3.5999985, 0, 0, 0, 1.5, 0, 0, 0, 3.5999985, 34, 6.25, -36)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(32.2, 5.5, -37.8, 35.8, 7, -34.2)
+web_box = PackedFloat64Array()
+
+[node name="Rock" type="Node3D" parent="SkyIsles/IsleNE" unique_id=410089283]
+transform = Transform3D(6.4000015, 0, 0, 0, 2, 0, 0, 0, 6.4000015, 34, 8, -36)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(30.8, 7, -39.2, 37.2, 9, -32.8)
+web_box = PackedFloat64Array()
+
+[node name="Base" type="Node3D" parent="SkyIsles/IsleNE" unique_id=1769081625]
+transform = Transform3D(9, 0, 0, 0, 2.3999996, 0, 0, 0, 9, 34, 10.2, -36)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(29.5, 9, -40.5, 38.5, 11.4, -31.5)
+web_box = PackedFloat64Array()
+
+[node name="Top" type="Node3D" parent="SkyIsles/IsleNE" unique_id=1321757757]
+transform = Transform3D(10, 0, 0, 0, 0.6000004, 0, 0, 0, 10, 34, 11.7, -36)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(29, 11.4, -41, 39, 12, -31)
+web_box = PackedFloat64Array()
+
+[node name="PadUp" type="Node3D" parent="SkyIsles/IsleNE" unique_id=907654788]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 0, -36)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_x = -1.0
+dir_z = 0.0
+at = PackedFloat64Array(47, 0, -36)
+
+[node name="CannonToCrown" type="Node3D" parent="SkyIsles/IsleNE" unique_id=1197482859]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, 12, -33)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 17.1
+directional = true
+dir_x = -0.664
+dir_z = 0.747
+at = PackedFloat64Array(31, 12, -33)
+
+[node name="Trunk" type="Node3D" parent="SkyIsles/IsleNE" unique_id=169801701]
+transform = Transform3D(0.80000305, 0, 0, 0, 3, 0, 0, 0, 0.80000305, 36, 13.5, -36)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(35.6, 12, -36.4, 36.4, 15, -35.6)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="SkyIsles/IsleNE" unique_id=1795828607]
+transform = Transform3D(3.5999985, 0, 0, 0, 2.3999996, 0, 0, 0, 3.5999985, 36, 15.599999, -36)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(34.2, 14.4, -37.8, 37.8, 16.8, -34.2)
+web_box = PackedFloat64Array()
+
+[node name="IsleSE" type="Node3D" parent="SkyIsles" unique_id=267026216]
+
+[node name="Root" type="Node3D" parent="SkyIsles/IsleSE" unique_id=839484555]
+transform = Transform3D(3.5999985, 0, 0, 0, 1.5, 0, 0, 0, 3.5999985, 34, 6.25, 36)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(32.2, 5.5, 34.2, 35.8, 7, 37.8)
+web_box = PackedFloat64Array()
+
+[node name="Rock" type="Node3D" parent="SkyIsles/IsleSE" unique_id=1997200597]
+transform = Transform3D(6.4000015, 0, 0, 0, 2, 0, 0, 0, 6.4000015, 34, 8, 36)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(30.8, 7, 32.8, 37.2, 9, 39.2)
+web_box = PackedFloat64Array()
+
+[node name="Base" type="Node3D" parent="SkyIsles/IsleSE" unique_id=1403640063]
+transform = Transform3D(9, 0, 0, 0, 2.3999996, 0, 0, 0, 9, 34, 10.2, 36)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(29.5, 9, 31.5, 38.5, 11.4, 40.5)
+web_box = PackedFloat64Array()
+
+[node name="Top" type="Node3D" parent="SkyIsles/IsleSE" unique_id=1573781620]
+transform = Transform3D(10, 0, 0, 0, 0.6000004, 0, 0, 0, 10, 34, 11.7, 36)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(29, 11.4, 31, 39, 12, 41)
+web_box = PackedFloat64Array()
+
+[node name="PadUp" type="Node3D" parent="SkyIsles/IsleSE" unique_id=990871976]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47, 0, 36)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_x = -1.0
+dir_z = 0.0
+at = PackedFloat64Array(47, 0, 36)
+
+[node name="CannonToCrown" type="Node3D" parent="SkyIsles/IsleSE" unique_id=1770448054]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, 12, 33)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 17.1
+directional = true
+dir_x = -0.664
+dir_z = -0.747
+at = PackedFloat64Array(31, 12, 33)
+
+[node name="Trunk" type="Node3D" parent="SkyIsles/IsleSE" unique_id=1465883569]
+transform = Transform3D(0.80000305, 0, 0, 0, 3, 0, 0, 0, 0.80000305, 36, 13.5, 36)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(35.6, 12, 35.6, 36.4, 15, 36.4)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="SkyIsles/IsleSE" unique_id=1787123742]
+transform = Transform3D(3.5999985, 0, 0, 0, 2.3999996, 0, 0, 0, 3.5999985, 36, 15.599999, 36)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(34.2, 14.4, 34.2, 37.8, 16.8, 37.8)
+web_box = PackedFloat64Array()
+
+[node name="IsleSW" type="Node3D" parent="SkyIsles" unique_id=1621323597]
+
+[node name="Root" type="Node3D" parent="SkyIsles/IsleSW" unique_id=242880334]
+transform = Transform3D(3.5999985, 0, 0, 0, 1.5, 0, 0, 0, 3.5999985, -34, 6.25, 36)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-35.8, 5.5, 34.2, -32.2, 7, 37.8)
+web_box = PackedFloat64Array()
+
+[node name="Rock" type="Node3D" parent="SkyIsles/IsleSW" unique_id=787692227]
+transform = Transform3D(6.4000015, 0, 0, 0, 2, 0, 0, 0, 6.4000015, -34, 8, 36)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-37.2, 7, 32.8, -30.8, 9, 39.2)
+web_box = PackedFloat64Array()
+
+[node name="Base" type="Node3D" parent="SkyIsles/IsleSW" unique_id=1198630567]
+transform = Transform3D(9, 0, 0, 0, 2.3999996, 0, 0, 0, 9, -34, 10.2, 36)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-38.5, 9, 31.5, -29.5, 11.4, 40.5)
+web_box = PackedFloat64Array()
+
+[node name="Top" type="Node3D" parent="SkyIsles/IsleSW" unique_id=28450305]
+transform = Transform3D(10, 0, 0, 0, 0.6000004, 0, 0, 0, 10, -34, 11.7, 36)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-39, 11.4, 31, -29, 12, 41)
+web_box = PackedFloat64Array()
+
+[node name="PadUp" type="Node3D" parent="SkyIsles/IsleSW" unique_id=1385200608]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47, 0, 36)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_x = 1.0
+dir_z = 0.0
+at = PackedFloat64Array(-47, 0, 36)
+
+[node name="CannonToCrown" type="Node3D" parent="SkyIsles/IsleSW" unique_id=2143035942]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31, 12, 33)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 17.1
+directional = true
+dir_x = 0.664
+dir_z = -0.747
+at = PackedFloat64Array(-31, 12, 33)
+
+[node name="Trunk" type="Node3D" parent="SkyIsles/IsleSW" unique_id=1059418252]
+transform = Transform3D(0.80000305, 0, 0, 0, 3, 0, 0, 0, 0.80000305, -36, 13.5, 36)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-36.4, 12, 35.6, -35.6, 15, 36.4)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="SkyIsles/IsleSW" unique_id=471867997]
+transform = Transform3D(3.5999985, 0, 0, 0, 2.3999996, 0, 0, 0, 3.5999985, -36, 15.599999, 36)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-37.8, 14.4, 34.2, -34.2, 16.8, 37.8)
+web_box = PackedFloat64Array()
+
+[node name="IsleNW" type="Node3D" parent="SkyIsles" unique_id=589549285]
+
+[node name="Root" type="Node3D" parent="SkyIsles/IsleNW" unique_id=2054420985]
+transform = Transform3D(3.5999985, 0, 0, 0, 1.5, 0, 0, 0, 3.5999985, -34, 6.25, -36)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-35.8, 5.5, -37.8, -32.2, 7, -34.2)
+web_box = PackedFloat64Array()
+
+[node name="Rock" type="Node3D" parent="SkyIsles/IsleNW" unique_id=1501692600]
+transform = Transform3D(6.4000015, 0, 0, 0, 2, 0, 0, 0, 6.4000015, -34, 8, -36)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(-37.2, 7, -39.2, -30.8, 9, -32.8)
+web_box = PackedFloat64Array()
+
+[node name="Base" type="Node3D" parent="SkyIsles/IsleNW" unique_id=1247624604]
+transform = Transform3D(9, 0, 0, 0, 2.3999996, 0, 0, 0, 9, -34, 10.2, -36)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-38.5, 9, -40.5, -29.5, 11.4, -31.5)
+web_box = PackedFloat64Array()
+
+[node name="Top" type="Node3D" parent="SkyIsles/IsleNW" unique_id=1961834526]
+transform = Transform3D(10, 0, 0, 0, 0.6000004, 0, 0, 0, 10, -34, 11.7, -36)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-39, 11.4, -41, -29, 12, -31)
+web_box = PackedFloat64Array()
+
+[node name="PadUp" type="Node3D" parent="SkyIsles/IsleNW" unique_id=1457494440]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47, 0, -36)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_x = 1.0
+dir_z = 0.0
+at = PackedFloat64Array(-47, 0, -36)
+
+[node name="CannonToCrown" type="Node3D" parent="SkyIsles/IsleNW" unique_id=2016056032]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31, 12, -33)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 17.1
+directional = true
+dir_x = 0.664
+dir_z = 0.747
+at = PackedFloat64Array(-31, 12, -33)
+
+[node name="Trunk" type="Node3D" parent="SkyIsles/IsleNW" unique_id=1673006258]
+transform = Transform3D(0.80000305, 0, 0, 0, 3, 0, 0, 0, 0.80000305, -36, 13.5, -36)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-36.4, 12, -36.4, -35.6, 15, -35.6)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="SkyIsles/IsleNW" unique_id=1596010960]
+transform = Transform3D(3.5999985, 0, 0, 0, 2.3999996, 0, 0, 0, 3.5999985, -36, 15.599999, -36)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-37.8, 14.4, -37.8, -34.2, 16.8, -34.2)
+web_box = PackedFloat64Array()
+
+[node name="Canyon" type="Node3D" parent="." unique_id=744421120]
+
+[node name="Floor" type="Node3D" parent="Canyon" unique_id=1392287054]
+transform = Transform3D(26, 0, 0, 0, 1, 0, 0, 0, 150, 63, -10.5, 35)
+script = ExtResource("2_e5yd8")
+kind = "sand"
+box = PackedFloat64Array(50, -11, -40, 76, -10, 110)
+web_box = PackedFloat64Array()
+
+[node name="WallWest" type="Node3D" parent="Canyon" unique_id=1412751783]
+transform = Transform3D(3, 0, 0, 0, 9, 0, 0, 0, 150, 48.5, -5.5, 35)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(47, -10, -40, 50, -1, 110)
+web_box = PackedFloat64Array()
+
+[node name="WallEast" type="Node3D" parent="Canyon" unique_id=1087133964]
+transform = Transform3D(3, 0, 0, 0, 9, 0, 0, 0, 150, 77.5, -5.5, 35)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(76, -10, -40, 79, -1, 110)
+web_box = PackedFloat64Array()
+
+[node name="SlideIn" type="Node3D" parent="Canyon" unique_id=1028286395]
+transform = Transform3D(26, 0, 0, 0, 10, 0, 0, 0, 25, 63, -5, -27.5)
+script = ExtResource("2_e5yd8")
+kind = "sand"
+ramp = "z-"
+box = PackedFloat64Array(50, -10, -40, 76, 0, -15)
+web_box = PackedFloat64Array()
+
+[node name="StoneBridge" type="Node3D" parent="Canyon" unique_id=259182188]
+
+[node name="Deck" type="Node3D" parent="Canyon/StoneBridge" unique_id=1919561757]
+transform = Transform3D(26, 0, 0, 0, 1, 0, 0, 0, 6, 63, -0.5, 1)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(50, -1, -2, 76, 0, 4)
+web_box = PackedFloat64Array()
+
+[node name="RailNorth" type="Node3D" parent="Canyon/StoneBridge" unique_id=2027687300]
+transform = Transform3D(26, 0, 0, 0, 0.9, 0, 0, 0, 0.39999998, 63, 0.45, -1.8)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(50, 0, -2, 76, 0.9, -1.6)
+web_box = PackedFloat64Array()
+
+[node name="RailSouth" type="Node3D" parent="Canyon/StoneBridge" unique_id=1728239553]
+transform = Transform3D(20, 0, 0, 0, 0.9, 0, 0, 0, 0.4000001, 60, 0.45, 3.8)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(50, 0, 3.6, 70, 0.9, 4)
+web_box = PackedFloat64Array()
+
+[node name="Support1" type="Node3D" parent="Canyon/StoneBridge" unique_id=1647205210]
+transform = Transform3D(2, 0, 0, 0, 9, 0, 0, 0, 5, 59, -5.5, 1)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(58, -10, -1.5, 60, -1, 3.5)
+web_box = PackedFloat64Array()
+
+[node name="Support2" type="Node3D" parent="Canyon/StoneBridge" unique_id=2012029211]
+transform = Transform3D(2, 0, 0, 0, 9, 0, 0, 0, 5, 67, -5.5, 1)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(66, -10, -1.5, 68, -1, 3.5)
+web_box = PackedFloat64Array()
+
+[node name="BrokenBridge" type="Node3D" parent="Canyon" unique_id=1897002415]
+
+[node name="West" type="Node3D" parent="Canyon/BrokenBridge" unique_id=831820916]
+transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 6, 55, -0.5, 48)
+script = ExtResource("2_e5yd8")
+kind = "wood"
+box = PackedFloat64Array(50, -1, 45, 60, 0, 51)
+web_box = PackedFloat64Array()
+
+[node name="East" type="Node3D" parent="Canyon/BrokenBridge" unique_id=2035621393]
+transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 6, 71, -0.5, 48)
+script = ExtResource("2_e5yd8")
+kind = "wood"
+box = PackedFloat64Array(66, -1, 45, 76, 0, 51)
+web_box = PackedFloat64Array()
+
+[node name="PostWest" type="Node3D" parent="Canyon/BrokenBridge" unique_id=330083934]
+transform = Transform3D(1, 0, 0, 0, 9, 0, 0, 0, 4, 52.5, -5.5, 48)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(52, -10, 46, 53, -1, 50)
+web_box = PackedFloat64Array()
+
+[node name="PostEast" type="Node3D" parent="Canyon/BrokenBridge" unique_id=1173877389]
+transform = Transform3D(1, 0, 0, 0, 9, 0, 0, 0, 4, 73.5, -5.5, 48)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(73, -10, 46, 74, -1, 50)
+web_box = PackedFloat64Array()
+
+[node name="ExitRampWest" type="Node3D" parent="Canyon" unique_id=537462838]
+transform = Transform3D(6, 0, 0, 0, 10, 0, 0, 0, 24, 53, -5, 63)
+script = ExtResource("2_e5yd8")
+kind = "sand"
+ramp = "z-"
+box = PackedFloat64Array(50, -10, 51, 56, 0, 75)
+web_box = PackedFloat64Array()
+
+[node name="ExitRampEast" type="Node3D" parent="Canyon" unique_id=1158453832]
+transform = Transform3D(6, 0, 0, 0, 10, 0, 0, 0, 22, 73, -5, 15)
+script = ExtResource("2_e5yd8")
+kind = "sand"
+ramp = "z-"
+box = PackedFloat64Array(70, -10, 4, 76, 0, 26)
+web_box = PackedFloat64Array()
+
+[node name="EscapePadWest" type="Node3D" parent="Canyon" unique_id=336868054]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, -10, 32)
+script = ExtResource("3_irwad")
+launch = 22.0
+forward = 5.0
+directional = true
+dir_x = -1.0
+dir_z = 0.0
+at = PackedFloat64Array(55, -10, 32)
+
+[node name="EscapePadEast" type="Node3D" parent="Canyon" unique_id=1265412248]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 71, -10, 95)
+script = ExtResource("3_irwad")
+launch = 22.0
+forward = 5.0
+directional = true
+dir_x = 1.0
+dir_z = 0.0
+at = PackedFloat64Array(71, -10, 95)
+
+[node name="LauncherEastward" type="Node3D" parent="Canyon" unique_id=490408183]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0, 85)
+script = ExtResource("3_irwad")
+launch = 20.0
+forward = 22.0
+directional = true
+dir_x = 1.0
+dir_z = 0.0
+at = PackedFloat64Array(44, 0, 85)
+
+[node name="LauncherWestward" type="Node3D" parent="Canyon" unique_id=122673871]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82, 0, 85)
+script = ExtResource("3_irwad")
+launch = 20.0
+forward = 22.0
+directional = true
+dir_x = -1.0
+dir_z = 0.0
+at = PackedFloat64Array(82, 0, 85)
+
+[node name="WallSouth" type="Node3D" parent="Canyon" unique_id=1776214778]
+transform = Transform3D(26, 0, 0, 0, 9, 0, 0, 0, 3, 63, -5.5, 111.5)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(50, -10, 110, 76, -1, 113)
+web_box = PackedFloat64Array()
+
+[node name="Overhang" type="Node3D" parent="Canyon" unique_id=315067833]
+transform = Transform3D(26, 0, 0, 0, 4, 0, 0, 0, 14, 63, -2, 103)
+script = ExtResource("2_e5yd8")
+kind = "cliff"
+box = PackedFloat64Array(50, -4, 96, 76, 0, 110)
+web_box = PackedFloat64Array()
+
+[node name="Boulders" type="Node3D" parent="Canyon" unique_id=1396314028]
+
+[node name="Boulder1" type="Node3D" parent="Canyon/Boulders" unique_id=1864586642]
+transform = Transform3D(4, 0, 0, 0, 3, 0, 0, 0, 4, 56, -8.5, -8)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(54, -10, -10, 58, -7, -6)
+web_box = PackedFloat64Array()
+
+[node name="Boulder2" type="Node3D" parent="Canyon/Boulders" unique_id=849524418]
+transform = Transform3D(3, 0, 0, 0, 2, 0, 0, 0, 3, 70, -9, 12)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(68.5, -10, 10.5, 71.5, -8, 13.5)
+web_box = PackedFloat64Array()
+
+[node name="Boulder3" type="Node3D" parent="Canyon/Boulders" unique_id=448422006]
+transform = Transform3D(5, 0, 0, 0, 4, 0, 0, 0, 5, 60, -8, 62)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(57.5, -10, 59.5, 62.5, -6, 64.5)
+web_box = PackedFloat64Array()
+
+[node name="Boulder4" type="Node3D" parent="Canyon/Boulders" unique_id=697353134]
+transform = Transform3D(3, 0, 0, 0, 2.5, 0, 0, 0, 3, 69, -8.75, 70)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(67.5, -10, 68.5, 70.5, -7.5, 71.5)
+web_box = PackedFloat64Array()
+
+[node name="Boulder5" type="Node3D" parent="Canyon/Boulders" unique_id=2041946350]
+transform = Transform3D(4, 0, 0, 0, 3.5, 0, 0, 0, 4, 58, -8.25, 88)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(56, -10, 86, 60, -6.5, 90)
+web_box = PackedFloat64Array()
+
+[node name="Boulder6" type="Node3D" parent="Canyon/Boulders" unique_id=449530798]
+transform = Transform3D(3.5, 0, 0, 0, 2, 0, 0, 0, 3.5, 71, -9, 104)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(69.25, -10, 102.25, 72.75, -8, 105.75)
+web_box = PackedFloat64Array()
+
+[node name="Boulder7" type="Node3D" parent="Canyon/Boulders" unique_id=1341811318]
+transform = Transform3D(3, 0, 0, 0, 1.5, 0, 0, 0, 3, 63, -9.25, 38)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(61.5, -10, 36.5, 64.5, -8.5, 39.5)
+web_box = PackedFloat64Array()
+
+[node name="GrottoShard1" type="Node3D" parent="Canyon" unique_id=1149099178]
+transform = Transform3D(1.2000008, 0, 0, 0, 3.5, 0, 0, 0, 1.199997, 57.6, -8.25, 104.6)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(57, -10, 104, 58.2, -6.5, 105.2)
+web_box = PackedFloat64Array()
+
+[node name="GrottoShard2" type="Node3D" parent="Canyon" unique_id=1685440170]
+transform = Transform3D(1, 0, 0, 0, 2.5, 0, 0, 0, 1, 66.5, -8.75, 106.5)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(66, -10, 106, 67, -7.5, 107)
+web_box = PackedFloat64Array()
+
+[node name="Ridge" type="Node3D" parent="." unique_id=327172378]
+
+[node name="Ridge" type="Node3D" parent="Ridge" unique_id=280444683]
+transform = Transform3D(140, 0, 0, 0, 19.4, 0, 0, 0, 16, -30, 9.7, 104)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-100, 0, 96, 40, 19.4, 112)
+web_box = PackedFloat64Array()
+
+[node name="RidgeTop" type="Node3D" parent="Ridge" unique_id=1792255629]
+transform = Transform3D(140, 0, 0, 0, 0.6000004, 0, 0, 0, 16, -30, 19.7, 104)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(-100, 19.4, 96, 40, 20, 112)
+web_box = PackedFloat64Array()
+
+[node name="SkiSlope" type="Node3D" parent="Ridge" unique_id=1534843089]
+transform = Transform3D(40, 0, 0, 0, 20, 0, 0, 0, 46, -40, 10, 73)
+script = ExtResource("2_e5yd8")
+kind = "sand"
+ramp = "z+"
+box = PackedFloat64Array(-60, 0, 50, -20, 20, 96)
+web_box = PackedFloat64Array()
+
+[node name="Kicker" type="Node3D" parent="Ridge" unique_id=1147541695]
+transform = Transform3D(12, 0, 0, 0, 2.2, 0, 0, 0, 6, -40, 1.1, 39)
+script = ExtResource("2_e5yd8")
+kind = "sand"
+ramp = "z-"
+box = PackedFloat64Array(-46, 0, 36, -34, 2.2, 42)
+web_box = PackedFloat64Array()
+
+[node name="Step" type="Node3D" parent="Ridge" unique_id=1317788589]
+transform = Transform3D(20, 0, 0, 0, 9.4, 0, 0, 0, 10, 20, 4.7, 91)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(10, 0, 86, 30, 9.4, 96)
+web_box = PackedFloat64Array()
+
+[node name="StepTop" type="Node3D" parent="Ridge" unique_id=904081616]
+transform = Transform3D(20, 0, 0, 0, 0.6000004, 0, 0, 0, 10, 20, 9.7, 91)
+script = ExtResource("2_e5yd8")
+kind = "grass"
+box = PackedFloat64Array(10, 9.4, 86, 30, 10, 96)
+web_box = PackedFloat64Array()
+
+[node name="PadToStep" type="Node3D" parent="Ridge" unique_id=2011257999]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 76)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_z = 1.0
+at = PackedFloat64Array(20, 0, 76)
+
+[node name="StepPad" type="Node3D" parent="Ridge" unique_id=1928657628]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 10, 87)
+script = ExtResource("3_irwad")
+launch = 24.0
+forward = 9.0
+directional = true
+dir_z = 1.0
+at = PackedFloat64Array(20, 10, 87)
+
+[node name="Lookout" type="Node3D" parent="Ridge" unique_id=753373296]
+
+[node name="Floor" type="Node3D" parent="Ridge/Lookout" unique_id=83478889]
+transform = Transform3D(16, 0, 0, 0, 0.39999962, 0, 0, 0, 10, -80, 20.2, 103)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-88, 20, 98, -72, 20.4, 108)
+web_box = PackedFloat64Array()
+
+[node name="BackWall_Part1" type="Node3D" parent="Ridge/Lookout" unique_id=322490941]
+transform = Transform3D(5, 0, 0, 0, 4, 0, 0, 0, 1, -85.5, 22.4, 107.5)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-88, 20.4, 107, -83, 24.4, 108)
+web_box = PackedFloat64Array()
+
+[node name="BackWall_Opening1_Below" type="Node3D" parent="Ridge/Lookout" unique_id=1927256588]
+transform = Transform3D(6, 0, 0, 0, 1.2000008, 0, 0, 0, 1, -80, 21, 107.5)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-83, 20.4, 107, -77, 21.6, 108)
+web_box = PackedFloat64Array()
+
+[node name="BackWall_Opening1_Above" type="Node3D" parent="Ridge/Lookout" unique_id=62158419]
+transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 1, -80, 23.9, 107.5)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-83, 23.4, 107, -77, 24.4, 108)
+web_box = PackedFloat64Array()
+
+[node name="BackWall_Part2" type="Node3D" parent="Ridge/Lookout" unique_id=1525835486]
+transform = Transform3D(5, 0, 0, 0, 4, 0, 0, 0, 1, -74.5, 22.4, 107.5)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-77, 20.4, 107, -72, 24.4, 108)
+web_box = PackedFloat64Array()
+
+[node name="SideWall_Part1" type="Node3D" parent="Ridge/Lookout" unique_id=391391598]
+transform = Transform3D(1, 0, 0, 0, 2.6000004, 0, 0, 0, 9, -87.5, 21.7, 102.5)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-88, 20.4, 98, -87, 23, 107)
+web_box = PackedFloat64Array()
+
+[node name="Column" type="Node3D" parent="Ridge/Lookout" unique_id=1607837287]
+transform = Transform3D(1, 0, 0, 0, 4.6000004, 0, 0, 0, 1, -72.5, 22.7, 98.5)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-73, 20.4, 98, -72, 25, 99)
+web_box = PackedFloat64Array()
+
+[node name="OldFort" type="Node3D" parent="." unique_id=932375365]
+
+[node name="Walls" type="Node3D" parent="OldFort" unique_id=705634264]
+
+[node name="North_Part1" type="Node3D" parent="OldFort/Walls" unique_id=773480786]
+transform = Transform3D(14, 0, 0, 0, 7, 0, 0, 0, 2, -97, 3.5, -23)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-104, 0, -24, -90, 7, -22)
+web_box = PackedFloat64Array()
+
+[node name="North_Part2" type="Node3D" parent="OldFort/Walls" unique_id=2024182962]
+transform = Transform3D(18, 0, 0, 0, 7, 0, 0, 0, 2, -73, 3.5, -23)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-82, 0, -24, -64, 7, -22)
+web_box = PackedFloat64Array()
+
+[node name="South_Part1" type="Node3D" parent="OldFort/Walls" unique_id=2137725041]
+transform = Transform3D(8, 0, 0, 0, 7, 0, 0, 0, 2, -100, 3.5, 23)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-104, 0, 22, -96, 7, 24)
+web_box = PackedFloat64Array()
+
+[node name="South_Part2" type="Node3D" parent="OldFort/Walls" unique_id=1040421153]
+transform = Transform3D(26, 0, 0, 0, 7, 0, 0, 0, 2, -77, 3.5, 23)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-90, 0, 22, -64, 7, 24)
+web_box = PackedFloat64Array()
+
+[node name="West_Part1" type="Node3D" parent="OldFort/Walls" unique_id=1261904603]
+transform = Transform3D(2, 0, 0, 0, 7, 0, 0, 0, 20, -103, 3.5, -12)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-104, 0, -22, -102, 7, -2)
+web_box = PackedFloat64Array()
+
+[node name="West_Opening1_Above" type="Node3D" parent="OldFort/Walls" unique_id=1849772836]
+transform = Transform3D(2, 0, 0, 0, 4, 0, 0, 0, 4, -103, 5, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-104, 3, -2, -102, 7, 2)
+web_box = PackedFloat64Array()
+
+[node name="West_Part2" type="Node3D" parent="OldFort/Walls" unique_id=1365046999]
+transform = Transform3D(2, 0, 0, 0, 7, 0, 0, 0, 20, -103, 3.5, 12)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-104, 0, 2, -102, 7, 22)
+web_box = PackedFloat64Array()
+
+[node name="East_Part1" type="Node3D" parent="OldFort/Walls" unique_id=517164091]
+transform = Transform3D(2, 0, 0, 0, 7, 0, 0, 0, 18, -65, 3.5, -13)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-66, 0, -22, -64, 7, -4)
+web_box = PackedFloat64Array()
+
+[node name="East_Opening1_Above" type="Node3D" parent="OldFort/Walls" unique_id=1473169366]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 8, -65, 6, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-66, 5, -4, -64, 7, 4)
+web_box = PackedFloat64Array()
+
+[node name="East_Part2" type="Node3D" parent="OldFort/Walls" unique_id=1633656877]
+transform = Transform3D(2, 0, 0, 0, 7, 0, 0, 0, 18, -65, 3.5, 13)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-66, 0, 4, -64, 7, 22)
+web_box = PackedFloat64Array()
+
+[node name="NorthRubble" type="Node3D" parent="OldFort/Walls" unique_id=457232721]
+transform = Transform3D(8, 0, 0, 0, 1, 0, 0, 0, 2, -86, 0.5, -23)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-90, 0, -24, -82, 1, -22)
+web_box = PackedFloat64Array()
+
+[node name="StairsNorth" type="Node3D" parent="OldFort" unique_id=393218076]
+transform = Transform3D(14, 0, 0, 0, 7, 0, 0, 0, 4, -87, 3.5, -20)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+ramp = "x-"
+box = PackedFloat64Array(-94, 0, -22, -80, 7, -18)
+web_box = PackedFloat64Array()
+
+[node name="LandingNorth" type="Node3D" parent="OldFort" unique_id=326945493]
+transform = Transform3D(4, 0, 0, 0, 7, 0, 0, 0, 4, -96, 3.5, -20)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-98, 0, -22, -94, 7, -18)
+web_box = PackedFloat64Array()
+
+[node name="StairsSouth" type="Node3D" parent="OldFort" unique_id=1898475200]
+transform = Transform3D(14, 0, 0, 0, 7, 0, 0, 0, 4, -83, 3.5, 20)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+ramp = "x+"
+box = PackedFloat64Array(-90, 0, 18, -76, 7, 22)
+web_box = PackedFloat64Array()
+
+[node name="LandingSouth" type="Node3D" parent="OldFort" unique_id=1638629101]
+transform = Transform3D(4, 0, 0, 0, 7, 0, 0, 0, 4, -74, 3.5, 20)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-76, 0, 18, -72, 7, 22)
+web_box = PackedFloat64Array()
+
+[node name="TowerNW" type="Node3D" parent="OldFort" unique_id=1271989091]
+
+[node name="Tower" type="Node3D" parent="OldFort/TowerNW" unique_id=390664711]
+transform = Transform3D(10, 0, 0, 0, 14, 0, 0, 0, 10, -103, 7, -23)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-108, 0, -28, -98, 14, -18)
+web_box = PackedFloat64Array()
+
+[node name="Merlon1" type="Node3D" parent="OldFort/TowerNW" unique_id=473921069]
+transform = Transform3D(1.199997, 0, 0, 0, 1.1999998, 0, 0, 0, 1.2000008, -107.4, 14.6, -27.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-108, 14, -28, -106.8, 15.2, -26.8)
+web_box = PackedFloat64Array()
+
+[node name="Merlon2" type="Node3D" parent="OldFort/TowerNW" unique_id=41166645]
+transform = Transform3D(1.199997, 0, 0, 0, 1.1999998, 0, 0, 0, 1.2000008, -98.6, 14.6, -27.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-99.2, 14, -28, -98, 15.2, -26.8)
+web_box = PackedFloat64Array()
+
+[node name="Merlon3" type="Node3D" parent="OldFort/TowerNW" unique_id=161211598]
+transform = Transform3D(1.199997, 0, 0, 0, 1.1999998, 0, 0, 0, 1.2000008, -107.4, 14.6, -18.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-108, 14, -19.2, -106.8, 15.2, -18)
+web_box = PackedFloat64Array()
+
+[node name="Merlon4" type="Node3D" parent="OldFort/TowerNW" unique_id=123689015]
+transform = Transform3D(1.199997, 0, 0, 0, 1.1999998, 0, 0, 0, 1.2000008, -98.6, 14.6, -18.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-99.2, 14, -19.2, -98, 15.2, -18)
+web_box = PackedFloat64Array()
+
+[node name="Pad" type="Node3D" parent="OldFort/TowerNW" unique_id=423322963]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -93, 7, -23)
+script = ExtResource("3_irwad")
+launch = 22.0
+forward = 8.0
+directional = true
+dir_x = -1.0
+dir_z = 0.0
+at = PackedFloat64Array(-93, 7, -23)
+
+[node name="TowerSE" type="Node3D" parent="OldFort" unique_id=1452361057]
+
+[node name="Tower" type="Node3D" parent="OldFort/TowerSE" unique_id=1512903021]
+transform = Transform3D(10, 0, 0, 0, 14, 0, 0, 0, 10, -67, 7, 21)
+script = ExtResource("2_e5yd8")
+kind = "ruin"
+box = PackedFloat64Array(-72, 0, 16, -62, 14, 26)
+web_box = PackedFloat64Array()
+
+[node name="Merlon1" type="Node3D" parent="OldFort/TowerSE" unique_id=626287853]
+transform = Transform3D(1.199997, 0, 0, 0, 1.1999998, 0, 0, 0, 1.2000008, -71.4, 14.6, 16.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-72, 14, 16, -70.8, 15.2, 17.2)
+web_box = PackedFloat64Array()
+
+[node name="Merlon2" type="Node3D" parent="OldFort/TowerSE" unique_id=186799251]
+transform = Transform3D(1.2000008, 0, 0, 0, 1.1999998, 0, 0, 0, 1.2000008, -62.6, 14.6, 16.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-63.2, 14, 16, -62, 15.2, 17.2)
+web_box = PackedFloat64Array()
+
+[node name="Merlon3" type="Node3D" parent="OldFort/TowerSE" unique_id=135667817]
+transform = Transform3D(1.199997, 0, 0, 0, 1.1999998, 0, 0, 0, 1.2000008, -71.4, 14.6, 25.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-72, 14, 24.8, -70.8, 15.2, 26)
+web_box = PackedFloat64Array()
+
+[node name="Merlon4" type="Node3D" parent="OldFort/TowerSE" unique_id=1620401001]
+transform = Transform3D(1.2000008, 0, 0, 0, 1.1999998, 0, 0, 0, 1.2000008, -62.6, 14.6, 25.4)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-63.2, 14, 24.8, -62, 15.2, 26)
+web_box = PackedFloat64Array()
+
+[node name="Pad" type="Node3D" parent="OldFort/TowerSE" unique_id=1477984338]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -77, 7, 23)
+script = ExtResource("3_irwad")
+launch = 22.0
+forward = 8.0
+directional = true
+dir_x = 1.0
+dir_z = 0.0
+at = PackedFloat64Array(-77, 7, 23)
+
+[node name="Keep" type="Node3D" parent="OldFort" unique_id=1038165943]
+
+[node name="North_Part1" type="Node3D" parent="OldFort/Keep" unique_id=351448487]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 0.8000002, -89, 3, -5.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-92, 0, -6, -86, 6, -5.2)
+web_box = PackedFloat64Array()
+
+[node name="North_Opening1_Below" type="Node3D" parent="OldFort/Keep" unique_id=198850851]
+transform = Transform3D(4, 0, 0, 0, 0.4, 0, 0, 0, 0.8000002, -84, 0.2, -5.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-86, 0, -6, -82, 0.4, -5.2)
+web_box = PackedFloat64Array()
+
+[node name="North_Opening1_Above" type="Node3D" parent="OldFort/Keep" unique_id=427048493]
+transform = Transform3D(4, 0, 0, 0, 2.8, 0, 0, 0, 0.8000002, -84, 4.6, -5.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-86, 3.2, -6, -82, 6, -5.2)
+web_box = PackedFloat64Array()
+
+[node name="North_Part2" type="Node3D" parent="OldFort/Keep" unique_id=731879658]
+transform = Transform3D(6, 0, 0, 0, 6, 0, 0, 0, 0.8000002, -79, 3, -5.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-82, 0, -6, -76, 6, -5.2)
+web_box = PackedFloat64Array()
+
+[node name="South_Part1" type="Node3D" parent="OldFort/Keep" unique_id=587756594]
+transform = Transform3D(2, 0, 0, 0, 4.2, 0, 0, 0, 0.8000002, -91, 2.1, 5.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-92, 0, 5.2, -90, 4.2, 6)
+web_box = PackedFloat64Array()
+
+[node name="South_Opening1_Above" type="Node3D" parent="OldFort/Keep" unique_id=538726404]
+transform = Transform3D(3, 0, 0, 0, 0.7999997, 0, 0, 0, 0.8000002, -88.5, 3.8, 5.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-90, 3.4, 5.2, -87, 4.2, 6)
+web_box = PackedFloat64Array()
+
+[node name="South_Part2" type="Node3D" parent="OldFort/Keep" unique_id=1214892463]
+transform = Transform3D(6, 0, 0, 0, 4.2, 0, 0, 0, 0.8000002, -84, 2.1, 5.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-87, 0, 5.2, -81, 4.2, 6)
+web_box = PackedFloat64Array()
+
+[node name="South_Opening2_Below" type="Node3D" parent="OldFort/Keep" unique_id=2138837936]
+transform = Transform3D(3, 0, 0, 0, 0.4, 0, 0, 0, 0.8000002, -79.5, 0.2, 5.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-81, 0, 5.2, -78, 0.4, 6)
+web_box = PackedFloat64Array()
+
+[node name="South_Opening2_Above" type="Node3D" parent="OldFort/Keep" unique_id=151503343]
+transform = Transform3D(3, 0, 0, 0, 0.99999976, 0, 0, 0, 0.8000002, -79.5, 3.6999998, 5.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-81, 3.2, 5.2, -78, 4.2, 6)
+web_box = PackedFloat64Array()
+
+[node name="South_Part3" type="Node3D" parent="OldFort/Keep" unique_id=604538214]
+transform = Transform3D(2, 0, 0, 0, 4.2, 0, 0, 0, 0.8000002, -77, 2.1, 5.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-78, 0, 5.2, -76, 4.2, 6)
+web_box = PackedFloat64Array()
+
+[node name="West_Part1" type="Node3D" parent="OldFort/Keep" unique_id=1330066238]
+transform = Transform3D(0.80000305, 0, 0, 0, 6, 0, 0, 0, 3.1999998, -91.6, 3, -3.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-92, 0, -5.2, -91.2, 6, -2)
+web_box = PackedFloat64Array()
+
+[node name="West_Opening1_Below" type="Node3D" parent="OldFort/Keep" unique_id=1770727262]
+transform = Transform3D(0.80000305, 0, 0, 0, 0.4, 0, 0, 0, 4, -91.6, 0.2, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-92, 0, -2, -91.2, 0.4, 2)
+web_box = PackedFloat64Array()
+
+[node name="West_Opening1_Above" type="Node3D" parent="OldFort/Keep" unique_id=1719718299]
+transform = Transform3D(0.80000305, 0, 0, 0, 2.8, 0, 0, 0, 4, -91.6, 4.6, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-92, 3.2, -2, -91.2, 6, 2)
+web_box = PackedFloat64Array()
+
+[node name="West_Part2" type="Node3D" parent="OldFort/Keep" unique_id=1744353190]
+transform = Transform3D(0.80000305, 0, 0, 0, 6, 0, 0, 0, 3.1999998, -91.6, 3, 3.6)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-92, 0, 2, -91.2, 6, 5.2)
+web_box = PackedFloat64Array()
+
+[node name="East_Part1" type="Node3D" parent="OldFort/Keep" unique_id=1904026133]
+transform = Transform3D(0.80000305, 0, 0, 0, 5, 0, 0, 0, 3.3999999, -76.4, 2.5, -3.5)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-76.8, 0, -5.2, -76, 5, -1.8)
+web_box = PackedFloat64Array()
+
+[node name="East_Opening1_Above" type="Node3D" parent="OldFort/Keep" unique_id=534283590]
+transform = Transform3D(0.80000305, 0, 0, 0, 1.5999999, 0, 0, 0, 3.6, -76.4, 4.2, 0)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-76.8, 3.4, -1.8, -76, 5, 1.8)
+web_box = PackedFloat64Array()
+
+[node name="East_Part2" type="Node3D" parent="OldFort/Keep" unique_id=1658010914]
+transform = Transform3D(0.80000305, 0, 0, 0, 5, 0, 0, 0, 3.3999999, -76.4, 2.5, 3.5)
+script = ExtResource("2_e5yd8")
+kind = "ruin_dark"
+box = PackedFloat64Array(-76.8, 0, 1.8, -76, 5, 5.2)
+web_box = PackedFloat64Array()
+
+[node name="HalfRoof" type="Node3D" parent="OldFort/Keep" unique_id=1225874834]
+transform = Transform3D(16, 0, 0, 0, 0.5999999, 0, 0, 0, 5, -84, 6.3, -3.5)
+script = ExtResource("2_e5yd8")
+kind = "wood"
+box = PackedFloat64Array(-92, 6, -6, -76, 6.6, -1)
+web_box = PackedFloat64Array()
+
+[node name="Crates" type="Node3D" parent="OldFort" unique_id=1606363003]
+
+[node name="Crate1" type="Node3D" parent="OldFort/Crates" unique_id=956234214]
+transform = Transform3D(1.3999939, 0, 0, 0, 1.4, 0, 0, 0, 1.4000006, -70, 0.7, -16)
+script = ExtResource("2_e5yd8")
+kind = "crate"
+box = PackedFloat64Array(-70.7, 0, -16.7, -69.3, 1.4, -15.3)
+web_box = PackedFloat64Array()
+
+[node name="Crate2" type="Node3D" parent="OldFort/Crates" unique_id=530964729]
+transform = Transform3D(1.0999985, 0, 0, 0, 1.1, 0, 0, 0, 1.1000004, -71.600006, 0.55, -16.2)
+script = ExtResource("2_e5yd8")
+kind = "crate"
+box = PackedFloat64Array(-72.15, 0, -16.75, -71.05, 1.1, -15.65)
+web_box = PackedFloat64Array()
+
+[node name="Crate3" type="Node3D" parent="OldFort/Crates" unique_id=1540104526]
+transform = Transform3D(1.3999939, 0, 0, 0, 1.4, 0, 0, 0, 1.3999996, -96, 0.7, 12)
+script = ExtResource("2_e5yd8")
+kind = "crate"
+box = PackedFloat64Array(-96.7, 0, 11.3, -95.3, 1.4, 12.7)
+web_box = PackedFloat64Array()
+
+[node name="Crate4" type="Node3D" parent="OldFort/Crates" unique_id=1781759093]
+transform = Transform3D(1.199997, 0, 0, 0, 1.2, 0, 0, 0, 1.2000008, -97, 0.6, 16)
+script = ExtResource("2_e5yd8")
+kind = "crate"
+box = PackedFloat64Array(-97.6, 0, 15.4, -96.4, 1.2, 16.6)
+web_box = PackedFloat64Array()
+
+[node name="Crate5" type="Node3D" parent="OldFort/Crates" unique_id=2041093588]
+transform = Transform3D(1.199997, 0, 0, 0, 1.2, 0, 0, 0, 1.2000003, -70, 0.6, 8)
+script = ExtResource("2_e5yd8")
+kind = "crate"
+box = PackedFloat64Array(-70.6, 0, 7.4, -69.4, 1.2, 8.6)
+web_box = PackedFloat64Array()
+
+[node name="Spawns" type="Node3D" parent="." unique_id=1544335574]
+
+[node name="Spawn1" type="Node3D" parent="Spawns" unique_id=1671023816]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 46)
+script = ExtResource("4_bb17s")
+at = PackedFloat64Array(-6, 0, 46)
+
+[node name="Spawn2" type="Node3D" parent="Spawns" unique_id=2095588564]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 46)
+script = ExtResource("4_bb17s")
+at = PackedFloat64Array(-2, 0, 46)
+
+[node name="Spawn3" type="Node3D" parent="Spawns" unique_id=1978365630]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 46)
+script = ExtResource("4_bb17s")
+at = PackedFloat64Array(2, 0, 46)
+
+[node name="Spawn4" type="Node3D" parent="Spawns" unique_id=380329025]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 46)
+script = ExtResource("4_bb17s")
+at = PackedFloat64Array(6, 0, 46)
+
+[node name="Nature" type="Node3D" parent="." unique_id=1814825850]
+
+[node name="Trees" type="Node3D" parent="Nature" unique_id=1706706759]
+
+[node name="Tree1" type="Node3D" parent="Nature/Trees" unique_id=806327578]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree1" unique_id=2125177554]
+transform = Transform3D(0.80000305, 0, 0, 0, 4.587, 0, 0, 0, 0.80000305, -69.691, 2.2935, 39.472)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-70.091, 0, 39.072, -69.291, 4.587, 39.872)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree1" unique_id=1831392071]
+transform = Transform3D(3.6709976, 0, 0, 0, 3.17, 0, 0, 0, 3.6709976, -69.690506, 5.572, 39.4715)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-71.526, 3.987, 37.636, -67.855, 7.157, 41.307)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree1" unique_id=1272105778]
+transform = Transform3D(2.203003, 0, 0, 0, 1.3209996, 0, 0, 0, 2.203003, -69.6905, 7.8175, 39.4715)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-70.792, 7.157, 38.37, -68.589, 8.478, 40.573)
+web_box = PackedFloat64Array()
+
+[node name="Tree2" type="Node3D" parent="Nature/Trees" unique_id=744643684]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree2" unique_id=615701142]
+transform = Transform3D(0.80000114, 0, 0, 0, 4.984, 0, 0, 0, 0.7999954, 17.755001, 12.492001, -89.593)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(17.355, 10, -89.993, 18.155, 14.984, -89.193)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree2" unique_id=1819507876]
+transform = Transform3D(3.3249989, 0, 0, 0, 2.9280005, 0, 0, 0, 3.3259964, 17.7555, 15.848, -89.593)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(16.093, 14.384, -91.256, 19.418, 17.312, -87.93)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree2" unique_id=2047029832]
+transform = Transform3D(1.9950008, 0, 0, 0, 1.1970005, 0, 0, 0, 1.9949951, 17.7555, 17.9105, -89.5925)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(16.758, 17.312, -90.59, 18.753, 18.509, -88.595)
+web_box = PackedFloat64Array()
+
+[node name="Tree3" type="Node3D" parent="Nature/Trees" unique_id=2090129030]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree3" unique_id=1783258225]
+transform = Transform3D(0.79999924, 0, 0, 0, 5.4940004, 0, 0, 0, 0.80000305, -55.599, 12.747, -95.194)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-55.999, 10, -95.594, -55.199, 15.494, -94.794)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree3" unique_id=961089836]
+transform = Transform3D(4.035, 0, 0, 0, 3.4240007, 0, 0, 0, 4.0339966, -55.599503, 16.606, -95.194)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-57.617, 14.894, -97.211, -53.582, 18.318, -93.177)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree3" unique_id=1954106012]
+transform = Transform3D(2.4210014, 0, 0, 0, 1.4519997, 0, 0, 0, 2.4199982, -55.599503, 19.044, -95.194)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-56.81, 18.318, -96.404, -54.389, 19.77, -93.984)
+web_box = PackedFloat64Array()
+
+[node name="Tree4" type="Node3D" parent="Nature/Trees" unique_id=28370593]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree4" unique_id=1548465442]
+transform = Transform3D(0.80000305, 0, 0, 0, 4.244, 0, 0, 0, 0.80000305, -96.913, 2.122, -35.583)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-97.313, 0, -35.983, -96.513, 4.244, -35.183)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree4" unique_id=246418333]
+transform = Transform3D(3.1620026, 0, 0, 0, 2.8129997, 0, 0, 0, 3.1620026, -96.913, 5.0505, -35.583)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-98.494, 3.644, -37.164, -95.332, 6.457, -34.002)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree4" unique_id=26748409]
+transform = Transform3D(1.8970032, 0, 0, 0, 1.1390004, 0, 0, 0, 1.8969994, -96.9135, 7.0264997, -35.582497)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-97.862, 6.457, -36.531, -95.965, 7.596, -34.634)
+web_box = PackedFloat64Array()
+
+[node name="Tree5" type="Node3D" parent="Nature/Trees" unique_id=1816499807]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree5" unique_id=887250809]
+transform = Transform3D(0.7999954, 0, 0, 0, 3.387, 0, 0, 0, 0.80000114, 94.009, 1.6935, -27.362999)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(93.609, 0, -27.763, 94.409, 3.387, -26.963)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree5" unique_id=736908305]
+transform = Transform3D(4.1450043, 0, 0, 0, 3.5010002, 0, 0, 0, 4.143999, 94.0085, 4.5375, -27.362999)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(91.936, 2.787, -29.435, 96.081, 6.288, -25.291)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree5" unique_id=1257628582]
+transform = Transform3D(2.4869995, 0, 0, 0, 1.4920001, 0, 0, 0, 2.486, 94.0085, 7.0340004, -27.363)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(92.765, 6.288, -28.606, 95.252, 7.78, -26.12)
+web_box = PackedFloat64Array()
+
+[node name="Tree6" type="Node3D" parent="Nature/Trees" unique_id=2100099177]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree6" unique_id=1798058202]
+transform = Transform3D(0.80000305, 0, 0, 0, 4.133, 0, 0, 0, 0.80000305, -78.026, 2.0665, 89.012)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-78.426, 0, 88.612, -77.626, 4.133, 89.412)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree6" unique_id=1284221244]
+transform = Transform3D(3.7730026, 0, 0, 0, 3.2410002, 0, 0, 0, 3.7730026, -78.0255, 5.1535, 89.0125)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-79.912, 3.533, 87.126, -76.139, 6.774, 90.899)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree6" unique_id=2080956893]
+transform = Transform3D(2.2630005, 0, 0, 0, 1.3579998, 0, 0, 0, 2.264, -78.0255, 7.453, 89.01199)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-79.157, 6.774, 87.88, -76.894, 8.132, 90.144)
+web_box = PackedFloat64Array()
+
+[node name="Tree7" type="Node3D" parent="Nature/Trees" unique_id=759570184]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree7" unique_id=54043664]
+transform = Transform3D(0.79999924, 0, 0, 0, 3.467, 0, 0, 0, 0.79999995, -32.671997, 1.7335, -3.1820002)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-33.072, 0, -3.582, -32.272, 3.467, -2.782)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree7" unique_id=1326017265]
+transform = Transform3D(3.052002, 0, 0, 0, 2.737, 0, 0, 0, 3.052, -32.672, 4.2355003, -3.1820002)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-34.198, 2.867, -4.708, -31.146, 5.604, -1.656)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree7" unique_id=787339846]
+transform = Transform3D(1.8310013, 0, 0, 0, 1.098, 0, 0, 0, 1.8310001, -32.6725, 6.153, -3.1815)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-33.588, 5.604, -4.097, -31.757, 6.702, -2.266)
+web_box = PackedFloat64Array()
+
+[node name="Tree8" type="Node3D" parent="Nature/Trees" unique_id=519787003]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree8" unique_id=1470014008]
+transform = Transform3D(0.7999954, 0, 0, 0, 4.951, 0, 0, 0, 0.79999924, 76.104004, 2.4755, -55.148003)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(75.704, 0, -55.548, 76.504, 4.951, -54.748)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree8" unique_id=1772018600]
+transform = Transform3D(3.2919998, 0, 0, 0, 2.9040003, 0, 0, 0, 3.2919998, 76.104004, 5.803, -55.148)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(74.458, 4.351, -56.794, 77.75, 7.255, -53.502)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree8" unique_id=1022974136]
+transform = Transform3D(1.9750061, 0, 0, 0, 1.1849995, 0, 0, 0, 1.9749985, 76.1045, 7.8475, -55.1475)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(75.117, 7.255, -56.135, 77.092, 8.44, -54.16)
+web_box = PackedFloat64Array()
+
+[node name="Tree9" type="Node3D" parent="Nature/Trees" unique_id=2044082591]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree9" unique_id=539353793]
+transform = Transform3D(0.79999924, 0, 0, 0, 3.306, 0, 0, 0, 0.79999924, 16.799, 1.653, 47.79)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(16.399, 0, 47.39, 17.199, 3.306, 48.19)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree9" unique_id=1678290406]
+transform = Transform3D(3.6669998, 0, 0, 0, 3.167, 0, 0, 0, 3.6669998, 16.7995, 4.2895, 47.7895)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(14.966, 2.706, 45.956, 18.633, 5.873, 49.623)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree9" unique_id=1876582284]
+transform = Transform3D(2.1999998, 0, 0, 0, 1.3199997, 0, 0, 0, 2.2010002, 16.799, 6.533, 47.789497)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(15.699, 5.873, 46.689, 17.899, 7.193, 48.89)
+web_box = PackedFloat64Array()
+
+[node name="Tree10" type="Node3D" parent="Nature/Trees" unique_id=771910739]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree10" unique_id=1559790906]
+transform = Transform3D(0.7999954, 0, 0, 0, 5.308, 0, 0, 0, 0.79999924, 68.020004, 2.654, -62.175003)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(67.62, 0, -62.575, 68.42, 5.308, -61.775)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree10" unique_id=764984734]
+transform = Transform3D(4.242996, 0, 0, 0, 3.5699997, 0, 0, 0, 4.242996, 68.0195, 6.493, -62.1755)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(65.898, 4.708, -64.297, 70.141, 8.278, -60.054)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree10" unique_id=307177983]
+transform = Transform3D(2.5459976, 0, 0, 0, 1.5270004, 0, 0, 0, 2.545002, 68.020004, 9.0415, -62.1755)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(66.747, 8.278, -63.448, 69.293, 9.805, -60.903)
+web_box = PackedFloat64Array()
+
+[node name="Tree11" type="Node3D" parent="Nature/Trees" unique_id=1486369094]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree11" unique_id=1550542349]
+transform = Transform3D(0.80000305, 0, 0, 0, 4.795, 0, 0, 0, 0.80000305, -98.418, 12.3975, -84.601)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-98.818, 10, -85.001, -98.018, 14.795, -84.201)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree11" unique_id=1643676733]
+transform = Transform3D(4.3899994, 0, 0, 0, 3.6730003, 0, 0, 0, 4.3899994, -98.418, 16.0315, -84.601)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-100.613, 14.195, -86.796, -96.223, 17.868, -82.406)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree11" unique_id=1332496083]
+transform = Transform3D(2.6340027, 0, 0, 0, 1.5809994, 0, 0, 0, 2.6340027, -98.418, 18.6585, -84.601)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-99.735, 17.868, -85.918, -97.101, 19.449, -83.284)
+web_box = PackedFloat64Array()
+
+[node name="Tree12" type="Node3D" parent="Nature/Trees" unique_id=1241543849]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree12" unique_id=1410520782]
+transform = Transform3D(0.79999924, 0, 0, 0, 4.391, 0, 0, 0, 0.80000114, -57.817, 2.1955, 22.651001)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-58.217, 0, 22.251, -57.417, 4.391, 23.051)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree12" unique_id=1439835776]
+transform = Transform3D(3.8719978, 0, 0, 0, 3.31, 0, 0, 0, 3.8710003, -57.817, 5.446, 22.6515)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-59.753, 3.791, 20.716, -55.881, 7.101, 24.587)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree12" unique_id=616281246]
+transform = Transform3D(2.3230019, 0, 0, 0, 1.394, 0, 0, 0, 2.323, -57.817497, 7.798, 22.6515)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-58.979, 7.101, 21.49, -56.656, 8.495, 23.813)
+web_box = PackedFloat64Array()
+
+[node name="Tree13" type="Node3D" parent="Nature/Trees" unique_id=21629883]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree13" unique_id=1941797595]
+transform = Transform3D(0.80000305, 0, 0, 0, 4.943, 0, 0, 0, 0.80000305, -90.346, 2.4715, 65.249)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-90.746, 0, 64.849, -89.946, 4.943, 65.649)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree13" unique_id=1792118221]
+transform = Transform3D(3.524002, 0, 0, 0, 3.067, 0, 0, 0, 3.5250015, -90.346, 5.8765, 65.248505)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-92.108, 4.343, 63.486, -88.584, 7.41, 67.011)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree13" unique_id=1304000297]
+transform = Transform3D(2.1149979, 0, 0, 0, 1.269, 0, 0, 0, 2.1149979, -90.3465, 8.0445, 65.248505)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-91.404, 7.41, 64.191, -89.289, 8.679, 66.306)
+web_box = PackedFloat64Array()
+
+[node name="Tree14" type="Node3D" parent="Nature/Trees" unique_id=888686829]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree14" unique_id=1094692619]
+transform = Transform3D(0.7999954, 0, 0, 0, 5.208, 0, 0, 0, 0.80000114, 95.977005, 2.604, 18.828)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(95.577, 0, 18.428, 96.377, 5.208, 19.228)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree14" unique_id=1684370919]
+transform = Transform3D(3.6869965, 0, 0, 0, 3.1810002, 0, 0, 0, 3.6880016, 95.9775, 6.1984997, 18.828)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(94.134, 4.608, 16.984, 97.821, 7.789, 20.672)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree14" unique_id=1152593821]
+transform = Transform3D(2.2129974, 0, 0, 0, 1.3270001, 0, 0, 0, 2.212, 95.9775, 8.4525, 18.828)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(94.871, 7.789, 17.722, 97.084, 9.116, 19.934)
+web_box = PackedFloat64Array()
+
+[node name="Tree15" type="Node3D" parent="Nature/Trees" unique_id=1183796682]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree15" unique_id=839772467]
+transform = Transform3D(0.80000305, 0, 0, 0, 3.173, 0, 0, 0, 0.7999954, 78.238, 1.5865, -70.243)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(77.838, 0, -70.643, 78.638, 3.173, -69.843)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree15" unique_id=165828093]
+transform = Transform3D(4.1279984, 0, 0, 0, 3.4900002, 0, 0, 0, 4.1279984, 78.23801, 4.318, -70.243)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(76.174, 2.573, -72.307, 80.302, 6.063, -68.179)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree15" unique_id=1635495049]
+transform = Transform3D(2.475998, 0, 0, 0, 1.4849997, 0, 0, 0, 2.4760056, 78.238, 6.8055, -70.243)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(77, 6.063, -71.481, 79.476, 7.548, -69.005)
+web_box = PackedFloat64Array()
+
+[node name="Tree16" type="Node3D" parent="Nature/Trees" unique_id=2109036904]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree16" unique_id=377171774]
+transform = Transform3D(0.80000305, 0, 0, 0, 3.645, 0, 0, 0, 0.7999954, 70.096, 1.8225, -93.147995)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(69.696, 0, -93.548, 70.496, 3.645, -92.748)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree16" unique_id=1124094555]
+transform = Transform3D(3.4060059, 0, 0, 0, 2.9839997, 0, 0, 0, 3.4059982, 70.096, 4.5369997, -93.147995)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(68.393, 3.045, -94.851, 71.799, 6.029, -91.445)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree16" unique_id=1450495110]
+transform = Transform3D(2.0429993, 0, 0, 0, 1.2260003, 0, 0, 0, 2.0439987, 70.0955, 6.642, -93.147995)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(69.074, 6.029, -94.17, 71.117, 7.255, -92.126)
+web_box = PackedFloat64Array()
+
+[node name="Tree17" type="Node3D" parent="Nature/Trees" unique_id=1846591113]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree17" unique_id=2109057071]
+transform = Transform3D(0.80000305, 0, 0, 0, 5.248, 0, 0, 0, 0.79999924, -89.554, 2.624, -33.679)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-89.954, 0, -34.079, -89.154, 5.248, -33.279)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree17" unique_id=1695631646]
+transform = Transform3D(4.376999, 0, 0, 0, 3.6640005, 0, 0, 0, 4.377001, -89.5545, 6.48, -33.6785)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-91.743, 4.648, -35.867, -87.366, 8.312, -31.49)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree17" unique_id=193987005]
+transform = Transform3D(2.6259995, 0, 0, 0, 1.5749998, 0, 0, 0, 2.6259995, -89.554, 9.099501, -33.679)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-90.867, 8.312, -34.992, -88.241, 9.887, -32.366)
+web_box = PackedFloat64Array()
+
+[node name="Tree18" type="Node3D" parent="Nature/Trees" unique_id=790896457]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree18" unique_id=870143242]
+transform = Transform3D(0.80000305, 0, 0, 0, 5.096, 0, 0, 0, 0.79999924, -98.114, 2.548, -59.885002)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-98.514, 0, -60.285, -97.714, 5.096, -59.485)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree18" unique_id=1063343304]
+transform = Transform3D(4.112999, 0, 0, 0, 3.479, 0, 0, 0, 4.114002, -98.113495, 6.2355, -59.885002)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-100.17, 4.496, -61.942, -96.057, 7.975, -57.828)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree18" unique_id=1040109270]
+transform = Transform3D(2.4680023, 0, 0, 0, 1.4810004, 0, 0, 0, 2.4679985, -98.114, 8.7155, -59.885002)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-99.348, 7.975, -61.119, -96.88, 9.456, -58.651)
+web_box = PackedFloat64Array()
+
+[node name="Tree19" type="Node3D" parent="Nature/Trees" unique_id=1720929390]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree19" unique_id=605072416]
+transform = Transform3D(0.79999924, 0, 0, 0, 4.713, 0, 0, 0, 0.80000305, 55.796997, 2.3565, -101.871)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(55.397, 0, -102.271, 56.197, 4.713, -101.471)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree19" unique_id=985396994]
+transform = Transform3D(4.3359985, 0, 0, 0, 3.6350002, 0, 0, 0, 4.334999, 55.797, 5.9305, -101.871506)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(53.629, 4.113, -104.039, 57.965, 7.748, -99.704)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree19" unique_id=1190872394]
+transform = Transform3D(2.600998, 0, 0, 0, 1.5609999, 0, 0, 0, 2.600998, 55.7975, 8.5285, -101.8715)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(54.497, 7.748, -103.172, 57.098, 9.309, -100.571)
+web_box = PackedFloat64Array()
+
+[node name="Tree20" type="Node3D" parent="Nature/Trees" unique_id=196552035]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree20" unique_id=1582385115]
+transform = Transform3D(0.79999924, 0, 0, 0, 4.461, 0, 0, 0, 0.80000305, 29.923, 2.2305, 73.15)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(29.523, 0, 72.75, 30.323, 4.461, 73.55)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree20" unique_id=1176674782]
+transform = Transform3D(3.3600006, 0, 0, 0, 2.9520001, 0, 0, 0, 3.3600006, 29.923, 5.337, 73.15)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(28.243, 3.861, 71.47, 31.603, 6.813, 74.83)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree20" unique_id=267951936]
+transform = Transform3D(2.0159988, 0, 0, 0, 1.2099996, 0, 0, 0, 2.0159988, 29.923, 7.418, 73.149994)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(28.915, 6.813, 72.142, 30.931, 8.023, 74.158)
+web_box = PackedFloat64Array()
+
+[node name="Tree21" type="Node3D" parent="Nature/Trees" unique_id=1514993554]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree21" unique_id=1715030252]
+transform = Transform3D(0.7999954, 0, 0, 0, 3.237, 0, 0, 0, 0.80000305, 84.366, 1.6185, -76.224)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(83.966, 0, -76.624, 84.766, 3.237, -75.824)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree21" unique_id=14845356]
+transform = Transform3D(3.1319962, 0, 0, 0, 2.7919998, 0, 0, 0, 3.1320038, 84.366, 4.033, -76.224)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(82.8, 2.637, -77.79, 85.932, 5.429, -74.658)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree21" unique_id=1734452363]
+transform = Transform3D(1.8789978, 0, 0, 0, 1.1280003, 0, 0, 0, 1.8789978, 84.3665, 5.993, -76.2245)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(83.427, 5.429, -77.164, 85.306, 6.557, -75.285)
+web_box = PackedFloat64Array()
+
+[node name="Tree22" type="Node3D" parent="Nature/Trees" unique_id=1120853060]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree22" unique_id=1054777741]
+transform = Transform3D(0.80000305, 0, 0, 0, 4.638, 0, 0, 0, 0.80000305, -74.708, 2.319, 76.406)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-75.108, 0, 76.006, -74.308, 4.638, 76.806)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree22" unique_id=116055841]
+transform = Transform3D(3.1769943, 0, 0, 0, 2.824, 0, 0, 0, 3.177002, -74.708496, 5.45, 76.4055)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-76.297, 4.038, 74.817, -73.12, 6.862, 77.994)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree22" unique_id=2142695333]
+transform = Transform3D(1.9060059, 0, 0, 0, 1.1439996, 0, 0, 0, 1.9059982, -74.708, 7.434, 76.406006)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-75.661, 6.862, 75.453, -73.755, 8.006, 77.359)
+web_box = PackedFloat64Array()
+
+[node name="Tree23" type="Node3D" parent="Nature/Trees" unique_id=1827174464]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree23" unique_id=1977328300]
+transform = Transform3D(0.8000002, 0, 0, 0, 4.235, 0, 0, 0, 0.79999924, 8.041, 2.1175, -36.550003)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(7.641, 0, -36.95, 8.441, 4.235, -36.15)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree23" unique_id=1175070120]
+transform = Transform3D(3.3079996, 0, 0, 0, 2.9150002, 0, 0, 0, 3.3069992, 8.041, 5.0925, -36.5505)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(6.387, 3.635, -38.204, 9.695, 6.55, -34.897)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree23" unique_id=110974996]
+transform = Transform3D(1.9840002, 0, 0, 0, 1.191, 0, 0, 0, 1.9850006, 8.041, 7.1455, -36.5505)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(7.049, 6.55, -37.543, 9.033, 7.741, -35.558)
+web_box = PackedFloat64Array()
+
+[node name="Tree24" type="Node3D" parent="Nature/Trees" unique_id=137743294]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree24" unique_id=707987426]
+transform = Transform3D(0.80000114, 0, 0, 0, 4.375, 0, 0, 0, 0.79999924, -25.415, 2.1875, 43.675003)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-25.815, 0, 43.275, -25.015, 4.375, 44.075)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree24" unique_id=2123641446]
+transform = Transform3D(3.0650005, 0, 0, 0, 2.745, 0, 0, 0, 3.0639992, -25.4155, 5.1475, 43.675003)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-26.948, 3.775, 42.143, -23.883, 6.52, 45.207)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree24" unique_id=2032868833]
+transform = Transform3D(1.8389988, 0, 0, 0, 1.1040001, 0, 0, 0, 1.8390007, -25.4155, 7.072, 43.6745)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-26.335, 6.52, 42.755, -24.496, 7.624, 44.594)
+web_box = PackedFloat64Array()
+
+[node name="Tree25" type="Node3D" parent="Nature/Trees" unique_id=1598138997]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree25" unique_id=1151497749]
+transform = Transform3D(0.80000305, 0, 0, 0, 3.438, 0, 0, 0, 0.79999924, -90.794, 1.719, 54.894997)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-91.194, 0, 54.495, -90.394, 3.438, 55.295)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree25" unique_id=363837587]
+transform = Transform3D(3.9960022, 0, 0, 0, 3.398, 0, 0, 0, 3.9960022, -90.794, 4.537, 54.895)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-92.792, 2.838, 52.897, -88.796, 6.236, 56.893)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree25" unique_id=2085634213]
+transform = Transform3D(2.397995, 0, 0, 0, 1.4379997, 0, 0, 0, 2.3970032, -90.794, 6.955, 54.8955)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-91.993, 6.236, 53.697, -89.595, 7.674, 56.094)
+web_box = PackedFloat64Array()
+
+[node name="Tree26" type="Node3D" parent="Nature/Trees" unique_id=64817560]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree26" unique_id=1959198103]
+transform = Transform3D(0.80000305, 0, 0, 0, 4.258, 0, 0, 0, 0.79999924, 83.357, 2.129, -42.634003)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(82.957, 0, -43.034, 83.757, 4.258, -42.234)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree26" unique_id=991840984]
+transform = Transform3D(3.7689972, 0, 0, 0, 3.238, 0, 0, 0, 3.769001, 83.3565, 5.277, -42.6345)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(81.472, 3.658, -44.519, 85.241, 6.896, -40.75)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree26" unique_id=58673173]
+transform = Transform3D(2.262001, 0, 0, 0, 1.3570004, 0, 0, 0, 2.2609978, 83.356995, 7.5745, -42.6345)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(82.226, 6.896, -43.765, 84.488, 8.253, -41.504)
+web_box = PackedFloat64Array()
+
+[node name="Tree27" type="Node3D" parent="Nature/Trees" unique_id=1124684839]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree27" unique_id=1979481533]
+transform = Transform3D(0.7999954, 0, 0, 0, 4.503, 0, 0, 0, 0.80000305, 93.229004, 2.2515, -83.499)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(92.829, 0, -83.899, 93.629, 4.503, -83.099)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree27" unique_id=479219159]
+transform = Transform3D(3.711998, 0, 0, 0, 3.1979997, 0, 0, 0, 3.7120056, 93.229004, 5.502, -83.499)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(91.373, 3.903, -85.355, 95.085, 7.101, -81.643)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree27" unique_id=490862846]
+transform = Transform3D(2.227005, 0, 0, 0, 1.3360004, 0, 0, 0, 2.2269974, 93.2295, 7.769, -83.498505)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(92.116, 7.101, -84.612, 94.343, 8.437, -82.385)
+web_box = PackedFloat64Array()
+
+[node name="Tree28" type="Node3D" parent="Nature/Trees" unique_id=1784920058]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree28" unique_id=1001864405]
+transform = Transform3D(0.7999954, 0, 0, 0, 3.1829996, 0, 0, 0, 0.80000305, -81.618, 11.591499, -88.17)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-82.018, 10, -88.57, -81.218, 13.183, -87.77)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree28" unique_id=1657016628]
+transform = Transform3D(4.140007, 0, 0, 0, 3.4979992, 0, 0, 0, 4.140999, -81.618, 14.332, -88.169495)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-83.688, 12.583, -90.24, -79.548, 16.081, -86.099)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree28" unique_id=1042545638]
+transform = Transform3D(2.4840012, 0, 0, 0, 1.4910011, 0, 0, 0, 2.4840012, -81.618, 16.8265, -88.17)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-82.86, 16.081, -89.412, -80.376, 17.572, -86.928)
+web_box = PackedFloat64Array()
+
+[node name="Tree29" type="Node3D" parent="Nature/Trees" unique_id=1677023775]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree29" unique_id=405769542]
+transform = Transform3D(0.79999924, 0, 0, 0, 4.6120005, 0, 0, 0, 0.80000305, 25.249, 12.306, -99.886)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(24.849, 10, -100.286, 25.649, 14.612, -99.486)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree29" unique_id=582909131]
+transform = Transform3D(3.6189995, 0, 0, 0, 3.1330004, 0, 0, 0, 3.6200027, 25.2495, 15.578501, -99.886)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(23.44, 14.012, -101.696, 27.059, 17.145, -98.076)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree29" unique_id=1929460013]
+transform = Transform3D(2.171999, 0, 0, 0, 1.3029995, 0, 0, 0, 2.171997, 25.249, 17.796501, -99.886)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(24.163, 17.145, -100.972, 26.335, 18.448, -98.8)
+web_box = PackedFloat64Array()
+
+[node name="Tree30" type="Node3D" parent="Nature/Trees" unique_id=1303485004]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree30" unique_id=1281135717]
+transform = Transform3D(0.80000305, 0, 0, 0, 3.618, 0, 0, 0, 0.8000002, -93.845, 1.809, -13.745001)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-94.245, 0, -14.145, -93.445, 3.618, -13.345)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree30" unique_id=1165498492]
+transform = Transform3D(3.9850006, 0, 0, 0, 3.39, 0, 0, 0, 3.9849997, -93.8455, 4.713, -13.745501)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-95.838, 3.018, -15.738, -91.853, 6.408, -11.753)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree30" unique_id=867840976]
+transform = Transform3D(2.3909988, 0, 0, 0, 1.435, 0, 0, 0, 2.3909998, -93.845505, 7.1254997, -13.745501)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-95.041, 6.408, -14.941, -92.65, 7.843, -12.55)
+web_box = PackedFloat64Array()
+
+[node name="Tree31" type="Node3D" parent="Nature/Trees" unique_id=1419423142]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree31" unique_id=1349351479]
+transform = Transform3D(0.79999924, 0, 0, 0, 4.67, 0, 0, 0, 0.79999924, 26.376, 2.335, 53.773003)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(25.976, 0, 53.373, 26.776, 4.67, 54.173)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree31" unique_id=1479861665]
+transform = Transform3D(4.2019997, 0, 0, 0, 3.5419998, 0, 0, 0, 4.202999, 26.376, 5.841, 53.7735)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(24.275, 4.07, 51.672, 28.477, 7.612, 55.875)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree31" unique_id=1128225727]
+transform = Transform3D(2.5219994, 0, 0, 0, 1.513, 0, 0, 0, 2.521, 26.376, 8.3685, 53.7735)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(25.115, 7.612, 52.513, 27.637, 9.125, 55.034)
+web_box = PackedFloat64Array()
+
+[node name="Tree32" type="Node3D" parent="Nature/Trees" unique_id=1225396825]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree32" unique_id=665602046]
+transform = Transform3D(0.8000002, 0, 0, 0, 3.757, 0, 0, 0, 0.80000305, 11.075001, 11.8785, -87.461)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(10.675, 10, -87.861, 11.475, 13.757, -87.061)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree32" unique_id=1865697177]
+transform = Transform3D(4.321, 0, 0, 0, 3.6240005, 0, 0, 0, 4.320999, 11.074499, 14.969, -87.4605)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(8.914, 13.157, -89.621, 13.235, 16.781, -85.3)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree32" unique_id=63895456]
+transform = Transform3D(2.5930004, 0, 0, 0, 1.5559998, 0, 0, 0, 2.5930023, 11.0745, 17.559, -87.4605)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(9.778, 16.781, -88.757, 12.371, 18.337, -86.164)
+web_box = PackedFloat64Array()
+
+[node name="Tree33" type="Node3D" parent="Nature/Trees" unique_id=1177599545]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree33" unique_id=749050902]
+transform = Transform3D(0.80000305, 0, 0, 0, 3.636, 0, 0, 0, 0.79999924, 93.858, 1.818, -37.001)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(93.458, 0, -37.401, 94.258, 3.636, -36.601)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree33" unique_id=578700091]
+transform = Transform3D(4.1829987, 0, 0, 0, 3.528, 0, 0, 0, 4.1829987, 93.8575, 4.8, -37.0005)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(91.766, 3.036, -39.092, 95.949, 6.564, -34.909)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree33" unique_id=1455582542]
+transform = Transform3D(2.5100021, 0, 0, 0, 1.5059996, 0, 0, 0, 2.5100021, 93.858, 7.317, -37.001)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(92.603, 6.564, -38.256, 95.113, 8.07, -35.746)
+web_box = PackedFloat64Array()
+
+[node name="Tree34" type="Node3D" parent="Nature/Trees" unique_id=1106625332]
+
+[node name="Trunk" type="Node3D" parent="Nature/Trees/Tree34" unique_id=1101365965]
+transform = Transform3D(0.80000305, 0, 0, 0, 5.352, 0, 0, 0, 0.80000114, -46.299, 2.676, -25.168999)
+script = ExtResource("2_e5yd8")
+kind = "trunk"
+box = PackedFloat64Array(-46.699, 0, -25.569, -45.899, 5.352, -24.769)
+web_box = PackedFloat64Array()
+
+[node name="Leaves" type="Node3D" parent="Nature/Trees/Tree34" unique_id=700021699]
+transform = Transform3D(3.6529999, 0, 0, 0, 3.157, 0, 0, 0, 3.6540012, -46.2985, 6.3304996, -25.168999)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-48.125, 4.752, -26.996, -44.472, 7.909, -23.342)
+web_box = PackedFloat64Array()
+
+[node name="LeavesTop" type="Node3D" parent="Nature/Trees/Tree34" unique_id=250855486]
+transform = Transform3D(2.1930008, 0, 0, 0, 1.3160005, 0, 0, 0, 2.1919994, -46.2985, 8.567, -25.168999)
+script = ExtResource("2_e5yd8")
+kind = "leaves"
+box = PackedFloat64Array(-47.395, 7.909, -26.265, -45.202, 9.225, -24.073)
+web_box = PackedFloat64Array()
+
+[node name="Boulders" type="Node3D" parent="Nature" unique_id=1078533978]
+
+[node name="Boulder1" type="Node3D" parent="Nature/Boulders" unique_id=1211647267]
+transform = Transform3D(2.104004, 0, 0, 0, 1.238, 0, 0, 0, 4.4309998, 90.428, 0.619, 42.5565)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(89.376, 0, 40.341, 91.48, 1.238, 44.772)
+web_box = PackedFloat64Array()
+
+[node name="Boulder2" type="Node3D" parent="Nature/Boulders" unique_id=1253980623]
+transform = Transform3D(4.6989975, 0, 0, 0, 1.319, 0, 0, 0, 4.2400017, 53.9295, 0.6595, -64.835)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(51.58, 0, -66.955, 56.279, 1.319, -62.715)
+web_box = PackedFloat64Array()
+
+[node name="Boulder3" type="Node3D" parent="Nature/Boulders" unique_id=821884733]
+transform = Transform3D(2.8939972, 0, 0, 0, 1.335, 0, 0, 0, 3.8819962, 81.15, 0.6675, -89.229004)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(79.703, 0, -91.17, 82.597, 1.335, -87.288)
+web_box = PackedFloat64Array()
+
+[node name="Boulder4" type="Node3D" parent="Nature/Boulders" unique_id=2138334583]
+transform = Transform3D(3.5349998, 0, 0, 0, 1.318, 0, 0, 0, 4.0340004, -64.5255, 0.659, -47.869003)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-66.293, 0, -49.886, -62.758, 1.318, -45.852)
+web_box = PackedFloat64Array()
+
+[node name="Boulder5" type="Node3D" parent="Nature/Boulders" unique_id=112491595]
+transform = Transform3D(2.473999, 0, 0, 0, 2.017, 0, 0, 0, 2.3119998, 89.62, 1.0085, 8.0199995)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(88.383, 0, 6.864, 90.857, 2.017, 9.176)
+web_box = PackedFloat64Array()
+
+[node name="Boulder6" type="Node3D" parent="Nature/Boulders" unique_id=668771551]
+transform = Transform3D(3.1709976, 0, 0, 0, 1.222, 0, 0, 0, 4.824997, 90.8495, 0.611, 61.1255)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(89.264, 0, 58.713, 92.435, 1.222, 63.538)
+web_box = PackedFloat64Array()
+
+[node name="Boulder7" type="Node3D" parent="Nature/Boulders" unique_id=306220549]
+transform = Transform3D(4.4449997, 0, 0, 0, 2.0459995, 0, 0, 0, 3.086998, -76.74049, 11.023, -98.38451)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-78.963, 10, -99.928, -74.518, 12.046, -96.841)
+web_box = PackedFloat64Array()
+
+[node name="Boulder8" type="Node3D" parent="Nature/Boulders" unique_id=1877027800]
+transform = Transform3D(2.321, 0, 0, 0, 2.228, 0, 0, 0, 4.7830048, 4.7905, 1.114, 82.1755)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(3.63, 0, 79.784, 5.951, 2.228, 84.567)
+web_box = PackedFloat64Array()
+
+[node name="Boulder9" type="Node3D" parent="Nature/Boulders" unique_id=16742961]
+transform = Transform3D(3.1050034, 0, 0, 0, 2.5930004, 0, 0, 0, 2.5800018, -74.6655, 11.2965, -91.988)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-76.218, 10, -93.278, -73.113, 12.593, -90.698)
+web_box = PackedFloat64Array()
+
+[node name="Boulder10" type="Node3D" parent="Nature/Boulders" unique_id=1168616100]
+transform = Transform3D(4.283001, 0, 0, 0, 1.37, 0, 0, 0, 2.6089997, 41.525497, 0.685, 8.0505)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(39.384, 0, 6.746, 43.667, 1.37, 9.355)
+web_box = PackedFloat64Array()
+
+[node name="Boulder11" type="Node3D" parent="Nature/Boulders" unique_id=949594441]
+transform = Transform3D(3.731, 0, 0, 0, 1.218, 0, 0, 0, 4.454998, 4.2475, 0.609, 34.010498)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(2.382, 0, 31.783, 6.113, 1.218, 36.238)
+web_box = PackedFloat64Array()
+
+[node name="Boulder12" type="Node3D" parent="Nature/Boulders" unique_id=1530785438]
+transform = Transform3D(2.9079971, 0, 0, 0, 2.77, 0, 0, 0, 2.955, 85.992004, 1.385, -29.636501)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(84.538, 0, -31.114, 87.446, 2.77, -28.159)
+web_box = PackedFloat64Array()
+
+[node name="Boulder13" type="Node3D" parent="Nature/Boulders" unique_id=874478547]
+transform = Transform3D(3.1679993, 0, 0, 0, 1.381, 0, 0, 0, 4.4039993, -92.89, 0.6905, -44.25)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-94.474, 0, -46.452, -91.306, 1.381, -42.048)
+web_box = PackedFloat64Array()
+
+[node name="Boulder14" type="Node3D" parent="Nature/Boulders" unique_id=853912529]
+transform = Transform3D(2.9740028, 0, 0, 0, 1.817, 0, 0, 0, 4.3790054, 52.718002, 0.9085, -72.9305)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(51.231, 0, -75.12, 54.205, 1.817, -70.741)
+web_box = PackedFloat64Array()
+
+[node name="Boulder15" type="Node3D" parent="Nature/Boulders" unique_id=1960207368]
+transform = Transform3D(3.783001, 0, 0, 0, 1.857, 0, 0, 0, 4.496, 39.850502, 0.9285, -4.1349998)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(37.959, 0, -6.383, 41.742, 1.857, -1.887)
+web_box = PackedFloat64Array()
+
+[node name="Boulder16" type="Node3D" parent="Nature/Boulders" unique_id=1418789490]
+transform = Transform3D(4.289999, 0, 0, 0, 2.2209997, 0, 0, 0, 2.145996, 28.432, 11.1105, -80.845)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(26.287, 10, -81.918, 30.577, 12.221, -79.772)
+web_box = PackedFloat64Array()
+
+[node name="Boulder17" type="Node3D" parent="Nature/Boulders" unique_id=1409345386]
+transform = Transform3D(3.1749954, 0, 0, 0, 2.604, 0, 0, 0, 4.1849995, -79.901505, 1.302, -31.421501)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-81.489, 0, -33.514, -78.314, 2.604, -29.329)
+web_box = PackedFloat64Array()
+
+[node name="Boulder18" type="Node3D" parent="Nature/Boulders" unique_id=1440660418]
+transform = Transform3D(4.505001, 0, 0, 0, 1.825, 0, 0, 0, 4.9379997, -50.512497, 0.9125, 26.041)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-52.765, 0, 23.572, -48.26, 1.825, 28.51)
+web_box = PackedFloat64Array()
+
+[node name="Boulder19" type="Node3D" parent="Nature/Boulders" unique_id=1292634755]
+transform = Transform3D(4.809, 0, 0, 0, 1.757, 0, 0, 0, 3.0569992, 27.489498, 0.8785, 66.2495)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(25.085, 0, 64.721, 29.894, 1.757, 67.778)
+web_box = PackedFloat64Array()
+
+[node name="Boulder20" type="Node3D" parent="Nature/Boulders" unique_id=1235805883]
+transform = Transform3D(3.038002, 0, 0, 0, 1.547, 0, 0, 0, 2.6390038, -98.729996, 0.7735, 63.0515)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-100.249, 0, 61.732, -97.211, 1.547, 64.371)
+web_box = PackedFloat64Array()
+
+[node name="Boulder21" type="Node3D" parent="Nature/Boulders" unique_id=1794884907]
+transform = Transform3D(3.8650017, 0, 0, 0, 3.057, 0, 0, 0, 2.5069962, 54.2545, 1.5285, -83.7195)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(52.322, 0, -84.973, 56.187, 3.057, -82.466)
+web_box = PackedFloat64Array()
+
+[node name="Boulder22" type="Node3D" parent="Nature/Boulders" unique_id=7547078]
+transform = Transform3D(2.9249992, 0, 0, 0, 2.783, 0, 0, 0, 2.7579994, -58.946503, 1.3915, -21.607)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-60.409, 0, -22.986, -57.484, 2.783, -20.228)
+web_box = PackedFloat64Array()
+
+[node name="Boulder23" type="Node3D" parent="Nature/Boulders" unique_id=1528010203]
+transform = Transform3D(2.9639997, 0, 0, 0, 3.192, 0, 0, 0, 2.913002, -13.865, 1.596, 77.891495)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-15.347, 0, 76.435, -12.383, 3.192, 79.348)
+web_box = PackedFloat64Array()
+
+[node name="Boulder24" type="Node3D" parent="Nature/Boulders" unique_id=1128814793]
+transform = Transform3D(2.2509995, 0, 0, 0, 2.586, 0, 0, 0, 4.894, 87.0195, 1.293, -8.129)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(85.894, 0, -10.576, 88.145, 2.586, -5.682)
+web_box = PackedFloat64Array()
+
+[node name="Boulder25" type="Node3D" parent="Nature/Boulders" unique_id=1205657341]
+transform = Transform3D(4.640999, 0, 0, 0, 2.173, 0, 0, 0, 4.7339973, -86.3745, 1.0865, 44.649002)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(-88.695, 0, 42.282, -84.054, 2.173, 47.016)
+web_box = PackedFloat64Array()
+
+[node name="Boulder26" type="Node3D" parent="Nature/Boulders" unique_id=15704738]
+transform = Transform3D(4.728, 0, 0, 0, 2.809, 0, 0, 0, 2.5009995, 10.148, 11.4045, -78.9155)
+script = ExtResource("2_e5yd8")
+kind = "sandstone"
+box = PackedFloat64Array(7.784, 10, -80.166, 12.512, 12.809, -77.665)
+web_box = PackedFloat64Array()
+
+[node name="Shards" type="Node3D" parent="Nature" unique_id=931653861]
+
+[node name="Shard1" type="Node3D" parent="Nature/Shards" unique_id=749257839]
+transform = Transform3D(0.85499954, 0, 0, 0, 1.855, 0, 0, 0, 0.8549957, 46.294502, 0.9275, -97.5215)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(45.867, 0, -97.949, 46.722, 1.855, -97.094)
+web_box = PackedFloat64Array()
+
+[node name="Shard2" type="Node3D" parent="Nature/Shards" unique_id=1223271418]
+transform = Transform3D(0.9869995, 0, 0, 0, 2.254, 0, 0, 0, 0.98700047, 96.7755, 1.127, -12.3375)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(96.282, 0, -12.831, 97.269, 2.254, -11.844)
+web_box = PackedFloat64Array()
+
+[node name="Shard3" type="Node3D" parent="Nature/Shards" unique_id=1923687091]
+transform = Transform3D(1.0820007, 0, 0, 0, 2.005, 0, 0, 0, 1.0820007, -65.217, 1.0025, -41.957)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-65.758, 0, -42.498, -64.676, 2.005, -41.416)
+web_box = PackedFloat64Array()
+
+[node name="Shard4" type="Node3D" parent="Nature/Shards" unique_id=1410226963]
+transform = Transform3D(0.7789993, 0, 0, 0, 2.34, 0, 0, 0, 0.7799988, -89.68851, 1.17, 85.603)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-90.078, 0, 85.213, -89.299, 2.34, 85.993)
+web_box = PackedFloat64Array()
+
+[node name="Shard5" type="Node3D" parent="Nature/Shards" unique_id=490989709]
+transform = Transform3D(0.87600327, 0, 0, 0, 2.567, 0, 0, 0, 0.8769989, -38.795, 1.2835, -49.5695)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-39.233, 0, -50.008, -38.357, 2.567, -49.131)
+web_box = PackedFloat64Array()
+
+[node name="Shard6" type="Node3D" parent="Nature/Shards" unique_id=21870162]
+transform = Transform3D(0.8010025, 0, 0, 0, 2.033, 0, 0, 0, 0.8010025, -93.376495, 11.0165, -87.587494)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-93.777, 10, -87.988, -92.976, 12.033, -87.187)
+web_box = PackedFloat64Array()
+
+[node name="Shard7" type="Node3D" parent="Nature/Shards" unique_id=1057668191]
+transform = Transform3D(1.0429997, 0, 0, 0, 2.168, 0, 0, 0, 1.0429993, -5.5785, 1.084, 56.4465)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-6.1, 0, 55.925, -5.057, 2.168, 56.968)
+web_box = PackedFloat64Array()
+
+[node name="Shard8" type="Node3D" parent="Nature/Shards" unique_id=297745728]
+transform = Transform3D(1.1529999, 0, 0, 0, 1.77, 0, 0, 0, 1.1529999, 99.1815, 0.885, 5.8445)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(98.605, 0, 5.268, 99.758, 1.77, 6.421)
+web_box = PackedFloat64Array()
+
+[node name="Shard9" type="Node3D" parent="Nature/Shards" unique_id=1126702060]
+transform = Transform3D(0.96899414, 0, 0, 0, 2.854, 0, 0, 0, 0.96899796, 97.3685, 1.427, -61.7265)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(96.884, 0, -62.211, 97.853, 2.854, -61.242)
+web_box = PackedFloat64Array()
+
+[node name="Shard10" type="Node3D" parent="Nature/Shards" unique_id=1837086474]
+transform = Transform3D(0.81900024, 0, 0, 0, 2.374, 0, 0, 0, 0.8180008, 97.7965, 1.187, 58.532)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(97.387, 0, 58.123, 98.206, 2.374, 58.941)
+web_box = PackedFloat64Array()
+
+[node name="Shard11" type="Node3D" parent="Nature/Shards" unique_id=203279397]
+transform = Transform3D(1.0380001, 0, 0, 0, 2.07, 0, 0, 0, 1.0369987, -16.703, 1.035, 38.220497)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-17.222, 0, 37.702, -16.184, 2.07, 38.739)
+web_box = PackedFloat64Array()
+
+[node name="Shard12" type="Node3D" parent="Nature/Shards" unique_id=228737265]
+transform = Transform3D(0.8880005, 0, 0, 0, 1.954, 0, 0, 0, 0.8879967, -100.824, 0.977, -43.295)
+script = ExtResource("2_e5yd8")
+kind = "sunstone"
+box = PackedFloat64Array(-101.268, 0, -43.739, -100.38, 1.954, -42.851)
+web_box = PackedFloat64Array()

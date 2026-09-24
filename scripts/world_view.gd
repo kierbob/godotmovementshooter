@@ -15,6 +15,9 @@ const COLORS := {
 	"house_blue": Color("7fb8ff"), "house_yellow": Color("ffd36b"), "trim": Color("f5f1e8"), "roof": Color("d9674e"),
 	"fence": Color("f3ecdf"), "hedge": Color("4f9e52"), "bus": Color("ffbf1f"), "truck": Color("e05252"),
 	"shed": Color("a8784f"), "leaves": Color("5fbf5f"), "trunk": Color("8a5a3b"), "crate": Color("d6a86a"), "barrier": Color("8fd3ff"),
+	# Sunstone Valley (stage 1)
+	"sandstone": Color("e3a468"), "cliff": Color("b86f4a"), "sand": Color("f0d9a0"), "ruin": Color("ddd5c2"),
+	"ruin_dark": Color("aaa08c"), "sunstone": Color("ffcf2e"),
 }
 const NO_SHADOW_KINDS := ["floor", "trialfloor", "arenafloor", "grass", "road", "sidewalk", "wood"]
 

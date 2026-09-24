@@ -17,7 +17,7 @@ extends Node3D
 ## drawn in the game, and shots pass through it.
 @export_enum("floor", "wall", "block", "stair", "pillar", "low", "test", "plat", "trialfloor", "arenafloor", "gate",
 	"grass", "road", "sidewalk", "wood", "house_blue", "house_yellow", "trim", "roof", "fence", "hedge", "bus", "truck",
-	"shed", "leaves", "trunk", "crate", "barrier")
+	"shed", "leaves", "trunk", "crate", "barrier", "sandstone", "cliff", "sand", "ruin", "ruin_dark", "sunstone")
 var kind := "block":
 	set(v):
 		kind = v
