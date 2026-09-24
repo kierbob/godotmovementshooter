@@ -10,8 +10,13 @@ const COLORS := {
 	"floor": Color("56648a"), "wall": Color("8fa3cc"), "block": Color("a77be0"), "stair": Color("f0b650"),
 	"pillar": Color("4fcf92"), "low": Color("f0766a"), "test": Color("ffd35a"), "plat": Color("52aef5"),
 	"trialfloor": Color("6f7fb0"), "arenafloor": Color("5d6f96"), "gate": Color("ff5ab4"),
+	# Bean Town (a cartoon cul-de-sac)
+	"grass": Color("7cc576"), "road": Color("5a6075"), "sidewalk": Color("c7ccd9"), "wood": Color("c49a6c"),
+	"house_blue": Color("7fb8ff"), "house_yellow": Color("ffd36b"), "trim": Color("f5f1e8"), "roof": Color("d9674e"),
+	"fence": Color("f3ecdf"), "hedge": Color("4f9e52"), "bus": Color("ffbf1f"), "truck": Color("e05252"),
+	"shed": Color("a8784f"), "leaves": Color("5fbf5f"), "trunk": Color("8a5a3b"), "crate": Color("d6a86a"),
 }
-const NO_SHADOW_KINDS := ["floor", "trialfloor", "arenafloor"]
+const NO_SHADOW_KINDS := ["floor", "trialfloor", "arenafloor", "grass", "road", "sidewalk", "wood"]
 
 static var _grid: ImageTexture
 static var cloud_material: ShaderMaterial # lighting presets tint the clouds

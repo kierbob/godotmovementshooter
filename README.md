@@ -34,9 +34,13 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 - **Movement**: a line-for-line port of the web game's `src/player.js` (sprint, slide, wall jumps,
   ramps, jump pads, momentum), fixed 120 Hz ticks with smooth camera interpolation. Mouse look uses
   Godot's raw mouse input.
-- **Maps**: the dev arena and Bean Street, as scenes you edit in the Godot editor (`maps/`, see
-  "Editing maps" below). They were converted from the web game's maps with every number kept
-  exact, so movement is identical.
+- **Maps**, as scenes you edit in the Godot editor (`maps/`, see "Editing maps" below):
+  - **Dev Arena**: the web game's dev map with every number kept exact, plus the time trial.
+  - **Bean Town**: a Nuketown-style FFA map. Two two-story houses face each other across a
+    cul-de-sac, with a school bus, trucks and cars in the street. Built for speed: doors and windows
+    3-5 m wide with knee-high sills you can sprint or slide straight through, stairs to the upstairs,
+    upstairs windows out onto the porch and garage roofs, trampolines in the yards up to the garage
+    roof and the main roof, ramps onto the bus and a street launcher at each end.
 - **Look**: toon shading (3 light bands + sky/ground fill), Candy Pastel sky, clouds, shadows.
 - **Guns and abilities** (`scripts/items.gd`, `scripts/combat.gd`): a port of the web game's
   `items.js` / `combat.js`. Primaries: Boomstick, Pulse Rifle, Rocket Launcher, Long Shot.
@@ -72,10 +76,11 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 
 ## Editing maps
 
-Open `maps/dev_map.tscn` or `maps/bean-street.tscn` in the Godot editor. Every piece is a node:
+Open `maps/dev_map.tscn` or `maps/bean-town.tscn` in the Godot editor. Every piece is a node:
 
 - **MapBox**: a solid box. Move it and scale it with the normal gizmos (position = center, scale =
-  size in meters). In the Inspector: `kind` (its color: floor, wall, block, plat...) and `ramp`
+  size in meters). In the Inspector: `kind` (its color: floor, wall, grass, road, house_blue,
+  roof, bus...; the list is `WorldView.COLORS`) and `ramp`
   (a sloped top rising toward x+, x-, z+ or z-). Don't rotate boxes: collision is axis-aligned
   (the editor shows a warning if you do). Ctrl+D duplicates a box to make a new one.
 - **MapPad**: jump pad (radius, launch speed, directional launchers).
@@ -86,7 +91,9 @@ Open `maps/dev_map.tscn` or `maps/bean-street.tscn` in the Godot editor. Every p
   start line and fall-off height. The course itself is ordinary boxes under it.
 - The root (**MapRoot**) holds the map's name and its card text and colors for the map screen.
 
-Group nodes under plain Node3Ds however you like; moving a group moves everything in it. Save
+Group nodes under plain Node3Ds however you like; moving a group moves everything in it. Bean
+Town is grouped by place (`BlueHouse/Walls`, `BlueHouse/Roof`, `Street`, `BlueBackyard`...), and the
+yellow side is the blue side turned around, so change both if you want it to stay fair. Save
 (Ctrl+S) and press F5. Positions snap to the millimeter; turn on Godot's grid snap for tidy
 numbers. A new map: duplicate a `.tscn` in `maps/` and rename it; it shows up on the map screen.
 

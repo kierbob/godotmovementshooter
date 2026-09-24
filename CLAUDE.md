@@ -23,7 +23,9 @@ own step.
   values are the truth; the node transform (32-bit) mirrors them and edits write back rounded to
   the millimeter. Only store short decimals: Godot misreads some 17-digit numbers from scenes.
   `MapData.load_map(id)` reads a map scene; `MapConvert` / `tools/json_to_map.gd` make one from a
-  map JSON.
+  map JSON. Maps: `dev_map` (web dev arena + time trial) and `bean-town` (Nuketown-style FFA,
+  grouped by place; the yellow half mirrors the blue half through the center). A box's `kind` is
+  its color from `WorldView.COLORS` (add new kinds there and to MapBox's enum).
 - `scripts/main.gd`: game entry. Builds the map, runs the sim at a fixed 120 ticks/s, moves the
   camera between ticks, switches menu/playing/paused. Test flags: `--map=`, `--at=`, `--screen=`, `--shot=`.
 - `scripts/player_sim.gd`: the movement, line for line from the web game's `src/player.js`. It uses

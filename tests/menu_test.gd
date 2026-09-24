@@ -108,11 +108,11 @@ func _init() -> void:
 	menu.to_main_menu.emit()
 	await frames()
 
-	menu.play.emit("bean-street")
+	menu.play.emit("bean-town")
 	await frames(8)
 	game = current_scene
-	check("playing another map reloads into it", game.map.name == "Bean Street" and game.state == "playing")
-	check("chosen map is remembered", Settings.map == "bean-street")
+	check("playing another map reloads into it", game.map.name == "Bean Town" and game.state == "playing")
+	check("chosen map is remembered", Settings.map == "bean-town")
 
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(Settings.path))
 	print("\n%s" % ("all menu checks passed" if fails == 0 else "%d menu check(s) failed" % fails))

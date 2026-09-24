@@ -4,7 +4,7 @@ extends Node3D
 ## menu / playing / paused.
 ##
 ## Command-line options (after `--`), handy for testing:
-##   --map=bean-street        start on another map from maps/
+##   --map=bean-town          start on another map from maps/
 ##   --at=x,y,z,yaw,pitch     start playing, placed there
 ##   --screen=main|maps|pause|settings:<tab>   open a menu screen
 ##   --shot=path.png          save a screenshot after --frames=N frames, then quit
