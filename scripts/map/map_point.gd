@@ -15,8 +15,11 @@ extends Node3D
 			_push()
 
 var _view: Node3D
-var _syncing := false # applying values to the transform (ignore the change notification)
 var _pulling := false # reading values from the transform (don't re-apply half-read values)
+# The transform we last applied. Change notifications arrive a frame late, so our own update
+# comes back as one; comparing against this ignores it (otherwise it pulls, pushes and redraws
+# every frame).
+var _pushed := Transform3D()
 
 
 func _ready() -> void:
@@ -26,7 +29,8 @@ func _ready() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_TRANSFORM_CHANGED and Engine.is_editor_hint() and not _syncing:
+	if what == NOTIFICATION_TRANSFORM_CHANGED and Engine.is_editor_hint() \
+			and not global_transform.is_equal_approx(_pushed):
 		_pull()
 
 
@@ -35,13 +39,13 @@ func pos() -> Vector3:
 
 
 func _push() -> void:
-	_syncing = true
 	if is_inside_tree():
 		global_position = pos()
 	else:
 		position = pos()
 	_push_extra()
-	_syncing = false
+	if is_inside_tree():
+		_pushed = global_transform
 	refresh()
 
 
