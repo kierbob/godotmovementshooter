@@ -14,7 +14,7 @@ const COLORS := {
 	"grass": Color("7cc576"), "road": Color("5a6075"), "sidewalk": Color("c7ccd9"), "wood": Color("c49a6c"),
 	"house_blue": Color("7fb8ff"), "house_yellow": Color("ffd36b"), "trim": Color("f5f1e8"), "roof": Color("d9674e"),
 	"fence": Color("f3ecdf"), "hedge": Color("4f9e52"), "bus": Color("ffbf1f"), "truck": Color("e05252"),
-	"shed": Color("a8784f"), "leaves": Color("5fbf5f"), "trunk": Color("8a5a3b"), "crate": Color("d6a86a"),
+	"shed": Color("a8784f"), "leaves": Color("5fbf5f"), "trunk": Color("8a5a3b"), "crate": Color("d6a86a"), "barrier": Color("8fd3ff"),
 }
 const NO_SHADOW_KINDS := ["floor", "trialfloor", "arenafloor", "grass", "road", "sidewalk", "wood"]
 
@@ -71,6 +71,8 @@ static func with_outline(m: Material, thickness := 0.025) -> Material:
 static func build_world(map: MapData, parent: Node3D) -> void:
 	var by_kind := {}
 	for b in map.boxes:
+		if b.kind == "barrier":
+			continue # invisible wall (keeps players in the map; only the editor shows it)
 		var st: SurfaceTool = by_kind.get(b.kind)
 		if st == null:
 			st = SurfaceTool.new()

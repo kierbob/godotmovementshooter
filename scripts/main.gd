@@ -1,18 +1,25 @@
 extends Node3D
 ## Game entry. Builds the map, runs the movement + combat sim at a fixed 120 Hz (Godot physics
 ## ticks), draws the first-person camera and gun in between ticks, and switches between the
-## menu / playing / paused.
+## menu / playing / paused. Online (see Net / MatchServer), it predicts your own movement and gun
+## locally, corrects to the host's state when it arrives, and draws everyone else.
 ##
 ## Command-line options (after `--`), handy for testing:
 ##   --map=bean-town          start on another map from maps/
 ##   --at=x,y,z,yaw,pitch     start playing, placed there
 ##   --screen=main|maps|pause|settings:<tab>   open a menu screen
 ##   --shot=path.png          save a screenshot after --frames=N frames, then quit
+##   --host[=port]            host a multiplayer match on the chosen map
+##   --join=address:port      join a match
+##   --name=Bean              your online name
 
 const SENS_BASE := 0.022 * PI / 180.0 # radians per mouse count at sensitivity 1 (CS2 / Apex scale)
 
 static var auto_play := false # set before reloading into another map from the menu
 static var auto_trial := "" # "off" / "on": also go straight onto that time trial after the reload
+static var auto_online := "" # "host" / "join": carry on into the match after reloading into its map
+static var pending_hint := "" # shown on the multiplayer screen after a reload (e.g. "Disconnected")
+static var _net_args_done := false # --host / --join only once (not again after reloading into a map)
 
 var state := "menu" # "menu" | "playing" | "paused"
 var map_id := "" # which map this scene built
@@ -60,6 +67,16 @@ var _shot_path := ""
 var _shot_frames := 30
 var _frame := 0
 
+# online
+var net: Net # the connection (lives outside this scene so it survives reloads)
+var online := false
+var remote_view: RemoteView
+var _history: Array = [] # our recent inputs [[seq, Cmd, impulses]], replayed after a correction
+var _visual_offset := Vector3.ZERO # corrections are eased out instead of popping the camera
+var _remote_targets := {} # id -> Combat.Target: other players, so our shots stop on them
+var _remote_proj := {} # "owner:id" -> Combat.Projectile: other players' rockets, grenades, knives
+var _killer := "" # who got us last (death screen)
+
 
 func _ready() -> void:
 	Settings.load_settings()
@@ -76,6 +93,8 @@ func _ready() -> void:
 	combat = Combat.new(map.boxes, map.targets)
 	combat_view = CombatView.new()
 	add_child(combat_view)
+	remote_view = RemoteView.new()
+	add_child(remote_view)
 	_build_beans()
 	_setup_environment()
 	Look.apply(Settings.lighting, env, sun, sky_mat, WorldView.cloud_material)
@@ -107,9 +126,16 @@ func _ready() -> void:
 	menu.play.connect(_on_play)
 	menu.play_trial.connect(_on_play_trial)
 	menu.resume.connect(_resume)
-	menu.to_main_menu.connect(_enter_menu)
+	menu.to_main_menu.connect(func() -> void:
+		if online:
+			_leave_match("")
+		else:
+			_enter_menu())
 	menu.quit_game.connect(func() -> void: get_tree().quit())
 	menu.settings_changed.connect(_on_settings_changed)
+	menu.host_match.connect(_on_host)
+	menu.join_match.connect(_on_join)
+	menu.cancel_online.connect(_on_cancel_online)
 	combat_view.word.connect(hud.word)
 	# Gun words sit a little left of / above the muzzle so they don't cover the gun.
 	viewmodel.word.connect(func(text: String, at: Vector2, style: String) -> void:
@@ -127,7 +153,18 @@ func _ready() -> void:
 		trial_view = TrialView.new()
 		add_child(trial_view)
 		trial_view.setup(trial)
-	if auto_play:
+	if auto_online != "":
+		var mode := auto_online
+		auto_online = ""
+		_enter_menu()
+		menu.show_screen("online")
+		if mode == "host":
+			_on_host(Settings.host_port)
+		elif Net.instance and Net.instance.connected:
+			net = Net.instance
+			_connect_net()
+			_start_online(net.welcome)
+	elif auto_play:
 		auto_play = false
 		_start_play()
 		if auto_trial != "" and trial:
@@ -136,6 +173,10 @@ func _ready() -> void:
 		auto_trial = ""
 	else:
 		_enter_menu()
+		if pending_hint != "":
+			menu.show_screen("online")
+			menu.set_online_status(pending_hint)
+			pending_hint = ""
 	_apply_args_state()
 
 
@@ -252,7 +293,7 @@ func _on_settings_changed(what: String) -> void:
 
 
 func _notification(what: int) -> void:
-	# Alt-tab / clicking another window pauses (it's solo).
+	# Alt-tab / clicking another window opens the menu (solo: the game freezes; online it carries on).
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and state == "playing" and _shot_path == "":
 		_pause()
 
@@ -269,6 +310,8 @@ func _parse_args() -> void:
 			_shot_frames = int(a.substr(9))
 		elif a.begins_with("--lighting="):
 			Settings.lighting = a.substr(11)
+		elif a.begins_with("--name="):
+			Settings.player_name = a.substr(7)
 
 
 func _apply_args_state() -> void:
@@ -282,6 +325,13 @@ func _apply_args_state() -> void:
 				yaw = float(v[3])
 			if v.size() > 4:
 				pitch = float(v[4])
+		elif (a == "--host" or a.begins_with("--host=")) and not _net_args_done:
+			_net_args_done = true
+			Settings.host_port = int(a.substr(7)) if a.begins_with("--host=") else Settings.host_port
+			_on_host(Settings.host_port)
+		elif a.begins_with("--join=") and not _net_args_done:
+			_net_args_done = true
+			_on_join(a.substr(7))
 		elif a.begins_with("--screen="):
 			var sc := a.substr(9)
 			if sc == "pause":
@@ -393,7 +443,7 @@ func _input(event: InputEvent) -> void:
 		jump_pressed = true
 	if event.is_action_pressed("slide"):
 		slide_pressed = true
-	if event.is_action_pressed("respawn"):
+	if event.is_action_pressed("respawn") and not online: # online, the host decides where you are
 		respawn_pressed = true
 	if event.is_action_pressed("fire"):
 		fire_pressed = true
@@ -413,7 +463,7 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("stats"):
 		Settings.stats_mode = hud.cycle_debug()
 		Settings.save_settings()
-	if event.is_action_pressed("next_map"):
+	if event.is_action_pressed("next_map") and not online:
 		var maps := MapData.list()
 		_on_play(maps[(maps.find(map_id) + 1) % maps.size()])
 
@@ -453,6 +503,9 @@ func _sample() -> Cmd:
 # ---------- simulation (fixed 120 Hz) ----------
 
 func _physics_process(_delta: float) -> void:
+	if online:
+		_online_tick()
+		return
 	if state != "playing":
 		return # solo: menus freeze the game
 	prev_pos = _player_pos()
@@ -497,20 +550,24 @@ func _process(delta: float) -> void:
 		camera.fov = Settings.fov
 		camera.look_at_from_position(Vector3(sin(t) * 42, 20, cos(t) * 42), Vector3(0, 3, 0))
 	else:
-		var a := Engine.get_physics_interpolation_fraction() if state == "playing" else 1.0
+		var a := Engine.get_physics_interpolation_fraction() if state == "playing" or online else 1.0
 		var pos := prev_pos.lerp(cur, a)
 		# Camera effects ease toward targets so crouch/slide transitions aren't instant snaps.
 		eye = _ease(eye, Cfg.PLAYER_CROUCH_EYE_HEIGHT if player.crouching else Cfg.PLAYER_EYE_HEIGHT, 14, dt)
 		roll = _ease(roll, -0.05 if player.sliding else 0.0, 10, dt)
 		var speed_t := clampf((speed - Cfg.MOVE_WALK_SPEED) / (Cfg.MOVE_MAX_SPEED - Cfg.MOVE_WALK_SPEED), 0, 1)
 		camera.fov = _ease(camera.fov, Settings.fov + speed_t * 15, 6, dt)
-		camera.position = pos + Vector3(0, eye, 0)
+		_visual_offset *= exp(-dt * 12)
+		camera.position = pos + Vector3(0, eye, 0) + _visual_offset
 		camera.rotation = Vector3(pitch, yaw, roll) # Godot's default Euler order is YXZ, same as the web game
 		if combat_view.shake > 0 and state == "playing":
 			var sh := combat_view.shake
 			camera.position += Vector3(randf() - 0.5, randf() - 0.5, randf() - 0.5) * sh
 
-	_update_beans(cur if state != "menu" else camera.position, dt)
+	if online:
+		_update_online(dt)
+	else:
+		_update_beans(cur if state != "menu" else camera.position, dt)
 	clouds.rotation.y += dt * 0.004
 	top_speed = maxf(top_speed, speed)
 	hud.set_speed(speed, top_speed)
@@ -525,16 +582,17 @@ func _process(delta: float) -> void:
 	var muzzle := camera.project_position(viewmodel.muzzle_screen(), 1.2)
 	combat_view.on_events(events, muzzle, player)
 	for e in events:
-		if e.type == "hit":
+		if e.type == "hit" and e.target < beans.size():
 			beans[e.target].flash = 0.08
-	combat_view.update(dt if state == "playing" else 0.0, combat)
+	combat_view.update(dt if state == "playing" or online else 0.0, combat, _remote_proj.values())
 	sound.listener = camera.global_position
 	_play_combat_sounds(events)
-	if state == "playing":
+	var live := state == "playing" or (online and state == "paused") # online never stops
+	if live:
 		_play_movement_sounds()
 	if state != "menu":
-		hud.update_combat(dt if state == "playing" else 0.0, combat, camera)
-		viewmodel.update(dt if state == "playing" else 0.0, combat, player, yaw)
+		hud.update_combat(dt if live else 0.0, combat, camera)
+		viewmodel.update(dt if live else 0.0, combat, player, yaw)
 	if trial_view:
 		trial_view.update(dt)
 	hud.update_trial(trial)
@@ -653,3 +711,292 @@ func _update_debug(dt: float, speed: float) -> void:
 	for e: Dictionary in player.events.slice(-6):
 		lines.append("%6.2f  %s  %s" % [e.t, e.name, e.detail])
 	hud.set_debug("\n".join(lines))
+
+
+# ---------- multiplayer ----------
+
+func _connect_net() -> void:
+	if not net.joined.is_connected(_on_net_joined):
+		net.joined.connect(_on_net_joined)
+		net.failed.connect(_on_net_failed)
+		net.left.connect(_on_net_left)
+
+
+## Host a match on the selected map (reloading into it first if this scene built another one).
+func _on_host(port: int) -> void:
+	if Settings.map != map_id:
+		auto_online = "host"
+		get_tree().reload_current_scene()
+		return
+	net = Net.get_instance(get_tree())
+	_connect_net()
+	var err := net.host(port, map_id, map, Settings.player_name, Settings.loadout)
+	if err != OK:
+		menu.set_online_status("Couldn't host on port %d (%s). Is another match already running on it?" % [port, error_string(err)])
+
+
+func _on_join(address: String) -> void:
+	if Net.parse_address(address).is_empty():
+		menu.set_online_status("Type the address your friend sent you first (like abc.gl.at.ply.gg:12345).")
+		return
+	net = Net.get_instance(get_tree())
+	_connect_net()
+	# Our copy of every map, so the host can tell us if theirs is different.
+	var sums := {}
+	for id in MapData.list():
+		sums[id] = Net.map_checksum(MapData.load_map(id))
+	var err := net.join(address, Settings.player_name, Settings.loadout, sums)
+	if err != OK:
+		menu.set_online_status("Couldn't start connecting (%s)." % error_string(err))
+	else:
+		menu.set_online_status("Connecting to %s..." % address, true)
+
+
+func _on_cancel_online() -> void:
+	if net and not online:
+		net.leave()
+
+
+func _on_net_joined(w: Dictionary) -> void:
+	if w.map != map_id:
+		# The host plays another map: reload into it (the connection stays up) and carry on.
+		Settings.map = w.map
+		Settings.save_settings()
+		auto_online = "join"
+		get_tree().reload_current_scene()
+		return
+	_start_online(w)
+
+
+func _on_net_failed(reason: String) -> void:
+	menu.set_online_status(reason)
+
+
+func _on_net_left(reason: String) -> void:
+	if online:
+		_leave_match(reason)
+
+
+## Back to the menu from a match (reloads the scene so everything solo starts fresh).
+func _leave_match(reason: String) -> void:
+	online = false
+	if net:
+		net.leave()
+	pending_hint = reason
+	get_tree().reload_current_scene()
+
+
+func _start_online(w: Dictionary) -> void:
+	online = true
+	menu.online = true
+	combat = Combat.new(map.boxes, []) # no dummies online: other players are the targets
+	for b: Dictionary in beans:
+		(b.node as Node3D).visible = false
+	_start_play()
+	var sp: Dictionary = w.spawn
+	player.respawn(sp.x, sp.y, sp.z)
+	player.log_impulses = true
+	yaw = sp.yaw
+	prev_pos = _player_pos()
+	_history.clear()
+	_visual_offset = Vector3.ZERO
+	if trial:
+		trial.reset()
+	hud.set_online(true)
+	menu.map_name = "ONLINE · " + map.name
+	menu.set_online_status("")
+
+
+## One sim tick online: predict our own movement and gun, send the input.
+func _online_tick() -> void:
+	if net == null or not net.connected:
+		return
+	if net.me_fresh:
+		_reconcile()
+	prev_pos = _player_pos()
+	var c: Cmd
+	if state == "playing" and not player.dead:
+		c = _sample()
+	else:
+		# In the menu or splatted: stand still (the match doesn't stop, and the host still needs
+		# an input every tick to keep us in step).
+		_sample() # swallow presses
+		c = Cmd.new()
+		c.yaw = yaw
+		c.pitch = pitch
+	player.impulse_log = []
+	combat.tick(player, c, Cfg.TICK_DT) # before movement so knockback applies this tick
+	if not player.dead:
+		player.step(c, map, Cfg.TICK_DT)
+	var seq := net.queue_cmd(c)
+	_history.append([seq, c, player.impulse_log])
+	if _history.size() > 360:
+		_history.pop_front()
+
+
+## The host sent our real state as of input #seq. Rewind to it and replay every newer input (and
+## our own predicted knockback), so we stay responsive but always end up on the host's truth,
+## including knocks from other players' explosions. Any visible jump is eased out.
+func _reconcile() -> void:
+	net.me_fresh = false
+	var me := net.me
+	var st: PackedFloat64Array = me.state
+	if st.size() != PlayerSim.STATE_SIZE:
+		return
+	var acked: int = me.seq
+	_history = _history.filter(func(h: Array) -> bool: return h[0] > acked)
+	var before := _player_pos()
+	var was_dead := player.dead
+	player.load_state(st)
+	player.quiet = true
+	player.log_impulses = false
+	for h: Array in _history:
+		for imp: Array in h[2]:
+			player.apply_impulse(imp[0], imp[1], imp[2])
+		if not player.dead:
+			player.step(h[1], map, Cfg.TICK_DT)
+	player.quiet = false
+	player.log_impulses = true
+	var d := before - _player_pos()
+	if d.length() < 3:
+		_visual_offset += d
+	else:
+		_visual_offset = Vector3.ZERO # respawn / big correction: just go there
+	prev_pos -= d
+	if was_dead and not player.dead:
+		combat.set_loadout(Settings.loadout) # the host gave us fresh ammo on respawn
+
+
+## Once per frame online: other players, their projectiles, the host's events, the online HUD.
+func _update_online(dt: float) -> void:
+	if net == null:
+		return
+	var samples := {}
+	var targets: Array[Combat.Target] = []
+	for id: int in net.remotes:
+		var s: Variant = net.sample(net.remotes[id])
+		if s == null:
+			continue
+		samples[id] = s
+		var t: Combat.Target = _remote_targets.get(id)
+		if t == null:
+			t = Combat.Target.new()
+			t.id = id
+			t.kind = "remote"
+			_remote_targets[id] = t
+		t.pos = Vector3(s.x, s.y, s.z)
+		t.dead = int(s.flags) & NetCodec.F_DEAD != 0
+		targets.append(t)
+	for id: int in _remote_targets.keys():
+		if not samples.has(id):
+			_remote_targets.erase(id)
+	combat.targets = targets
+	remote_view.update(samples, net.roster, dt)
+	_sync_remote_projectiles(dt)
+	_handle_net_events(net.take_events())
+
+	var badge := "HOSTING" if net.is_host() else "ONLINE"
+	var count := net.remotes.size() + 1
+	badge += " · %d PLAYER%s" % [count, "" if count == 1 else "S"]
+	if not net.is_host():
+		badge += " · %d MS" % roundi(net.ping)
+	hud.online.update(dt, player, yaw, float(net.me.get("respawn_in", 0.0)), _killer, badge)
+	var rows := []
+	for p: Dictionary in net.players:
+		var info: Dictionary = net.roster.get(p.id, {"name": "Bean", "color": Color.WHITE})
+		rows.append({"name": info.name, "kills": p.kills, "deaths": p.deaths, "color": info.color, "you": p.id == net.my_id})
+	hud.online.scoreboard(state == "playing" and Input.is_action_pressed("scoreboard"), rows)
+
+
+## Other players' rockets, grenades and knives: jump to each snapshot, fly on between them.
+func _sync_remote_projectiles(dt: float) -> void:
+	if net.proj_fresh:
+		net.proj_fresh = false
+		var seen := {}
+		for s: Dictionary in net.proj:
+			if s.owner == net.my_id:
+				continue # ours are simulated locally
+			var key := "%d:%d" % [s.owner, s.id]
+			seen[key] = true
+			var pr: Combat.Projectile = _remote_proj.get(key)
+			if pr == null:
+				pr = Combat.Projectile.new()
+				pr.kind = s.kind
+				var item: Dictionary = Items.WEAPONS.get(s.kind, Items.ABILITIES.get(s.kind, {}))
+				pr.def = item.get("projectile", {})
+				_remote_proj[key] = pr
+			pr.pos = s.pos
+			pr.vel = s.vel
+			pr.stuck = s.stuck
+		for key: String in _remote_proj.keys():
+			if not seen.has(key):
+				_remote_proj.erase(key)
+	else:
+		for pr: Combat.Projectile in _remote_proj.values():
+			if not pr.stuck:
+				pr.vel.y -= float(pr.def.get("gravity", 0.0)) * dt
+				pr.pos += pr.vel * dt
+
+
+## Gameplay events from the host. Our own shots and explosions already showed (we predicted
+## them), so from us only the confirmed hits count. Everyone else's effects show in a lighter form.
+func _handle_net_events(evs: Array) -> void:
+	var me := net.my_id
+	for e: Dictionary in evs:
+		match e.type:
+			"kill":
+				var killer := _player_name(e.killer)
+				var victim := _player_name(e.victim)
+				if e.killer == me:
+					hud.online.feed([["YOU", UiStyle.YELLOW], ["SPLATTED", Color("ff4a4a")], [victim, Color.WHITE]], "mine")
+				elif e.victim == me:
+					_killer = killer
+					hud.online.feed([[killer, Color.WHITE], ["SPLATTED", Color("ff4a4a")], ["YOU", UiStyle.YELLOW]], "died")
+					sound.play("death")
+				else:
+					hud.online.feed([[killer, Color.WHITE], ["SPLATTED", Color("ff4a4a")], [victim, Color.WHITE]])
+			"join", "leave":
+				if e.id != me:
+					hud.online.feed([[str(e.name), Color.WHITE], ["joined" if e.type == "join" else "left", UiStyle.MUTED]])
+			"respawn":
+				if e.id == me:
+					yaw = float(e.yaw)
+					pitch = 0.0
+					_killer = ""
+			"hit":
+				if e.target == me:
+					var shooter: Combat.Target = _remote_targets.get(e.by)
+					hud.online.hurt(e.dmg, shooter.pos if shooter else null)
+					sound.play("hurt", {"gap": 0.06})
+					combat_view.shake = maxf(combat_view.shake, 0.03)
+				elif e.by == me:
+					# Our hit, confirmed by the host: hitmarker, damage number, splat, sound.
+					var local: Array[Dictionary] = [e]
+					hud.on_events(local)
+					combat_view.on_events(local, e.pos, player)
+					_play_combat_sounds(local)
+					remote_view.flash(e.target)
+				else:
+					var quiet: Array[Dictionary] = [e.merged({"quiet": true})]
+					combat_view.on_events(quiet, e.pos, player)
+					remote_view.flash(e.target)
+			_:
+				if e.get("by", 0) == me:
+					continue # our own shots / impacts / explosions were predicted locally
+				match e.type:
+					"shot":
+						var gun := remote_view.muzzle(e.by, e.origin)
+						combat_view.remote_shot(e, gun)
+						sound.play(e.weapon, {"pos": gun, "gap": 0.0})
+					"impact", "explosion":
+						var one: Array[Dictionary] = [e]
+						combat_view.on_events(one, e.pos, player)
+						_play_combat_sounds(one)
+					"throw":
+						var t: Combat.Target = _remote_targets.get(e.by)
+						if t:
+							sound.play("knifeThrow" if e.ability == "knife" else "throw", {"pos": t.pos})
+
+
+func _player_name(id: int) -> String:
+	return str(net.roster.get(id, {}).get("name", "Someone"))

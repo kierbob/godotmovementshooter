@@ -173,7 +173,9 @@ func step() -> void:
 			_collect(c)
 			p.step(cmd, map, Cfg.TICK_DT)
 			if p.py < -30:
-				_spawn(c)
+				# Fell out: back to a spawn point, guns untouched (the player's screen keeps
+				# predicting their gun, and a surprise reload there would put the two out of step).
+				_spawn(c, false)
 	for c: Peer in all:
 		c.history[tick % HISTORY] = [tick, Vector3(c.sim.px, c.sim.py, c.sim.pz)]
 
@@ -254,7 +256,7 @@ func _pick_spawn(exclude: Peer) -> Dictionary:
 	return scored[randi() % mini(3, scored.size())][1]
 
 
-func _spawn(c: Peer) -> Dictionary:
+func _spawn(c: Peer, fresh_loadout := true) -> Dictionary:
 	var s := _pick_spawn(c)
 	var p := c.sim
 	p.respawn(float(s.x), float(s.y), float(s.z))
@@ -264,7 +266,8 @@ func _spawn(c: Peer) -> Dictionary:
 	p.regen_delay = 0.0
 	c.target.hp = c.target.max_hp
 	c.target.dead = false
-	c.combat.set_loadout(c.loadout) # fresh ammo and ability
+	if fresh_loadout:
+		c.combat.set_loadout(c.loadout) # fresh ammo and ability
 	c.last_cmd = Cmd.new()
 	c.last_cmd.yaw = float(s.get("yaw", 0.0))
 	c.respawn_t = 0.0

@@ -9,6 +9,9 @@ signal play_trial(guns: bool) # straight onto the dev map's time trial course
 signal resume
 signal to_main_menu
 signal quit_game
+signal host_match(port: int)
+signal join_match(address: String)
+signal cancel_online
 signal settings_changed(what: String) # "video" | "quality" | "lighting" | "audio" | "mouse" | "binds" | "loadout"
 
 const TOP_H := 64
@@ -57,6 +60,15 @@ var _items_count: Label
 var _items_row: HBoxContainer
 var _stage_info: VBoxContainer
 var _thumb_rects := {} # item id -> [TextureRect] waiting for / showing its thumbnail
+var online := false # in a multiplayer match: the pause menu says so
+var _maps_back := "main" # where picking a map returns to
+var _online_status: Label
+var _online_cancel: Button
+var _online_host_map: Label
+var _online_ips: Label
+var _pause_title: Label
+var _pause_leave: Button
+var _pause_note: Label
 
 
 func _ready() -> void:
@@ -72,6 +84,7 @@ func _ready() -> void:
 	_screens.maps = _build_maps()
 	_screens.loadout = _build_loadout()
 	_screens.settings = _build_settings()
+	_screens.online = _build_online()
 	_screens.pause = _build_pause()
 	_top = _build_topbar()
 	show_screen("")
@@ -83,17 +96,18 @@ func show_screen(s: String) -> void:
 	visible = s != ""
 	for k: String in _screens:
 		(_screens[k] as Control).visible = k == s
-	var with_top := s in ["main", "maps", "loadout"] or (s == "settings" and _settings_back != "pause")
+	var with_top := s in ["main", "maps", "loadout", "online"] or (s == "settings" and _settings_back != "pause")
 	_top.visible = with_top
 	(_screens.settings as Control).offset_top = TOP_H if with_top else 0
 	for k: String in _top_tabs:
-		(_top_tabs[k] as Button).set_pressed_no_signal(k == s or (k == "main" and s == "maps"))
+		(_top_tabs[k] as Button).set_pressed_no_signal(k == s or (k == _maps_back and s == "maps"))
 	match s:
 		"main": _refresh_main()
 		"maps": _refresh_maps()
 		"loadout": _open_loadout()
 		"settings": _refresh_settings()
-		"pause": _pause_mode.text = map_name.to_upper()
+		"online": _refresh_online()
+		"pause": _refresh_pause()
 
 
 func open_settings(from: String) -> void:
@@ -126,7 +140,11 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
 		match screen:
 			"settings": show_screen(_settings_back)
-			"maps", "loadout": show_screen("main")
+			"maps": show_screen(_maps_back)
+			"loadout": show_screen("main")
+			"online":
+				cancel_online.emit()
+				show_screen("main")
 			"pause": resume.emit()
 			_: return
 		get_viewport().set_input_as_handled()
@@ -157,7 +175,7 @@ func _build_topbar() -> Control:
 	row.add_child(logo)
 	row.add_child(_spacer(26))
 	var group := ButtonGroup.new()
-	for t: Array in [["main", "PLAY"], ["loadout", "LOADOUT"], ["settings", "SETTINGS"]]:
+	for t: Array in [["main", "PLAY"], ["online", "MULTIPLAYER"], ["loadout", "LOADOUT"], ["settings", "SETTINGS"]]:
 		var b := UiStyle.button(t[1], "TopTab")
 		b.toggle_mode = true
 		b.button_group = group
@@ -166,6 +184,8 @@ func _build_topbar() -> Control:
 			b.pressed.connect(func() -> void: show_screen("loadout"))
 		elif t[0] == "settings":
 			b.pressed.connect(func() -> void: open_settings("main"))
+		elif t[0] == "online":
+			b.pressed.connect(func() -> void: show_screen("online"))
 		else:
 			b.pressed.connect(func() -> void: show_screen("main"))
 		_top_tabs[t[0]] = b
@@ -227,7 +247,9 @@ func _build_main() -> Control:
 func _refresh_main() -> void:
 	for c in _main_card_slot.get_children():
 		c.queue_free()
-	_main_card_slot.add_child(_map_card(Settings.map, "CHANGE MAP", func() -> void: show_screen("maps")))
+	_main_card_slot.add_child(_map_card(Settings.map, "CHANGE MAP", func() -> void:
+		_maps_back = "main"
+		show_screen("maps")))
 	for c in _chips.get_children():
 		c.queue_free()
 	for slot: Dictionary in Items.SLOTS:
@@ -592,7 +614,7 @@ func _build_maps() -> Control:
 	col.offset_top = 36
 	col.offset_right = -80
 	col.add_theme_constant_override("separation", 26)
-	col.add_child(_screen_head("Choose where to play", "Select Map", func() -> void: show_screen("main")))
+	col.add_child(_screen_head("Choose where to play", "Select Map", func() -> void: show_screen(_maps_back)))
 	_map_grid = HBoxContainer.new()
 	_map_grid.add_theme_constant_override("separation", 28)
 	col.add_child(_map_grid)
@@ -611,7 +633,7 @@ func _refresh_maps() -> void:
 		var pick := func() -> void:
 			Settings.map = id
 			Settings.save_settings()
-			show_screen("main")
+			show_screen(_maps_back)
 		_map_grid.add_child(_map_card(id, "SELECTED" if id == Settings.map else "", pick, id == Settings.map))
 	for c in _trial_grid.get_children():
 		c.queue_free()
@@ -1026,14 +1048,15 @@ func _build_pause() -> Control:
 	col.add_theme_constant_override("separation", 4)
 	_pause_mode = UiStyle.kicker("")
 	col.add_child(_pause_mode)
-	col.add_child(UiStyle.label("PAUSED", 124, UiStyle.TEXT, true))
+	_pause_title = UiStyle.label("PAUSED", 124, UiStyle.TEXT, true)
+	col.add_child(_pause_title)
 	col.add_child(_spacer(0, 10))
 	var resume_b := UiStyle.button("RESUME", "NavButton", func() -> void: resume.emit())
 	resume_b.add_theme_color_override("font_color", UiStyle.YELLOW)
 	for b: Button in [
 		resume_b,
 		UiStyle.button("SETTINGS", "NavButton", func() -> void: open_settings("pause")),
-		UiStyle.button("MAIN MENU", "NavButton", func() -> void: to_main_menu.emit()),
+		_pause_leave_button(),
 		UiStyle.button("QUIT GAME", "DangerNav", func() -> void: quit_game.emit()),
 	]:
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -1043,9 +1066,162 @@ func _build_pause() -> Control:
 	var push := Control.new()
 	push.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(push)
-	col.add_child(UiStyle.note("Esc resumes. The game is frozen while you're in here (it's solo).", 14))
+	_pause_note = UiStyle.note("", 14)
+	col.add_child(_pause_note)
 	s.add_child(col)
 	return s
+
+
+func _pause_leave_button() -> Button:
+	_pause_leave = UiStyle.button("MAIN MENU", "NavButton", func() -> void: to_main_menu.emit())
+	return _pause_leave
+
+
+func _refresh_pause() -> void:
+	_pause_mode.text = map_name.to_upper()
+	_pause_title.text = "MENU" if online else "PAUSED"
+	_pause_leave.text = "LEAVE MATCH" if online else "MAIN MENU"
+	_pause_note.text = "Esc resumes. The match keeps going while you're in here: you can still be hit." if online \
+		else "Esc resumes. The game is frozen while you're in here (it's solo)."
+
+
+# ---------- multiplayer ----------
+
+func _build_online() -> Control:
+	var s := _screen_root(TOP_H)
+	s.add_child(_menu_backdrop())
+	var col := VBoxContainer.new()
+	col.set_anchors_preset(Control.PRESET_FULL_RECT)
+	col.offset_left = 80
+	col.offset_top = 36
+	col.offset_right = -80
+	col.offset_bottom = -30
+	col.add_theme_constant_override("separation", 22)
+	col.add_child(_screen_head("Play with friends", "Multiplayer", func() -> void:
+		cancel_online.emit()
+		show_screen("main")))
+	# name
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 16)
+	var nl := UiStyle.label("YOUR NAME", 26, UiStyle.MUTED)
+	nl.custom_minimum_size.x = 180
+	name_row.add_child(nl)
+	var name_edit := LineEdit.new()
+	name_edit.text = Settings.player_name
+	name_edit.placeholder_text = "Bean"
+	name_edit.max_length = 16
+	name_edit.custom_minimum_size.x = 360
+	name_edit.text_changed.connect(func(t: String) -> void:
+		Settings.player_name = t
+		Settings.save_settings())
+	name_row.add_child(name_edit)
+	col.add_child(name_row)
+	# host | join
+	var cards := HBoxContainer.new()
+	cards.add_theme_constant_override("separation", 28)
+	col.add_child(cards)
+
+	var host := _online_card("HOST A MATCH", "You run the match on this PC and play in it. Friends join you.")
+	var hv: VBoxContainer = host.get_meta("body")
+	_online_host_map = UiStyle.label("", 30)
+	var map_row := HBoxContainer.new()
+	map_row.add_theme_constant_override("separation", 14)
+	var ml := UiStyle.label("MAP", 22, UiStyle.MUTED)
+	ml.custom_minimum_size.x = 90
+	map_row.add_child(ml)
+	_online_host_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_row.add_child(_online_host_map)
+	map_row.add_child(UiStyle.button("CHANGE", "", func() -> void:
+		_maps_back = "online"
+		show_screen("maps")))
+	hv.add_child(map_row)
+	var port_row := HBoxContainer.new()
+	port_row.add_theme_constant_override("separation", 14)
+	var pl := UiStyle.label("PORT", 22, UiStyle.MUTED)
+	pl.custom_minimum_size.x = 90
+	port_row.add_child(pl)
+	var port_edit := LineEdit.new()
+	port_edit.text = str(Settings.host_port)
+	port_edit.custom_minimum_size.x = 140
+	port_edit.text_changed.connect(func(t: String) -> void:
+		if t.is_valid_int() and int(t) >= 1024 and int(t) <= 65535:
+			Settings.host_port = int(t)
+			Settings.save_settings())
+	port_row.add_child(port_edit)
+	hv.add_child(port_row)
+	var host_btn := UiStyle.button("HOST", "PlayButton", func() -> void: host_match.emit(Settings.host_port))
+	host_btn.custom_minimum_size.y = 72
+	hv.add_child(host_btn)
+	hv.add_child(UiStyle.note("Over the internet: run playit.gg, add a UDP tunnel to this port, and send your friends the address it gives you (like abc.gl.at.ply.gg:12345).", 14))
+	_online_ips = UiStyle.note("", 14)
+	hv.add_child(_online_ips)
+	cards.add_child(host)
+
+	var join := _online_card("JOIN A MATCH", "Paste the address your friend sent you.")
+	var jv: VBoxContainer = join.get_meta("body")
+	var addr := LineEdit.new()
+	addr.text = Settings.join_address
+	addr.placeholder_text = "abc.gl.at.ply.gg:12345  or  192.168.1.20:7777"
+	addr.text_changed.connect(func(t: String) -> void:
+		Settings.join_address = t.strip_edges()
+		Settings.save_settings())
+	addr.text_submitted.connect(func(_t: String) -> void: join_match.emit(Settings.join_address))
+	jv.add_child(addr)
+	var join_btn := UiStyle.button("JOIN", "PlayButton", func() -> void: join_match.emit(Settings.join_address))
+	join_btn.custom_minimum_size.y = 72
+	jv.add_child(join_btn)
+	jv.add_child(UiStyle.note("You'll play on the host's map with your own loadout. Everyone needs the same version of the game.", 14))
+	cards.add_child(join)
+
+	var status_row := HBoxContainer.new()
+	status_row.add_theme_constant_override("separation", 16)
+	_online_status = UiStyle.label("", 24, Color("ffb86b"))
+	status_row.add_child(_online_status)
+	_online_cancel = UiStyle.button("CANCEL", "", func() -> void:
+		cancel_online.emit()
+		set_online_status(""))
+	_online_cancel.visible = false
+	status_row.add_child(_online_cancel)
+	col.add_child(status_row)
+	s.add_child(col)
+	return s
+
+
+func _online_card(title: String, blurb: String) -> PanelContainer:
+	var p := PanelContainer.new()
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.03, 0.047, 0.157, 0.85)
+	st.set_border_width_all(2)
+	st.border_color = Color(1, 1, 1, 0.2)
+	st.content_margin_left = 24
+	st.content_margin_right = 24
+	st.content_margin_top = 16
+	st.content_margin_bottom = 20
+	p.add_theme_stylebox_override("panel", st)
+	p.custom_minimum_size = Vector2(560, 0)
+	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 14)
+	v.add_child(UiStyle.label(title, 44, UiStyle.YELLOW, true))
+	v.add_child(UiStyle.note(blurb, 15))
+	p.add_child(v)
+	p.set_meta("body", v)
+	return p
+
+
+func _refresh_online() -> void:
+	_online_host_map.text = String(map_info.get(Settings.map, {}).get("name", Settings.map)).to_upper()
+	var ips := PackedStringArray()
+	for ip in IP.get_local_addresses():
+		if ip.begins_with("192.168.") or ip.begins_with("10.") or (ip.begins_with("172.") and ip.count(".") == 3):
+			ips.append("%s:%d" % [ip, Settings.host_port])
+	_online_ips.text = ("Same Wi-Fi: friends can use " + " or ".join(ips)) if not ips.is_empty() else ""
+
+
+## Connecting / error text under the host and join cards ("" hides it). busy shows CANCEL.
+func set_online_status(text: String, busy := false) -> void:
+	_online_status.text = text
+	_online_cancel.visible = busy
 
 
 # ---------- helpers ----------

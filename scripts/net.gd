@@ -20,6 +20,7 @@ signal left(reason: String) # connection lost or closed by the host
 const PROTOCOL := 1 # bump when the messages change: older clients get a clear "update" message
 const DEFAULT_PORT := 7777
 const INTERP_DELAY := 100.0 # ms other players are shown in the past (must exceed the snapshot gap)
+const HOST_INTERP_DELAY := 45.0 # the host gets snapshots with no network in between
 const SEND_EVERY := 2 # physics ticks between input packets (60 per second)
 
 static var instance: Net
@@ -29,6 +30,7 @@ var local_player := true # hosting: does this game also play? (false = dedicated
 var my_id := 0
 var connected := false
 var map_id := ""
+var welcome := {} # the last welcome (id, map, spawn, roster)
 var ping := 0.0 # ms
 
 # client side
@@ -178,9 +180,7 @@ func queue_cmd(c: Cmd) -> int:
 ## The server tick other players are being drawn at right now (they're shown INTERP_DELAY in the
 ## past). Sent with every input so the server can rewind hitboxes to match what you saw.
 func view_tick(now := -1.0) -> int:
-	if is_host():
-		return server.tick # the host sees everyone live
-	var t: float = (now if now >= 0 else float(Time.get_ticks_msec())) - INTERP_DELAY
+	var t: float = (now if now >= 0 else float(Time.get_ticks_msec())) - _delay()
 	var tl := _timeline
 	if tl.is_empty():
 		return 0
@@ -194,6 +194,10 @@ func view_tick(now := -1.0) -> int:
 	return tl[tl.size() - 1][1]
 
 
+func _delay() -> float:
+	return HOST_INTERP_DELAY if is_host() else INTERP_DELAY
+
+
 func take_events() -> Array:
 	var e := events
 	events = []
@@ -203,7 +207,7 @@ func take_events() -> Array:
 ## Where to draw a remote player right now: INTERP_DELAY in the past, blended between the two
 ## snapshots around that moment. null if we know nothing yet.
 func sample(r: Dictionary, now := -1.0) -> Variant:
-	var t: float = (now if now >= 0 else float(Time.get_ticks_msec())) - (0.0 if is_host() else INTERP_DELAY)
+	var t: float = (now if now >= 0 else float(Time.get_ticks_msec())) - _delay()
 	var b: Array = r.buf
 	if b.is_empty():
 		return null
@@ -303,6 +307,7 @@ func _drop(reason: String) -> void:
 
 
 func _welcome_local(w: Dictionary) -> void:
+	welcome = w
 	my_id = w.id
 	map_id = w.map
 	connected = true
