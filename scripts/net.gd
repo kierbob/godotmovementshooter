@@ -10,14 +10,22 @@ extends Node
 ## other players are drawn 100 ms in the past, blended between two snapshots, and our own full
 ## movement state is handed to main.gd to correct its prediction.
 ##
+## A session goes lobby -> loading -> run (Risk of Rain style): everyone picks a character and
+## readies up, a short countdown, then every game loads the stage and reports in, and the run
+## starts for everyone at once. Someone joining mid-run loads and drops straight in.
+##
 ## The node lives under the scene tree's root, not in the game scene, so the connection survives
-## reloading into the host's map. Net.instance is the live one.
+## reloading into the stage. Net.instance is the live one.
 
-signal joined(welcome: Dictionary) # connected and in the match (welcome: id, map, spawn)
+signal joined(welcome: Dictionary) # connected and in the lobby (welcome: id, phase, stage)
+signal lobby_changed # lobby members / countdown changed
+signal load_stage(stage: String) # time to load this stage (everyone was ready)
+signal run_started(start: Dictionary) # everyone loaded: go (start: spawn, roster, tick)
 signal failed(reason: String) # couldn't connect / refused
 signal left(reason: String) # connection lost or closed by the host
 
-const PROTOCOL := 1 # bump when the messages change: older clients get a clear "update" message
+const PROTOCOL := 2 # bump when the messages change: older clients get a clear "update" message
+const COUNTDOWN := 3.0 # seconds from "everyone ready" to loading
 const DEFAULT_PORT := 7777
 const INTERP_DELAY := 100.0 # ms other players are shown in the past (must exceed the snapshot gap)
 const HOST_INTERP_DELAY := 45.0 # the host gets snapshots with no network in between
@@ -25,12 +33,16 @@ const SEND_EVERY := 2 # physics ticks between input packets (60 per second)
 
 static var instance: Net
 
-var server: MatchServer # set when hosting
+var hosting := false
+var server: MatchServer # the match, while a stage is loading or running (host only)
 var local_player := true # hosting: does this game also play? (false = dedicated server)
 var my_id := 0
-var connected := false
-var map_id := ""
-var welcome := {} # the last welcome (id, map, spawn, roster)
+var connected := false # in the session (lobby or run)
+var phase := "" # "lobby" | "loading" | "run"
+var stage := "" # the stage's map id (loading / run)
+var lobby := {} # id -> {name, character, ready, loaded}
+var countdown := -1.0 # seconds until loading starts (everyone ready), -1 = not counting
+var welcome := {} # the last start (spawn, roster, tick) for this game
 var ping := 0.0 # ms
 
 # client side
@@ -107,8 +119,8 @@ static func map_checksum(m: MapData) -> int:
 
 # ---------- start / stop ----------
 
-## Host a match on `map`. The host's own game joins it straight away (unless dedicated).
-func host(port: int, map: String, m: MapData, player_name: String, loadout: Dictionary, play := true) -> Error:
+## Open a lobby on `port`. The host's own game is in it straight away (unless dedicated).
+func host(port: int, player_name: String, character: String, play := true) -> Error:
 	leave()
 	_peer = ENetMultiplayerPeer.new()
 	var err := _peer.create_server(port, MatchServer.MAX_PLAYERS)
@@ -116,18 +128,19 @@ func host(port: int, map: String, m: MapData, player_name: String, loadout: Dict
 		_peer = null
 		return err
 	multiplayer.multiplayer_peer = _peer
-	server = MatchServer.new(m)
-	server.set_meta("checksum", map_checksum(m))
-	map_id = map
+	hosting = true
 	local_player = play
+	phase = "lobby"
 	if play:
-		var spawn := server.add_player(1, player_name, loadout)
-		_welcome_local({"id": 1, "map": map, "spawn": spawn, "tick": server.tick, "roster": server.roster()})
+		lobby[1] = _member(player_name, character)
+		my_id = 1
+		connected = true
+		joined.emit.call_deferred({"id": 1, "phase": phase, "stage": ""})
 	return OK
 
 
-## Join a match at "host:port". Answers with `joined` or `failed`.
-func join(address: String, player_name: String, loadout: Dictionary, checksums: Dictionary) -> Error:
+## Join a lobby at "host:port". Answers with `joined` or `failed`.
+func join(address: String, player_name: String, character: String) -> Error:
 	leave()
 	var a := parse_address(address)
 	if a.is_empty():
@@ -138,7 +151,7 @@ func join(address: String, player_name: String, loadout: Dictionary, checksums: 
 		_peer = null
 		return err
 	multiplayer.multiplayer_peer = _peer
-	_hello = {"name": player_name, "loadout": loadout, "protocol": PROTOCOL, "checksums": checksums}
+	_hello = {"name": player_name, "character": character, "protocol": PROTOCOL}
 	return OK
 
 
@@ -147,10 +160,14 @@ func leave() -> void:
 		_peer.close()
 	_peer = null
 	multiplayer.multiplayer_peer = null
+	hosting = false
 	server = null
 	connected = false
 	my_id = 0
-	map_id = ""
+	phase = ""
+	stage = ""
+	lobby.clear()
+	countdown = -1.0
 	remotes.clear()
 	roster.clear()
 	players = []
@@ -164,7 +181,39 @@ func leave() -> void:
 
 
 func is_host() -> bool:
-	return server != null
+	return hosting
+
+
+## Our own character / ready in the lobby.
+func set_me(character: String, ready: bool) -> void:
+	if not connected:
+		return
+	if hosting:
+		_set_member(1, character, ready)
+	else:
+		_lobby_set.rpc_id(1, character, ready)
+
+
+## This game finished loading the stage (with this copy of its map).
+func report_loaded(checksum: int) -> void:
+	if hosting:
+		_mark_loaded(1, checksum)
+	elif connected:
+		_loaded.rpc_id(1, checksum)
+
+
+func all_ready() -> bool:
+	if lobby.is_empty():
+		return false
+	for m: Dictionary in lobby.values():
+		if not m.ready:
+			return false
+	return true
+
+
+static func _member(player_name: String, character: String) -> Dictionary:
+	return {"name": MatchServer.clean_name(player_name), "character": character if Characters.is_valid(character) else Characters.DEFAULT,
+		"ready": false, "loaded": false}
 
 
 # ---------- client: inputs ----------
@@ -173,8 +222,9 @@ func is_host() -> bool:
 func queue_cmd(c: Cmd) -> int:
 	_seq += 1
 	var e := [_seq, view_tick(), c]
-	if is_host():
-		server.receive(1, [e]) # no network in between
+	if hosting:
+		if server:
+			server.receive(1, [e]) # no network in between
 	else:
 		_unacked.append(e)
 		if _unacked.size() > 120:
@@ -243,9 +293,12 @@ func sample(r: Dictionary, now := -1.0) -> Variant:
 func _physics_process(_delta: float) -> void:
 	if _peer == null:
 		return
-	if server:
-		_server_tick()
-	elif connected:
+	if hosting:
+		if phase == "lobby":
+			_lobby_tick()
+		elif phase == "run":
+			_server_tick()
+	elif connected and phase == "run":
 		_send_tick += 1
 		if _send_tick >= SEND_EVERY and not _unacked.is_empty():
 			_send_tick = 0
@@ -254,6 +307,98 @@ func _physics_process(_delta: float) -> void:
 		if _ping_t >= 1.0:
 			_ping_t = 0.0
 			_ping.rpc_id(1, Time.get_ticks_msec())
+
+
+## Everyone ready: count down, then load the stage (anyone un-readying stops the clock).
+func _lobby_tick() -> void:
+	if not all_ready():
+		if countdown >= 0:
+			countdown = -1.0
+			_broadcast_lobby()
+		return
+	if countdown < 0:
+		countdown = COUNTDOWN
+		_broadcast_lobby()
+	var before := ceili(countdown)
+	countdown -= Cfg.TICK_DT
+	if ceili(countdown) != before:
+		_broadcast_lobby() # once a second is plenty
+	if countdown <= 0:
+		_begin_stage(Characters.FIRST_STAGE)
+
+
+func _begin_stage(id: String) -> void:
+	phase = "loading"
+	stage = id
+	countdown = -1.0
+	var m := MapData.load_map(id)
+	server = MatchServer.new(m)
+	server.set_meta("checksum", map_checksum(m))
+	for mid: int in lobby:
+		lobby[mid].loaded = false
+	_broadcast_lobby()
+	for mid: int in lobby:
+		if mid != 1:
+			_load_stage_rpc.rpc_id(mid, id)
+	if local_player:
+		load_stage.emit(id)
+
+
+func _mark_loaded(id: int, checksum: int) -> void:
+	if not lobby.has(id) or server == null:
+		return
+	if checksum != int(server.get_meta("checksum")):
+		_kick(id, "Your copy of the map \"%s\" is different from the host's. Get the same version of the game." % stage)
+		return
+	lobby[id].loaded = true
+	_broadcast_lobby()
+	if phase == "run":
+		_spawn_in(id) # dropped in mid-run
+	elif phase == "loading":
+		for m: Dictionary in lobby.values():
+			if not m.loaded:
+				return
+		phase = "run"
+		for mid: int in lobby:
+			_spawn_in(mid)
+
+
+func _spawn_in(id: int) -> void:
+	var m: Dictionary = lobby[id]
+	var c := Characters.get_info(m.character)
+	var spawn := server.add_player(id, m.name, Characters.loadout(m.character), c.color)
+	var start := {"id": id, "spawn": spawn, "tick": server.tick, "roster": server.roster()}
+	if id == 1:
+		_start_local(start)
+	else:
+		_go.rpc_id(id, start)
+
+
+func _set_member(id: int, character: String, ready: bool) -> void:
+	if not lobby.has(id):
+		return
+	lobby[id].character = character if Characters.is_valid(character) else Characters.DEFAULT
+	lobby[id].ready = ready
+	_broadcast_lobby()
+
+
+## Everyone's copy of the lobby (and our own signal).
+func _broadcast_lobby() -> void:
+	var state := {"members": lobby.duplicate(true), "countdown": countdown, "phase": phase, "stage": stage}
+	for id: int in lobby:
+		if id != 1 and multiplayer.get_peers().has(id):
+			_lobby_rpc.rpc_id(id, state)
+	lobby_changed.emit()
+
+
+func _kick(id: int, why: String) -> void:
+	_refused.rpc_id(id, why)
+	lobby.erase(id)
+	# Let the message go out, then hang up on them.
+	get_tree().create_timer(1.0).timeout.connect(func() -> void:
+		if _peer and multiplayer.get_peers().has(id):
+			_peer.disconnect_peer(id))
+	_broadcast_lobby()
 
 
 func _server_tick() -> void:
@@ -290,7 +435,8 @@ func _on_connected() -> void:
 
 
 func _on_peer_connected(id: int) -> void:
-	_quick_timeout(id) # they introduce themselves with _hello_rpc
+	if hosting: # (clients also hear about each other; only the host has a line to them)
+		_quick_timeout(id) # they introduce themselves with _hello_rpc
 
 
 ## Notice a vanished peer (crash, pulled cable) in seconds instead of ENet's default half minute.
@@ -303,8 +449,21 @@ func _quick_timeout(id: int) -> void:
 
 
 func _on_peer_disconnected(id: int) -> void:
+	if not hosting:
+		return
 	if server:
 		server.remove_player(id)
+	if lobby.has(id):
+		lobby.erase(id)
+		_broadcast_lobby()
+		if phase == "loading": # the one we were waiting for may have left
+			var done := true
+			for m: Dictionary in lobby.values():
+				done = done and m.loaded
+			if done and not lobby.is_empty():
+				phase = "run"
+				for mid: int in lobby:
+					_spawn_in(mid)
 
 
 func _fail(reason: String) -> void:
@@ -321,51 +480,89 @@ func _drop(reason: String) -> void:
 		failed.emit(reason)
 
 
-func _welcome_local(w: Dictionary) -> void:
-	welcome = w
-	my_id = w.id
-	map_id = w.map
-	connected = true
+func _start_local(start: Dictionary) -> void:
+	welcome = start
+	phase = "run"
 	roster.clear()
-	for r: Dictionary in w.roster:
+	for r: Dictionary in start.roster:
 		roster[r.id] = {"name": r.name, "color": r.color}
-	joined.emit.call_deferred(w)
+	_seq = 0
+	_unacked = []
+	_timeline = []
+	remotes.clear()
+	run_started.emit.call_deferred(start)
 
 
 # ---------- messages ----------
 
 @rpc("any_peer", "call_remote", "reliable")
 func _hello_rpc(hello: Dictionary) -> void:
-	if server == null:
+	if not hosting:
 		return
 	var id := multiplayer.get_remote_sender_id()
-	var why := ""
+	if lobby.has(id):
+		return
 	if int(hello.get("protocol", 0)) != PROTOCOL:
-		why = "The host is on a different version of the game. Update so you both have the same one."
-	elif server.is_full():
-		why = "That match is full (%d players)." % MatchServer.MAX_PLAYERS
-	elif server.peers.has(id):
+		lobby[id] = {} # so _kick has something to erase
+		_kick(id, "The host is on a different version of the game. Update so you both have the same one.")
 		return
-	else:
-		var sums: Dictionary = hello.get("checksums", {})
-		if not sums.has(map_id):
-			why = "The host is playing a map you don't have (%s)." % map_id
-		elif int(sums[map_id]) != int(server.get_meta("checksum")):
-			why = "Your copy of the map \"%s\" is different from the host's. Get the same version of the game." % map_id
-	if why != "":
-		_refused.rpc_id(id, why)
-		# Let the message go out, then hang up on them.
-		get_tree().create_timer(1.0).timeout.connect(func() -> void:
-			if _peer and multiplayer.get_peers().has(id):
-				_peer.disconnect_peer(id))
+	if lobby.size() >= MatchServer.MAX_PLAYERS:
+		lobby[id] = {}
+		_kick(id, "That lobby is full (%d players)." % MatchServer.MAX_PLAYERS)
 		return
-	var spawn := server.add_player(id, str(hello.get("name", "")), hello.get("loadout", {}) as Dictionary)
-	_welcome.rpc_id(id, {"id": id, "map": map_id, "spawn": spawn, "tick": server.tick, "roster": server.roster()})
+	var m := _member(str(hello.get("name", "")), str(hello.get("character", "")))
+	m.ready = phase != "lobby" # joining a run in progress: straight in
+	lobby[id] = m
+	_welcome.rpc_id(id, {"id": id, "phase": phase, "stage": stage})
+	_broadcast_lobby()
+	if phase != "lobby":
+		_load_stage_rpc.rpc_id(id, stage)
 
 
 @rpc("authority", "call_remote", "reliable")
 func _welcome(w: Dictionary) -> void:
-	_welcome_local(w)
+	my_id = w.id
+	phase = w.phase
+	stage = w.stage
+	connected = true
+	joined.emit(w)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _lobby_rpc(state: Dictionary) -> void:
+	lobby = state.members
+	countdown = state.countdown
+	if phase != "run" or state.phase == "lobby":
+		phase = state.phase
+	stage = state.stage
+	lobby_changed.emit()
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _lobby_set(character: String, ready: bool) -> void:
+	if hosting:
+		_set_member(multiplayer.get_remote_sender_id(), character, ready)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _load_stage_rpc(id: String) -> void:
+	phase = "loading"
+	stage = id
+	if not MapData.list().has(id):
+		_fail("The host is playing a map you don't have (%s). Get the same version of the game." % id)
+		return
+	load_stage.emit(id)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _loaded(checksum: int) -> void:
+	if hosting:
+		_mark_loaded(multiplayer.get_remote_sender_id(), checksum)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _go(start: Dictionary) -> void:
+	_start_local(start)
 
 
 @rpc("authority", "call_remote", "reliable")
@@ -401,7 +598,7 @@ func _pong(t: int) -> void:
 
 
 func _on_events(evs: Array) -> void:
-	if not connected:
+	if not connected or phase != "run":
 		return
 	for e: Dictionary in evs:
 		if e.type == "roster":
@@ -413,7 +610,7 @@ func _on_events(evs: Array) -> void:
 
 
 func _on_snapshot(data: PackedByteArray) -> void:
-	if not connected:
+	if not connected or phase != "run":
 		return
 	var snap := NetCodec.unpack_snapshot(data)
 	var at := float(Time.get_ticks_msec())

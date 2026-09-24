@@ -1,5 +1,7 @@
 extends SceneTree
-## Clicks through the menus headless and checks each step.
+## Clicks through the menus headless and checks each step: main screen, practice (through the
+## loading screen), pause / settings / rebinding, the solo lobby (character select + ready starts a
+## run on the first stage with that character's kit) and the multiplayer screen.
 ##   godot --headless --path . --script res://tests/menu_test.gd
 
 var fails := 0
@@ -27,6 +29,28 @@ func frames(n := 3) -> void:
 		await process_frame
 
 
+## Wait for the scene to reload into a built game that's playing (or time out). Returns it.
+func wait_playing(old: Node, secs := 10.0) -> Node:
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < secs * 1000:
+		await process_frame
+		var c := current_scene
+		if c and c != old and c.get("_built") and c.state == "playing":
+			return c
+	return current_scene
+
+
+## Find a button by its text under a node.
+func button(n: Node, text: String) -> Button:
+	if n is Button and (n as Button).text == text:
+		return n
+	for c in n.get_children():
+		var b := button(c, text)
+		if b:
+			return b
+	return null
+
+
 func _init() -> void:
 	Settings.path = "user://settings_test.cfg"
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(Settings.path))
@@ -38,15 +62,34 @@ func _init() -> void:
 	var menu: Menu = game.menu
 
 	check("starts in the main menu", game.state == "menu" and menu.screen == "main")
-	menu.play.emit("dev_map")
+	for t in ["SINGLEPLAYER", "MULTIPLAYER", "PRACTICE", "SETTINGS", "QUIT"]:
+		if button(menu._screens.main, t) == null:
+			check("main menu has %s" % t, false)
+	check("main menu has singleplayer, multiplayer, practice, settings and quit",
+		["SINGLEPLAYER", "MULTIPLAYER", "PRACTICE", "SETTINGS", "QUIT"].all(func(t: String) -> bool: return button(menu._screens.main, t) != null))
+
+	# practice: the map screen, then through the loading screen into free play
+	button(menu._screens.main, "PRACTICE").pressed.emit()
 	await frames()
-	check("PLAY starts the game", game.state == "playing" and menu.screen == "")
+	check("PRACTICE opens the practice map screen", menu.screen == "maps")
+	key(KEY_ESCAPE)
+	await frames()
+	check("Esc on the practice screen goes back", menu.screen == "main")
+	menu.play.emit("dev_map")
+	await frames(2)
+	check("playing shows the loading screen", LoadingScreen.is_up())
+	game = await wait_playing(game)
+	menu = game.menu
+	check("...then the game starts on that map", game.state == "playing" and game.map_id == "dev_map" and menu.screen == "")
+	await create_timer(2.0).timeout
+	check("the loading screen goes away", LoadingScreen.instance == null)
+
 	key(KEY_ESCAPE)
 	await frames()
 	check("Esc pauses", game.state == "paused" and menu.screen == "pause")
 	menu.open_settings("pause")
 	await frames()
-	check("pause -> settings (no top bar)", menu.screen == "settings" and not menu._top.visible)
+	check("pause -> settings", menu.screen == "settings")
 	key(KEY_ESCAPE)
 	await frames()
 	check("Esc in settings goes back to pause", menu.screen == "pause" and game.state == "paused")
@@ -79,39 +122,43 @@ func _init() -> void:
 	Settings.reset_binds()
 	Settings.apply_input()
 
-	# back to the main menu, then pick another map
 	menu.to_main_menu.emit()
 	await frames()
 	check("main menu from pause", game.state == "menu" and menu.screen == "main")
 
-	# loadout: pick a primary and an ability, and they're what you play with
-	(menu._top_tabs.loadout as Button).pressed.emit()
+	# singleplayer: the lobby, pick a character, ready -> stage 1 with that kit
+	button(menu._screens.main, "SINGLEPLAYER").pressed.emit()
 	await frames()
-	check("LOADOUT tab opens the loadout screen", menu.screen == "loadout" and menu._top.visible)
-	var rocket_tile: Button = menu._items_row.get_child(2) # shotgun, rifle, rocket, sniper
-	rocket_tile.pressed.emit()
-	await frames()
-	check("clicking a tile equips it", Settings.loadout.primary == "rocket")
-	(menu._loadout_slots.get_child(3) as Button).pressed.emit() # title, primary, secondary, ability
-	await frames()
-	(menu._items_row.get_child(1) as Button).pressed.emit() # frag, knife, impulse
-	await frames()
-	check("ability slot lists abilities and equips one", menu.loadout_slot == "ability" and Settings.loadout.ability == "knife")
-	cf = ConfigFile.new()
-	check("loadout is saved", cf.load(Settings.path) == OK and cf.get_value("loadout", "primary", "") == "rocket")
+	var lobby: LobbyScreen = menu.lobby
+	check("SINGLEPLAYER opens the lobby with just you in it", menu.screen == "lobby" and menu.lobby_mode == "solo"
+		and lobby._players.get_child_count() == 1)
+	check("the lobby lists every character", lobby._char_list.get_child_count() == Characters.ORDER.size())
 	key(KEY_ESCAPE)
 	await frames()
-	check("Esc in loadout goes back to the main menu", menu.screen == "main")
-	menu.play.emit("dev_map")
+	check("Esc leaves the lobby", menu.screen == "main")
+	menu.open_lobby("solo")
 	await frames()
-	check("you play with the chosen loadout", game.combat.slots.primary.id == "rocket" and game.combat.ability.id == "knife")
+	(lobby._char_list.get_child(2) as Button).pressed.emit() # sharpshooter
+	await frames()
+	check("clicking a character picks it", Settings.character == "sharpshooter")
+	cf = ConfigFile.new()
+	check("your character is saved", cf.load(Settings.path) == OK and cf.get_value("game", "character", "") == "sharpshooter")
+	lobby._ready_btn.pressed.emit()
+	game = await wait_playing(game)
+	menu = game.menu
+	var kit := Characters.loadout("sharpshooter")
+	check("READY starts the run on the first stage (%s)" % Characters.FIRST_STAGE, game.state == "playing"
+		and game.map_id == Characters.FIRST_STAGE)
+	check("you play with your character's kit", game.combat.slots.primary.id == kit.primary
+		and game.combat.slots.secondary.id == kit.secondary and game.combat.ability.id == kit.ability)
+	await create_timer(2.0).timeout
 	menu.to_main_menu.emit()
 	await frames()
 
-	# multiplayer screen: tab, name saved, a bad address explains itself, Esc goes back
-	(menu._top_tabs.online as Button).pressed.emit()
+	# multiplayer screen: name saved, a bad address explains itself, Esc goes back
+	button(menu._screens.main, "MULTIPLAYER").pressed.emit()
 	await frames()
-	check("MULTIPLAYER tab opens the multiplayer screen", menu.screen == "online" and menu._top.visible)
+	check("MULTIPLAYER opens the multiplayer screen", menu.screen == "online")
 	Settings.player_name = "Tester"
 	Settings.save_settings()
 	menu.join_match.emit("")
@@ -122,12 +169,6 @@ func _init() -> void:
 	key(KEY_ESCAPE)
 	await frames()
 	check("Esc on the multiplayer screen goes back to the main menu", menu.screen == "main")
-
-	menu.play.emit("bean-town")
-	await frames(8)
-	game = current_scene
-	check("playing another map reloads into it", game.map.name == "Bean Town" and game.state == "playing")
-	check("chosen map is remembered", Settings.map == "bean-town")
 
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(Settings.path))
 	print("\n%s" % ("all menu checks passed" if fails == 0 else "%d menu check(s) failed" % fails))

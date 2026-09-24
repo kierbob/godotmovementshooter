@@ -74,11 +74,11 @@ static func clean_loadout(lo: Dictionary) -> Dictionary:
 
 
 ## Adds a player and spawns them. Returns their spawn point ({x, y, z, yaw}).
-func add_player(id: int, player_name: String, loadout: Dictionary) -> Dictionary:
+func add_player(id: int, player_name: String, loadout: Dictionary, color := Color(0, 0, 0, 0)) -> Dictionary:
 	var c := Peer.new()
 	c.id = id
 	c.name = clean_name(player_name)
-	c.color = _free_color()
+	c.color = color if color.a > 0 else _free_color() # their character's color, if given
 	c.loadout = clean_loadout(loadout)
 	c.sim = PlayerSim.new()
 	c.sim.quiet = true # nobody reads the server's movement log

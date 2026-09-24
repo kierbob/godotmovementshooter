@@ -12,8 +12,11 @@ Useful files: `src/items.js` (weapon/ability data), `src/combat.js`, `src/hud.js
 `src/config.js`, `src/world.js`.
 
 Port only what the current step needs, not the whole web game. Guns, gun models, the combat HUD,
-the loadout screen, the cartoon effects, sound, the time trial and multiplayer are in; bots come
-later, in their own step.
+the cartoon effects, sound, the time trial and multiplayer are in.
+
+Direction (the owner's call): a Risk of Rain style first-person roguelite. Characters with fixed
+kits, runs over stages with a loading screen between them, enemies and stacking items next;
+multiplayer becomes optional co-op later (the owner said to leave multiplayer alone for now).
 
 ## Files
 
@@ -28,20 +31,23 @@ later, in their own step.
   its color from `WorldView.COLORS` (add new kinds there and to MapBox's enum). Kind `barrier` is
   an invisible wall: solid for players, not drawn, ignored by shots.
 - `scripts/main.gd`: game entry. Builds the map, runs the sim at a fixed 120 ticks/s, moves the
-  camera between ticks, switches menu/playing/paused. Test flags: `--map=`, `--at=`, `--screen=`, `--shot=`.
+  camera between ticks, switches menu/playing/paused. Test flags: `--map=`, `--at=`, `--screen=`, `--shot=`,
+  `--solo` (straight into a solo run), `--host`, `--join=`, `--ready`, `--name=`.
 - `scripts/player_sim.gd`: the movement, line for line from the web game's `src/player.js`. It uses
   plain 64-bit floats on purpose (Vector3 is 32-bit). Do NOT refactor it to Vector3.
 - `scripts/cfg.gd`: every movement number, 1:1 from the web game's `config.js`.
 - `scripts/cmd.gd`: one tick of input as plain data (network-ready for multiplayer), including
   fire/reload/ability/slot/cycle.
-- `scripts/items.gd`: weapon + ability data, 1:1 from `items.js`, plus loadout-screen stats.
+- `scripts/items.gd`: weapon + ability data from `items.js` (Boomstick and Sidearm buffed since).
+- `scripts/characters.gd`: the characters (fixed kits: primary, secondary, ability; color, blurb)
+  and the first stage. `Settings.character` picks one; `Settings.loadout()` is its kit.
 - `scripts/combat.gd`: guns, projectiles, damage and knockback (port of `combat.js`, no bots yet).
   Ticks before `player.step`, like the web game. Uses Vector3 (spread is random, so no bit-exact
   match needed); knockback goes through `PlayerSim.apply_impulse`.
 - `scripts/models.gd`, `viewmodel.gd`, `combat_view.gd`, `showcase.gd`: gun models (toon look,
   smooth-normal outline shells), the first-person gun and its muzzle effects (its own SubViewport),
   world effects (port of `fx.js`: projectiles, tracers, bullet holes, explosions, gun toss), and the
-  loadout 3D stage. `particles.gd` is the pooled particle system (`particles.js`).
+  lobby's 3D stage (`show_character`). `particles.gd` is the pooled particle system (`particles.js`).
 - `assets/fx/*.png` are baked by `tools/make_fx_textures.gd` (needs a renderer: run it under Xvfb).
   `assets/fonts/Bangers-Regular.ttf` (OFL) is the comic-word font.
 - `scripts/sound.gd` plays `assets/sounds/*.wav`, which `tools/make_sounds.gd` bakes from the web
@@ -63,7 +69,12 @@ later, in their own step.
 - `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
 - `scripts/world_view.gd`: map meshes, jump pads, bean dummies, clouds.
 - `scripts/menu.gd`, `ui_style.gd`, `hud.gd`, `settings.gd`: menus, styling, HUD, saved settings
-  and keybinds (combat keybinds already exist).
+  and keybinds. The main screen is a Risk of Rain style column (singleplayer, multiplayer,
+  practice, settings, quit). `scripts/lobby_screen.gd` is the lobby (character select, players,
+  ready). `scripts/loading_screen.gd` is the loading card: it lives under the tree root, loads the
+  stage's files on a thread, and stays up across the reload; main.gd's `_ready` yields a frame
+  between build steps while it's up (`_step`), and `pending_run` says what to do after the reload
+  (solo run / online run / practice). Runs and practice always go through `_load_into`.
 - `shaders/`: toon shading, sky, clouds.
 - `tests/compare.gd`: replays web-game movement (`tests/traces.json`) and checks every tick, on the
   frozen original maps in `tests/maps/*.json` (so map edits don't break it). The combat and trial
@@ -118,7 +129,7 @@ Headless runs draw nothing. To see the game, render under Xvfb (it falls back to
 lighting differs a little from Forward+ on Windows) and use the `--shot` flag:
 
 ```
-xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- --screen=loadout --shot=/tmp/s.png --frames=90
+xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- --screen=maps --shot=/tmp/s.png --frames=90
 ```
 
 ## Roadmap
@@ -126,7 +137,9 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 1. ~~Guns and abilities~~ (done: guns, abilities, gun models, combat HUD, loadout screen).
 2. ~~Bean dummies take damage~~ (done: damage, hit flash, health bars, damage numbers).
 3. ~~Cartoon effects and sounds~~ (done).
-4. Bot Arena mode (still to do) and a time trial mode (done: guns off and guns on).
-5. More menu and settings polish.
+4. ~~Time trial~~ (done: guns off and guns on). ~~Risk of Rain style menus~~ (done: characters,
+   lobby, loading screen).
+5. Roguelite: enemies + spawn director, solo health/death, gold + chests + stacking items,
+   teleporter/boss/next stage, more stages, character passives. (Bot Arena folds into enemies.)
 6. ~~Multiplayer~~ (first version done: host/join, FFA, prediction, lag compensation). Later:
    teams, match rules, dedicated server.

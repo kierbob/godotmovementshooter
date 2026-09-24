@@ -8,8 +8,15 @@ you hosts, see "Playing online").
 - Double-click `play.bat` (uses `Downloads\Godot_v4.6.2-stable_win64.exe\...`), or
 - open this folder in Godot 4.6 and press **F5**.
 
-Main menu → pick a map (and your guns under **Loadout**) → **Play**. The map screen also has the
-two **time trials** (guns off / guns on); in the Dev Arena you can walk into their portals too. **Esc** pauses (Resume / Settings / Main Menu / Quit).
+The game is heading toward a Risk of Rain style roguelite (runs over several stages, enemies,
+items that stack). The menus already work that way:
+
+- **SINGLEPLAYER** → the lobby: pick your character (Brawler, Bomber, Sharpshooter; each is a
+  fixed kit), press **READY** → the loading screen → stage 1 (Bean Town for now).
+- **MULTIPLAYER** → host or join a lobby (see "Playing online").
+- **PRACTICE** → free play on any map with the dummies, and the two **time trials** (guns off /
+  guns on); in the Dev Arena you can walk into their portals too.
+- **SETTINGS**, **QUIT**. **Esc** pauses in game (Resume / Settings / Main Menu / Quit).
 Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are saved to
 `%APPDATA%/Godot/app_userdata/Movement Shooter/settings.cfg`.
 
@@ -61,8 +68,12 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   clip into walls.
 - **Combat HUD**: a crosshair per weapon (the Boomstick's ring is its real spread), recoil bloom,
   hitmarkers, weapon slots, ammo, reload bar and the ability cooldown.
-- **Loadout screen**: pick a primary, secondary and ability, with a 3D preview you can spin,
-  stats and item thumbnails. Saved with your settings.
+- **Characters** (`scripts/characters.gd`): Brawler (Boomstick, Kick Pistol, Impulse Charge),
+  Bomber (Rocket Launcher, Sidearm, Impact Grenade), Sharpshooter (Long Shot, Buzz SMG, Throwing
+  Knife). Picked in the lobby, shown on a 3D stage in their color; saved with your settings.
+- **Lobby and loading screen**: Risk of Rain style. Everyone ready → (online: a 3 s countdown) →
+  a loading card with the stage number, name, progress and tips, which stays up while the stage
+  loads and, online, until everyone has loaded.
 - **Bean dummies** stop shots, take damage (headshots count), flash white when hit, show a health
   bar with their HP (e.g. "105 / 150"), go down at 0 HP and pop back 2.5 s later.
 - **Cartoon effects** (the web game's `fx.js`): muzzle flash, POW star and action lines, smoke puffs
@@ -87,7 +98,7 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 One player hosts; the match runs on their PC and they play in it like everyone else. Up to 8
 players. Everyone needs the same version of the game (and the same maps).
 
-**Host:** Main menu → **MULTIPLAYER** → set your name → pick the map (**CHANGE**) → **HOST**.
+**Host:** Main menu → **MULTIPLAYER** → set your name → **HOST**. You land in the lobby.
 The game listens on UDP port 7777 (change it on the same screen). If Windows Firewall asks, allow
 it. Then give your friends an address:
 
@@ -99,8 +110,9 @@ it. Then give your friends an address:
 - **Same Wi-Fi:** they can use your PC's local address; the host screen lists it
   (like `192.168.1.20:7777`).
 
-**Join:** **MULTIPLAYER** → set your name → paste the address → **JOIN**. If the host is on a
-different map, your game switches to it by itself. You play with your own loadout.
+**Join:** **MULTIPLAYER** → set your name → paste the address → **JOIN**. In the lobby everyone
+picks a character and readies up; when all are ready a 3 s countdown starts, everyone loads the
+stage, and the run starts together. Joining a run in progress drops you straight in.
 
 In the match: free-for-all. 100 HP, you regenerate 3 s after the last hit, respawn 2.5 s after
 getting splatted with 1.5 s of spawn protection (you blink, your health bar turns blue). Hold
@@ -156,8 +168,8 @@ node tools/make_traces.mjs
 godot --headless --path . --script res://tests/compare.gd
 ```
 
-`tests/menu_test.gd` clicks through the menus headless (play, pause, settings, rebinding, loadout,
-map switch). `tests/combat_test.gd` checks the guns: fire rate, reloads, switching, hits and
+`tests/menu_test.gd` clicks through the menus headless (main screen, practice through the loading
+screen, pause, settings, rebinding, the solo lobby starting a run with your character's kit). `tests/combat_test.gd` checks the guns: fire rate, reloads, switching, hits and
 headshots on the dummies, knockback, rocket jumps, abilities and shots against ramps.
 `tests/trial_test.gd` checks the time trial (portals, start line, finish, falling off, records,
 guns off/on), `tests/sound_test.gd` checks every sound is there and plays, and
@@ -177,8 +189,12 @@ godot --headless --path . --script res://tests/net_test.gd
 
 ## Next
 
-1. Bot Arena mode: bean bots that move, aim and shoot back (the health, dying and respawning from
-   multiplayer are ready for it).
-2. More multiplayer: team modes, a match timer / score limit, a dedicated server option, better
-   animations for other players than the crouch/slide squash.
-3. More menu and settings polish (a mode picker once the modes exist, crosshair options).
+The roguelite, in this order:
+
+1. Enemies: three bean types (melee charger, ranged shooter, flyer) and a spawn director that
+   ramps up over time.
+2. Solo health, dying and "run over".
+3. Gold, chests and stacking items (movement-themed: speed, extra wall jumps, slide damage...).
+4. Run structure: teleporter + boss wave, then the next stage (the loading screen is ready for
+   it), a difficulty clock.
+5. More stages, character passives, unlocks. Multiplayer becomes co-op.
