@@ -230,14 +230,24 @@ func _move_axis(axis: int, delta: float, boxes: Array[MapData.Box]) -> MapData.B
 	return hit
 
 
-## Horizontal move with automatic step-up onto low ledges while grounded.
+## Horizontal move with automatic step-up onto low ledges while grounded, and onto a slope that
+## rises under us in the air.
 func _move_horizontal(axis: int, delta: float, boxes: Array[MapData.Box], was_grounded: bool) -> void:
 	var start := px if axis == 0 else pz
+	var ox := px
+	var oz := pz
 	var hit := _move_axis(axis, delta, boxes)
 	if hit == null:
 		return
 	var rise := _hit_top - py
-	if was_grounded and rise > 0 and rise <= Cfg.PLAYER_STEP_HEIGHT:
+	var step := was_grounded and rise > 0 and rise <= Cfg.PLAYER_STEP_HEIGHT
+	# Not in the web game (world.js pushes you out to the ramp's low end, a teleport of meters):
+	# moving uphill along a ramp in the air with our feet on or above its slope just now means the
+	# slope rose into us, so ride up onto it. On the ground the step-up above already does this.
+	var hw := Cfg.PLAYER_HALF_WIDTH
+	var onto_slope := not step and hit.ramp_axis == axis and rise > 0 \
+		and py >= MapData.solid_top(hit, ox - hw, ox + hw, oz - hw, oz + hw) - 1e-6
+	if step or onto_slope:
 		var sx := px
 		var sy := py
 		var sz := pz
@@ -247,7 +257,7 @@ func _move_horizontal(axis: int, delta: float, boxes: Array[MapData.Box], was_gr
 			pz = start + delta
 		py = _hit_top + 1e-4
 		if not _blocked(boxes):
-			_log("step-up", "%.2f m" % rise)
+			_log("step-up" if step else "onto slope", "%.2f m" % rise)
 			return
 		px = sx
 		py = sy

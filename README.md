@@ -32,7 +32,9 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 ## What's in
 
 - **Movement**: a line-for-line port of the web game's `src/player.js` (sprint, slide, wall jumps,
-  ramps, jump pads, momentum), fixed 120 Hz ticks with smooth camera interpolation. Mouse look uses
+  ramps, jump pads, momentum), fixed 120 Hz ticks with smooth camera interpolation. One fix on
+  top: flying or jumping into a ramp uphill lands you on the slope instead of teleporting you back
+  to its bottom (a bug the web game still has). Mouse look uses
   Godot's raw mouse input.
 - **Maps**, as scenes you edit in the Godot editor (`maps/`, see "Editing maps" below):
   - **Dev Arena**: the web game's dev map with every number kept exact, plus the time trial.
