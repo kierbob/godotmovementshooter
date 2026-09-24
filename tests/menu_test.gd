@@ -148,8 +148,51 @@ func _init() -> void:
 		and game.player.horizontal_speed() < 0.01)
 	game.console.execute("god")
 	check("'god' turns on god mode", game.enemies.god)
+	game.console.execute("freeze")
+	check("'freeze' freezes them", game.enemies.frozen)
+	game.console.execute("unfreeze")
+	check("'unfreeze' lets them move again", not game.enemies.frozen)
+	game.console.execute("freeze on")
+	game.console.execute("freeze off")
+	check("'freeze on' / 'freeze off' work too", not game.enemies.frozen)
 	game.console.execute("killall")
 	check("'killall' removes them all", game.enemies.list.is_empty())
+
+	# a beam flyer that dies mid-beam takes its beam with it
+	game.player.invuln = 0.0
+	var fwd := Vector3(-sin(game.yaw), 0, -cos(game.yaw))
+	var beamer: Enemies.Enemy = game.enemies.spawn("flyer_beam", Vector3(game.player.px, game.player.py + 3.0, game.player.pz) + fwd * 5.0)
+	beamer.cd = 0.0
+	var t0 := Time.get_ticks_msec()
+	while beamer.state != "attack" and Time.get_ticks_msec() - t0 < 8000:
+		await process_frame
+	await frames(2)
+	var beam_mesh: Node3D = game.enemy_view._views.get(beamer.id, {}).get("beam")
+	check("the beam flyer beams you (state %s)" % beamer.state, beamer.state == "attack" and beam_mesh != null and beam_mesh.visible)
+	beamer.target.hp = 0.0 # dies mid-beam
+	await frames(4)
+	check("when it dies, the beam goes with it", game.enemies.list.is_empty() and not is_instance_valid(beam_mesh)
+		and game.enemy_view.get_child_count() == 0)
+	game.console.execute("god off")
+	check("'god off' turns god mode off", not game.enemies.god)
+
+	# the buttons next to the text bar do the same, without typing
+	button(game.console._panel, "BEAM").pressed.emit()
+	await frames()
+	check("the BEAM button spawns a beam flyer", game.enemies.list.size() == 1 and game.enemies.list[0].type == "flyer_beam")
+	button(game.console._panel, "x3").pressed.emit()
+	button(game.console._panel, "SWARMER").pressed.emit()
+	await frames()
+	check("x3 then SWARMER spawns three swarmers", game.enemies.list.filter(func(e: Enemies.Enemy) -> bool: return e.type == "swarmer").size() == 3)
+	button(game.console._panel, "GOD").pressed.emit()
+	check("the GOD button toggles god mode (and shows it)", game.enemies.god and game.console._god_btn.button_pressed)
+	button(game.console._panel, "FREEZE").pressed.emit()
+	button(game.console._panel, "FREEZE").pressed.emit()
+	check("FREEZE twice freezes and unfreezes", not game.enemies.frozen and not game.console._freeze_btn.button_pressed)
+	button(game.console._panel, "KILL ALL").pressed.emit()
+	button(game.console._panel, "GOD").pressed.emit()
+	await frames()
+	check("KILL ALL clears them", game.enemies.list.is_empty() and not game.enemies.god)
 	key(KEY_F10)
 	await frames()
 	check("F10 closes it again", not game.console.is_open)

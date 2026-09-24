@@ -3,16 +3,18 @@ extends CanvasLayer
 ## Testing console on F10 (rebindable): type a command, Enter runs it.
 ##   spawn flyer beam      spawn a variant (also: spawn beam, spawn swarmer 5, spawn runner = any runner)
 ##   killall               remove every enemy
-##   god                   toggle: you can't be hurt
+##   god [on|off]          you can't be hurt (no word: toggle); ungod = off
 ##   heal                  full health
-##   freeze                toggle: enemies stand still
+##   freeze [on|off]       enemies stand still (no word: toggle); unfreeze = off
 ##   list                  every enemy type
 ##   help
-## Up / Down walk through what you typed before. The game (main.gd) does the work in admin().
+## Up / Down walk through what you typed before. Next to the text bar there are buttons for all
+## of it (every enemy, a count, god / freeze / heal / kill all), which just run the same commands.
+## The game (main.gd) does the work in admin().
 
 const HELP := [
 	"spawn <enemy> [variant] [count]   e.g. spawn flyer beam, spawn swarmer 5, spawn runner",
-	"killall · god · heal · freeze · list · help",
+	"killall · god [on/off] · heal · freeze / unfreeze · list · help",
 ]
 const VARIANT_WORDS := {"projectile": "flyer_projectile", "beam": "flyer_beam", "healer": "flyer_healer",
 	"charger": "charger", "brute": "brute", "swarmer": "swarmer", "gunner": "gunner", "lobber": "lobber", "sniper": "sniper"}
@@ -25,6 +27,10 @@ var _edit: LineEdit
 var _lines: Array[String] = []
 var _history: Array[String] = []
 var _hist_i := -1
+var _count := 1 # how many the spawn buttons spawn
+var _count_btns := {}
+var _god_btn: Button
+var _freeze_btn: Button
 
 
 func _ready() -> void:
@@ -42,9 +48,14 @@ func _ready() -> void:
 	_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	_panel.theme = UiStyle.theme()
 	add_child(_panel)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+	_panel.add_child(row)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
-	_panel.add_child(v)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(v)
+	row.add_child(_build_buttons())
 	var title := UiStyle.label("ADMIN · F10 TO CLOSE", 18, UiStyle.YELLOW)
 	v.add_child(title)
 	var mono := SystemFont.new()
@@ -66,12 +77,84 @@ func _ready() -> void:
 		say(l)
 
 
+## The button panel: spawn any enemy (x1 / x3 / x5), and the toggles.
+func _build_buttons() -> Control:
+	var grid := VBoxContainer.new()
+	grid.add_theme_constant_override("separation", 5)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 6)
+	top.add_child(_tag("SPAWN"))
+	for n: int in [1, 3, 5]:
+		var b := _btn("x%d" % n, func() -> void:
+			_count = n
+			_refresh_buttons())
+		b.toggle_mode = true
+		_count_btns[n] = b
+		top.add_child(b)
+	grid.add_child(top)
+	for fam: String in Enemies.FAMILIES:
+		var r := HBoxContainer.new()
+		r.add_theme_constant_override("separation", 6)
+		r.add_child(_tag(fam.to_upper() + "S"))
+		for id: String in Enemies.FAMILIES[fam]:
+			var label := String(Enemies.TYPES[id].name).trim_suffix(" Flyer").to_upper()
+			var word := id.trim_prefix("flyer_")
+			r.add_child(_btn(label, func() -> void: _press("spawn %s %d" % [word if fam != "flyer" else "flyer " + word, _count])))
+		r.add_child(_btn("ANY", func() -> void: _press("spawn %s %d" % [fam, _count])))
+		grid.add_child(r)
+	var tools := HBoxContainer.new()
+	tools.add_theme_constant_override("separation", 6)
+	tools.add_child(_tag(""))
+	_god_btn = _btn("GOD", func() -> void: _press("god"))
+	_god_btn.toggle_mode = true
+	tools.add_child(_god_btn)
+	_freeze_btn = _btn("FREEZE", func() -> void: _press("freeze"))
+	_freeze_btn.toggle_mode = true
+	tools.add_child(_freeze_btn)
+	tools.add_child(_btn("HEAL", func() -> void: _press("heal")))
+	tools.add_child(_btn("KILL ALL", func() -> void: _press("killall")))
+	grid.add_child(tools)
+	_refresh_buttons()
+	return grid
+
+
+func _tag(text: String) -> Label:
+	var l := UiStyle.label(text, 16, UiStyle.MUTED)
+	l.custom_minimum_size.x = 92
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	return l
+
+
+func _btn(text: String, on_press: Callable) -> Button:
+	var b := UiStyle.button(text, "SegButton", on_press)
+	b.add_theme_font_size_override("font_size", 16)
+	b.custom_minimum_size = Vector2(96, 30)
+	return b
+
+
+## A button runs its command as if typed (so it shows in the log too).
+func _press(text: String) -> void:
+	say("> " + text)
+	say(execute(text))
+	_refresh_buttons()
+
+
+func _refresh_buttons() -> void:
+	for n: int in _count_btns:
+		(_count_btns[n] as Button).set_pressed_no_signal(n == _count)
+	var en: Variant = game.get("enemies") if game else null
+	if _god_btn:
+		_god_btn.set_pressed_no_signal(en != null and en.god)
+		_freeze_btn.set_pressed_no_signal(en != null and en.frozen)
+
+
 func toggle() -> void:
 	is_open = not is_open
 	_panel.visible = is_open
 	if is_open:
 		_edit.grab_focus()
 		_edit.text = ""
+		_refresh_buttons()
 	else:
 		_edit.release_focus()
 
@@ -92,6 +175,7 @@ func _submit(text: String) -> void:
 	_hist_i = -1
 	say("> " + text)
 	say(execute(text))
+	_refresh_buttons()
 
 
 func _edit_input(event: InputEvent) -> void:
@@ -126,10 +210,14 @@ func execute(text: String) -> String:
 			return _call("killall", {})
 		"god":
 			return _call("god", {"on": words[1] if words.size() > 1 else "toggle"})
+		"ungod":
+			return _call("god", {"on": "off"})
 		"heal":
 			return _call("heal", {})
 		"freeze":
-			return _call("freeze", {})
+			return _call("freeze", {"on": words[1] if words.size() > 1 else "toggle"})
+		"unfreeze":
+			return _call("freeze", {"on": "off"})
 		"list":
 			var out := PackedStringArray()
 			for fam: String in Enemies.FAMILIES:
