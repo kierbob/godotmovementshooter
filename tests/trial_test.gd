@@ -24,6 +24,17 @@ func stand(t: TimeTrial, p: PlayerSim, x: float, y: float, z: float, dt := Cfg.T
 	t.tick(p, dt)
 
 
+## Wait for the scene to reload into a built game that's playing (or time out). Returns it.
+func wait_playing(old: Node, secs := 10.0) -> Node:
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < secs * 1000:
+		await process_frame
+		var c := current_scene
+		if c and c != old and c.get("_built") and c.state == "playing":
+			return c
+	return current_scene
+
+
 func _init() -> void:
 	await run()
 	print("\n%s" % ("all trial checks passed" if fails == 0 else "%d trial checks FAILED" % fails))
@@ -118,22 +129,21 @@ func run() -> void:
 	for i in 5:
 		await process_frame
 	var game := current_scene
-	game.menu.play_trial.emit(false)
-	for i in 3:
-		await process_frame
+	game.menu.play_trial.emit(false) # through the loading screen
+	game = await wait_playing(game)
 	check("the GUNS OFF card starts the trial with guns off", game.trial.active and not game.trial.guns and not game.combat.enabled)
 	check("...and hides the gun", not game.viewmodel.visible)
 	game.menu.to_main_menu.emit()
 	await process_frame
 	game.menu.play_trial.emit(true)
-	for i in 3:
-		await process_frame
+	game = await wait_playing(game)
 	check("the GUNS ON card starts it with guns on", game.trial.active and game.trial.guns and game.combat.enabled and game.viewmodel.visible)
 	game.menu.to_main_menu.emit()
 	await process_frame
 	game.menu.play.emit("dev_map")
-	await process_frame
+	game = await wait_playing(game)
 	check("playing normally afterwards is off the course with guns", not game.trial.active and game.combat.enabled)
+	await create_timer(2.0).timeout # let the loading screen finish
 	game.queue_free() # stops any sound still playing, so nothing is held at exit
 	await create_timer(0.5).timeout # the audio thread lets go of the last sound a moment later
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TimeTrial.path))

@@ -81,6 +81,29 @@ func _model(id: String) -> Node3D:
 	return _models[id]
 
 
+## A character on the stage: their bean, in their color, with their main gun floating at the side.
+func show_character(id: String) -> void:
+	var key := "char:" + id
+	if not _models.has(key):
+		var ch := Characters.get_info(id)
+		var holder := Node3D.new()
+		var bean := WorldView.make_bean(ch.color, (ch.color as Color).lerp(Color.WHITE, 0.3))
+		bean.position.y = -1.0 # centered on the stage
+		holder.add_child(bean)
+		var gun := Models.held_gun(ch.primary, float(Items.MODELS[ch.primary].length) * 1.1)
+		if gun:
+			gun.position = Vector3(-0.52, -0.05, 0.3)
+			gun.rotation.y = PI # the bean faces +Z
+			holder.add_child(gun)
+		holder.scale = Vector3.ONE * 0.62
+		holder.position = Vector3(0.75, 0.1, 0) # right of the stage: the kit text sits on the left
+		holder.rotation.y = -0.5 # three-quarter view: face and gun both show
+		holder.visible = false
+		_pivot.add_child(holder)
+		_models[key] = holder
+	show_item(key)
+
+
 func show_item(id: String) -> void:
 	if id == _want:
 		return

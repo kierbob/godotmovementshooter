@@ -359,43 +359,81 @@ func correction_after_lag() -> void:
 
 # ---------- real network ----------
 
+func side(root_name: String) -> Net:
+	var r := Node.new()
+	r.name = root_name
+	root.add_child(r)
+	set_multiplayer(SceneMultiplayer.new(), r.get_path())
+	var n := Net.new()
+	n.name = "Net"
+	r.add_child(n)
+	return n
+
+
+func wait_for(cond: Callable, ticks := 600) -> bool:
+	for i in ticks:
+		if cond.call():
+			return true
+		await physics_frame
+	return cond.call()
+
+
 func enet() -> void:
 	await process_frame
-	var host_root := Node.new()
-	host_root.name = "HostSide"
-	var client_root := Node.new()
-	client_root.name = "ClientSide"
-	root.add_child(host_root)
-	root.add_child(client_root)
-	set_multiplayer(SceneMultiplayer.new(), host_root.get_path())
-	set_multiplayer(SceneMultiplayer.new(), client_root.get_path())
-	var host := Net.new()
-	host.name = "Net"
-	host_root.add_child(host)
-	var client := Net.new()
-	client.name = "Net"
-	client_root.add_child(client)
+	var host := side("HostSide")
+	var client := side("ClientSide")
+	var stage_sum := Net.map_checksum(MapData.load_map(Characters.FIRST_STAGE))
 
 	var port := 7797
-	var err := host.host(port, "bean-street", map, "Hosty", {"primary": "rocket", "secondary": "pistol", "ability": "frag"})
-	check("hosting opens UDP port %d (%s)" % [port, error_string(err)], err == OK)
-	var result := {}
-	client.joined.connect(func(w: Dictionary) -> void: result.welcome = w)
-	client.failed.connect(func(why: String) -> void: result.failed = why)
-	err = client.join("127.0.0.1:%d" % port, "Clienty", {}, {"bean-street": Net.map_checksum(map)})
+	var err := host.host(port, "Hosty", "bomber")
+	check("hosting opens a lobby on UDP port %d (%s)" % [port, error_string(err)], err == OK and host.phase == "lobby")
+	var got := {}
+	client.joined.connect(func(w: Dictionary) -> void: got.welcome = w)
+	client.failed.connect(func(why: String) -> void: got.failed = why)
+	client.load_stage.connect(func(id: String) -> void: got.client_load = id)
+	host.load_stage.connect(func(id: String) -> void: got.host_load = id)
+	client.run_started.connect(func(st: Dictionary) -> void: got.client_go = st)
+	host.run_started.connect(func(st: Dictionary) -> void: got.host_go = st)
+	err = client.join("127.0.0.1:%d" % port, "Clienty", "sharpshooter")
 	check("joining starts (%s)" % error_string(err), err == OK)
-	for i in 300:
-		await physics_frame
-		if not result.is_empty():
-			break
-	check("the client is welcomed into the host's match", result.has("welcome") and result.welcome.map == "bean-street"
-		and client.my_id > 1 and host.server.peers.size() == 2)
-	if not result.has("welcome"):
-		print("      ", result)
+	await wait_for(func() -> bool: return got.has("welcome") or got.has("failed"))
+	if not got.has("welcome"):
+		check("the client is welcomed into the lobby", false)
+		print("      ", got)
 		host.leave()
 		client.leave()
 		return
 	var cid := client.my_id
+	await wait_for(func() -> bool: return client.lobby.size() == 2)
+	check("the client is in the host's lobby, and both see both (names, characters)", client.phase == "lobby"
+		and host.lobby.has(cid) and host.lobby[cid].character == "sharpshooter" and client.lobby.size() == 2
+		and client.lobby[1].name == "Hosty" and client.lobby[1].character == "bomber")
+
+	# ready up; un-readying during the countdown stops it
+	host.set_me("bomber", true)
+	client.set_me("brawler", true)
+	await wait_for(func() -> bool: return host.countdown > 0)
+	check("changing character and readying reaches the host; everyone ready starts the countdown",
+		host.lobby[cid].character == "brawler" and host.lobby[cid].ready and host.countdown > 0)
+	await wait_for(func() -> bool: return client.countdown > 0)
+	check("the client sees the countdown", client.countdown > 0)
+	client.set_me("brawler", false)
+	await wait_for(func() -> bool: return host.countdown < 0)
+	check("un-readying stops the countdown", host.countdown < 0 and host.phase == "lobby")
+	client.set_me("brawler", true)
+	await wait_for(func() -> bool: return got.has("host_load") and got.has("client_load"), 900)
+	check("after the countdown everyone is told to load the first stage (%s)" % Characters.FIRST_STAGE,
+		got.get("host_load", "") == Characters.FIRST_STAGE and got.get("client_load", "") == Characters.FIRST_STAGE)
+	host.report_loaded(stage_sum)
+	await wait_for(func() -> bool: return host.lobby[1].loaded, 60)
+	check("the run waits for everyone to load", not got.has("host_go") and host.phase == "loading")
+	client.report_loaded(stage_sum)
+	await wait_for(func() -> bool: return got.has("host_go") and got.has("client_go"))
+	check("when the last one has loaded, the run starts for everyone", got.has("host_go") and got.has("client_go")
+		and host.server.peers.size() == 2 and host.phase == "run")
+	check("everyone plays their character: kit and color", host.server.peers[cid].loadout == Characters.loadout("brawler")
+		and host.server.peers[1].color == Characters.get_info("bomber").color)
+
 	var start := Vector3(host.server.peers[cid].sim.px, 0, host.server.peers[cid].sim.pz)
 	for i in 120:
 		var c := Cmd.new()
@@ -418,35 +456,34 @@ func enet() -> void:
 	var me_state: PackedFloat64Array = client.me.get("state", PackedFloat64Array())
 	check("the client gets its own full state back, acknowledged up to its latest inputs",
 		me_state.size() == PlayerSim.STATE_SIZE and client.me.seq >= 110)
-	check("join events arrive on both sides", host.events.any(func(e: Dictionary) -> bool: return e.type == "join" and e.id == cid))
 	check("ping is measured (%.0f ms)" % client.ping, client.ping >= 0.0 and client.ping < 200.0)
 
-	# someone with a different copy of the map is told why
-	var bad := Net.new()
-	bad.name = "Net"
-	var bad_root := Node.new()
-	bad_root.name = "BadSide"
-	root.add_child(bad_root)
-	set_multiplayer(SceneMultiplayer.new(), bad_root.get_path())
-	bad_root.add_child(bad)
-	var bad_result := {}
-	bad.failed.connect(func(why: String) -> void: bad_result.failed = why)
-	bad.joined.connect(func(_w: Dictionary) -> void: bad_result.joined = true)
-	bad.join("localhost:%d" % port, "Other", {}, {"bean-street": 12345})
-	for i in 300:
-		await physics_frame
-		if not bad_result.is_empty():
-			break
-	check("a different copy of the map is refused with a reason", bad_result.has("failed")
-		and String(bad_result.failed).contains("different"))
+	# someone joining mid-run loads and drops in; a different copy of the map is refused
+	var late := side("LateSide")
+	var late_got := {}
+	late.load_stage.connect(func(id: String) -> void:
+		late_got.load = id
+		late.report_loaded(stage_sum))
+	late.run_started.connect(func(_st: Dictionary) -> void: late_got.go = true)
+	late.join("127.0.0.1:%d" % port, "Latey", "bomber")
+	await wait_for(func() -> bool: return late_got.has("go"))
+	check("joining mid-run loads the stage and drops you straight in", late_got.has("go")
+		and host.server.peers.has(late.my_id))
+	var bad := side("BadSide")
+	var bad_got := {}
+	bad.load_stage.connect(func(_id: String) -> void: bad.report_loaded(12345))
+	bad.failed.connect(func(why: String) -> void: bad_got.failed = why)
+	bad.run_started.connect(func(_st: Dictionary) -> void: bad_got.go = true)
+	bad.join("localhost:%d" % port, "Other", "brawler")
+	await wait_for(func() -> bool: return not bad_got.is_empty())
+	check("a different copy of the map is refused with a reason", bad_got.has("failed")
+		and String(bad_got.failed).contains("different"))
 
 	client.leave()
-	for i in 120:
-		await physics_frame
-		if host.server.peers.size() == 1:
-			break
-	check("when the client leaves, the host drops them", host.server.peers.size() == 1)
+	await wait_for(func() -> bool: return not host.server.peers.has(cid) and not host.lobby.has(cid), 240)
+	check("when the client leaves, the host drops them", not host.server.peers.has(cid) and not host.lobby.has(cid))
 	host.leave()
+	late.leave()
 	bad.leave()
 	check("addresses parse: playit style, bare host, bad port", Net.parse_address("abc.gl.joinmc.link:12345") == ["abc.gl.joinmc.link", 12345]
 		and Net.parse_address("192.168.1.5") == ["192.168.1.5", Net.DEFAULT_PORT] and Net.parse_address("x:99999").is_empty())

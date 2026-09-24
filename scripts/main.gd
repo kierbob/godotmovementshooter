@@ -4,22 +4,28 @@ extends Node3D
 ## menu / playing / paused. Online (see Net / MatchServer), it predicts your own movement and gun
 ## locally, corrects to the host's state when it arrives, and draws everyone else.
 ##
+## A run (solo or online) and practice both go lobby/menu -> LoadingScreen -> reload this scene into
+## the stage -> play. While a loading screen is up, building the scene yields a frame between steps
+## so the card keeps moving and shows how far along it is.
+##
 ## Command-line options (after `--`), handy for testing:
 ##   --map=bean-town          start on another map from maps/
 ##   --at=x,y,z,yaw,pitch     start playing, placed there
 ##   --screen=main|maps|pause|settings:<tab>   open a menu screen
 ##   --shot=path.png          save a screenshot after --frames=N frames, then quit
-##   --host[=port]            host a multiplayer match on the chosen map
-##   --join=address:port      join a match
+##   --host[=port]            host a multiplayer lobby
+##   --join=address:port      join a lobby
+##   --ready                  ready up in the lobby straight away
+##   --solo                   start a solo run
 ##   --name=Bean              your online name
 
 const SENS_BASE := 0.022 * PI / 180.0 # radians per mouse count at sensitivity 1 (CS2 / Apex scale)
 
-static var auto_play := false # set before reloading into another map from the menu
-static var auto_trial := "" # "off" / "on": also go straight onto that time trial after the reload
-static var auto_online := "" # "host" / "join": carry on into the match after reloading into its map
+## What to do once this scene has (re)built: {mode: "solo" | "online" | "practice", stage, trial}.
+static var pending_run := {}
 static var pending_hint := "" # shown on the multiplayer screen after a reload (e.g. "Disconnected")
-static var _net_args_done := false # --host / --join only once (not again after reloading into a map)
+static var _net_args_done := false # --host / --join / --solo only once (not again after reloading)
+static var _auto_ready := false # --ready
 
 var state := "menu" # "menu" | "playing" | "paused"
 var map_id := "" # which map this scene built
@@ -76,6 +82,8 @@ var _visual_offset := Vector3.ZERO # corrections are eased out instead of poppin
 var _remote_targets := {} # id -> Combat.Target: other players, so our shots stop on them
 var _remote_proj := {} # "owner:id" -> Combat.Projectile: other players' rockets, grenades, knives
 var _killer := "" # who got us last (death screen)
+var _built := false # the scene finished building (it yields frames while a loading screen is up)
+var _waiting_run := false # online: loaded the stage, waiting for the others
 
 
 func _ready() -> void:
@@ -86,11 +94,14 @@ func _ready() -> void:
 	if not maps.has(Settings.map):
 		Settings.map = maps[0] if not maps.is_empty() else "dev_map"
 	map_id = Settings.map
+	await _step(0.0, "Reading the stage")
 	map = MapData.load_map(map_id) # maps/<id>.tscn, edited in the Godot editor
+	await _step(0.2, "Building the world")
 	WorldView.build_world(map, self)
 	WorldView.build_pads(map, self)
 	clouds = WorldView.build_clouds(self)
 	combat = Combat.new(map.boxes, map.targets)
+	await _step(0.5, "Loading guns and effects")
 	combat_view = CombatView.new()
 	add_child(combat_view)
 	remote_view = RemoteView.new()
@@ -106,6 +117,7 @@ func _ready() -> void:
 	sound = Sound.new()
 	add_child(sound)
 	viewmodel.set_msaa(Settings.QUALITY[Settings.quality].msaa)
+	await _step(0.85, "Almost there")
 
 	camera = Camera3D.new()
 	camera.fov = Settings.fov
@@ -136,6 +148,9 @@ func _ready() -> void:
 	menu.host_match.connect(_on_host)
 	menu.join_match.connect(_on_join)
 	menu.cancel_online.connect(_on_cancel_online)
+	menu.lobby_character.connect(_on_lobby_character)
+	menu.lobby_ready.connect(_on_lobby_ready)
+	menu.lobby_leave.connect(_on_lobby_leave)
 	combat_view.word.connect(hud.word)
 	# Gun words sit a little left of / above the muzzle so they don't cover the gun.
 	viewmodel.word.connect(func(text: String, at: Vector2, style: String) -> void:
@@ -153,31 +168,56 @@ func _ready() -> void:
 		trial_view = TrialView.new()
 		add_child(trial_view)
 		trial_view.setup(trial)
-	if auto_online != "":
-		var mode := auto_online
-		auto_online = ""
-		_enter_menu()
-		menu.show_screen("online")
-		if mode == "host":
-			_on_host(Settings.host_port)
-		elif Net.instance and Net.instance.connected:
-			net = Net.instance
-			_connect_net()
-			_start_online(net.welcome)
-	elif auto_play:
-		auto_play = false
-		_start_play()
-		if auto_trial != "" and trial:
-			trial.enter(player, auto_trial == "on")
-			_handle_trial_events()
-		auto_trial = ""
-	else:
-		_enter_menu()
-		if pending_hint != "":
-			menu.show_screen("online")
-			menu.set_online_status(pending_hint)
-			pending_hint = ""
+	_built = true
+	var run := pending_run
+	pending_run = {}
+	match run.get("mode", ""):
+		"solo", "practice":
+			_start_play()
+			if run.get("trial", "") != "" and trial:
+				trial.enter(player, run.trial == "on")
+				_handle_trial_events()
+			LoadingScreen.finish()
+		"online":
+			_enter_menu()
+			menu.show_screen("")
+			if Net.instance and Net.instance.connected:
+				net = Net.instance
+				_connect_net()
+				_waiting_run = true
+				net.report_loaded(Net.map_checksum(map))
+			else:
+				LoadingScreen.finish()
+				_enter_menu()
+		_:
+			LoadingScreen.finish()
+			_enter_menu()
+			if Net.instance and Net.instance.connected:
+				net = Net.instance # back from something, still in a lobby
+				_connect_net()
+				_open_online_lobby()
+			elif pending_hint != "":
+				menu.show_screen("online")
+				menu.set_online_status(pending_hint)
+				pending_hint = ""
 	_apply_args_state()
+
+
+## One building step: with a loading screen up, show progress and let a frame draw.
+func _step(frac: float, text: String) -> void:
+	if LoadingScreen.is_up():
+		LoadingScreen.progress(frac, text)
+		await get_tree().process_frame
+
+
+## Load `stage` behind the loading screen, then carry on with `run` (see pending_run).
+func _load_into(kicker: String, stage: String, run: Dictionary) -> void:
+	pending_run = run
+	pending_run.stage = stage
+	LoadingScreen.begin(get_tree(), kicker, stage, func() -> void:
+		Settings.map = stage
+		Settings.save_settings()
+		get_tree().reload_current_scene())
 
 
 # ---------- states ----------
@@ -198,7 +238,7 @@ func _start_play() -> void:
 	top_speed = 0.0
 	eye = Cfg.PLAYER_EYE_HEIGHT
 	prev_pos = _player_pos()
-	combat.set_loadout(Settings.loadout)
+	combat.set_loadout(Settings.loadout())
 	_last_move_t = -1.0 # a new PlayerSim starts its clock at 0
 	combat.reset_targets()
 	combat_view.clear()
@@ -225,29 +265,14 @@ func _resume() -> void:
 	menu.show_screen("")
 
 
+## Practice on a map (free play with its dummies), behind the loading screen.
 func _on_play(id: String) -> void:
-	if id != map_id:
-		# The world is built once per scene: reload into the new map and start right away.
-		Settings.map = id
-		Settings.save_settings()
-		auto_play = true
-		get_tree().reload_current_scene()
-		return
-	_start_play()
+	_load_into("PRACTICE", id, {"mode": "practice"})
 
 
 ## Straight onto a time trial from the menu (the course lives on the dev map).
 func _on_play_trial(guns: bool) -> void:
-	if map_id != "dev_map" or trial == null:
-		Settings.map = "dev_map"
-		Settings.save_settings()
-		auto_play = true
-		auto_trial = "on" if guns else "off"
-		get_tree().reload_current_scene()
-		return
-	_start_play()
-	trial.enter(player, guns)
-	_handle_trial_events()
+	_load_into("TIME TRIAL", "dev_map", {"mode": "practice", "trial": "on" if guns else "off"})
 
 
 ## Guns are off on the "guns off" time trial; everything else has them.
@@ -294,7 +319,7 @@ func _on_settings_changed(what: String) -> void:
 
 func _notification(what: int) -> void:
 	# Alt-tab / clicking another window opens the menu (solo: the game freezes; online it carries on).
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and state == "playing" and _shot_path == "":
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and _built and state == "playing" and _shot_path == "":
 		_pause()
 
 
@@ -312,6 +337,8 @@ func _parse_args() -> void:
 			Settings.lighting = a.substr(11)
 		elif a.begins_with("--name="):
 			Settings.player_name = a.substr(7)
+		elif a == "--ready":
+			_auto_ready = true
 
 
 func _apply_args_state() -> void:
@@ -332,6 +359,10 @@ func _apply_args_state() -> void:
 		elif a.begins_with("--join=") and not _net_args_done:
 			_net_args_done = true
 			_on_join(a.substr(7))
+		elif a == "--solo" and not _net_args_done:
+			_net_args_done = true
+			menu.open_lobby("solo")
+			_on_lobby_ready(true)
 		elif a.begins_with("--screen="):
 			var sc := a.substr(9)
 			if sc == "pause":
@@ -419,6 +450,8 @@ func _build_beans() -> void:
 # ---------- input ----------
 
 func _input(event: InputEvent) -> void:
+	if not _built:
+		return
 	if menu.listening != "":
 		return # the settings screen is waiting for a new keybind
 	if event.is_action_pressed("fullscreen"):
@@ -503,6 +536,8 @@ func _sample() -> Cmd:
 # ---------- simulation (fixed 120 Hz) ----------
 
 func _physics_process(_delta: float) -> void:
+	if not _built:
+		return
 	if online:
 		_online_tick()
 		return
@@ -540,7 +575,15 @@ func _player_pos() -> Vector3:
 # ---------- per frame ----------
 
 func _process(delta: float) -> void:
+	if not _built:
+		return
 	var dt := minf(delta, 0.1)
+	if _waiting_run and net:
+		var loaded := 0
+		for m: Dictionary in net.lobby.values():
+			if m.loaded:
+				loaded += 1
+		LoadingScreen.wait_for_players("Waiting for everyone to load (%d/%d)" % [loaded, net.lobby.size()])
 	var cur := _player_pos()
 	var speed := player.horizontal_speed()
 	if state == "menu":
@@ -720,19 +763,18 @@ func _connect_net() -> void:
 		net.joined.connect(_on_net_joined)
 		net.failed.connect(_on_net_failed)
 		net.left.connect(_on_net_left)
+		net.lobby_changed.connect(_refresh_lobby)
+		net.load_stage.connect(_on_load_stage)
+		net.run_started.connect(_on_run_started)
 
 
-## Host a match on the selected map (reloading into it first if this scene built another one).
+## Open a lobby that friends can join.
 func _on_host(port: int) -> void:
-	if Settings.map != map_id:
-		auto_online = "host"
-		get_tree().reload_current_scene()
-		return
 	net = Net.get_instance(get_tree())
 	_connect_net()
-	var err := net.host(port, map_id, map, Settings.player_name, Settings.loadout)
+	var err := net.host(port, Settings.player_name, Settings.character)
 	if err != OK:
-		menu.set_online_status("Couldn't host on port %d (%s). Is another match already running on it?" % [port, error_string(err)])
+		menu.set_online_status("Couldn't host on port %d (%s). Is another game already running on it?" % [port, error_string(err)])
 
 
 func _on_join(address: String) -> void:
@@ -741,11 +783,7 @@ func _on_join(address: String) -> void:
 		return
 	net = Net.get_instance(get_tree())
 	_connect_net()
-	# Our copy of every map, so the host can tell us if theirs is different.
-	var sums := {}
-	for id in MapData.list():
-		sums[id] = Net.map_checksum(MapData.load_map(id))
-	var err := net.join(address, Settings.player_name, Settings.loadout, sums)
+	var err := net.join(address, Settings.player_name, Settings.character)
 	if err != OK:
 		menu.set_online_status("Couldn't start connecting (%s)." % error_string(err))
 	else:
@@ -758,31 +796,107 @@ func _on_cancel_online() -> void:
 
 
 func _on_net_joined(w: Dictionary) -> void:
-	if w.map != map_id:
-		# The host plays another map: reload into it (the connection stays up) and carry on.
-		Settings.map = w.map
-		Settings.save_settings()
-		auto_online = "join"
-		get_tree().reload_current_scene()
+	menu.set_online_status("")
+	_open_online_lobby()
+	if w.get("phase", "lobby") != "lobby":
+		menu.lobby.set_status("Joining the run in progress...")
+
+
+func _open_online_lobby() -> void:
+	var note := ""
+	if net.is_host():
+		var ips := PackedStringArray()
+		for ip in IP.get_local_addresses():
+			if ip.begins_with("192.168.") or ip.begins_with("10."):
+				ips.append("%s:%d" % [ip, Settings.host_port])
+		note = "Friends join with your playit.gg address (UDP tunnel to port %d)%s." % [Settings.host_port,
+			(", or on your Wi-Fi: " + " / ".join(ips)) if not ips.is_empty() else ""]
+	menu.open_lobby("host" if net.is_host() else "client", note)
+	_refresh_lobby()
+	if _auto_ready:
+		menu.lobby.set_ready(true)
+		net.set_me(Settings.character, true)
+
+
+## The lobby list and countdown, from the host's copy.
+func _refresh_lobby() -> void:
+	if net == null or menu.screen != "lobby" or menu.lobby_mode == "solo":
 		return
-	_start_online(w)
+	var rows := []
+	var ready_count := 0
+	for id: int in net.lobby:
+		var m: Dictionary = net.lobby[id]
+		if m.is_empty():
+			continue
+		rows.append({"name": m.name, "character": m.character, "ready": m.ready, "you": id == net.my_id})
+		if m.ready:
+			ready_count += 1
+	menu.lobby.set_players(rows)
+	if net.countdown >= 0:
+		menu.lobby.set_status("Starting in %d..." % ceili(net.countdown))
+	elif net.phase == "loading" or net.phase == "run":
+		menu.lobby.set_status("Joining the run in progress...")
+	else:
+		menu.lobby.set_status("Waiting for everyone to ready up (%d/%d)" % [ready_count, rows.size()])
+
+
+func _on_lobby_character(id: String) -> void:
+	if menu.lobby_mode != "solo" and net:
+		net.set_me(id, menu.lobby.ready_on)
+
+
+func _on_lobby_ready(on: bool) -> void:
+	if menu.lobby_mode == "solo":
+		if on:
+			_load_into("STAGE 1", Characters.FIRST_STAGE, {"mode": "solo"})
+	elif net:
+		net.set_me(Settings.character, on)
+
+
+func _on_lobby_leave() -> void:
+	if menu.lobby_mode == "solo":
+		menu.show_screen("main")
+	else:
+		if net:
+			net.leave()
+		menu.show_screen("online")
+
+
+## Everyone was ready: load the stage behind the loading screen, then tell the host we're in.
+func _on_load_stage(stage: String) -> void:
+	_load_into("STAGE 1", stage, {"mode": "online"})
+
+
+## Everyone has loaded: the run starts.
+func _on_run_started(start: Dictionary) -> void:
+	if not _built:
+		return
+	_waiting_run = false
+	_start_online(start)
+	LoadingScreen.finish()
 
 
 func _on_net_failed(reason: String) -> void:
+	LoadingScreen.finish()
+	if menu.screen == "lobby" or state != "menu":
+		_leave_match(reason)
+		return
 	menu.set_online_status(reason)
 
 
 func _on_net_left(reason: String) -> void:
-	if online:
-		_leave_match(reason)
+	_leave_match(reason)
 
 
 ## Back to the menu from a match (reloads the scene so everything solo starts fresh).
 func _leave_match(reason: String) -> void:
 	online = false
+	_waiting_run = false
 	if net:
 		net.leave()
 	pending_hint = reason
+	pending_run = {}
+	LoadingScreen.finish()
 	get_tree().reload_current_scene()
 
 
@@ -864,7 +978,7 @@ func _reconcile() -> void:
 		_visual_offset = Vector3.ZERO # respawn / big correction: just go there
 	prev_pos -= d
 	if was_dead and not player.dead:
-		combat.set_loadout(Settings.loadout) # the host gave us fresh ammo on respawn
+		combat.set_loadout(Settings.loadout()) # the host gave us fresh ammo on respawn
 
 
 ## Once per frame online: other players, their projectiles, the host's events, the online HUD.
