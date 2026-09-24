@@ -41,7 +41,9 @@ var kind := "block":
 		_push()
 
 var _view: MeshInstance3D
-var _syncing := false
+# The transform we last applied: change notifications arrive a frame late, so this tells our own
+# update apart from an edit in the editor (see MapPoint).
+var _pushed := Transform3D()
 
 
 func _ready() -> void:
@@ -51,7 +53,8 @@ func _ready() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_TRANSFORM_CHANGED and Engine.is_editor_hint() and not _syncing:
+	if what == NOTIFICATION_TRANSFORM_CHANGED and Engine.is_editor_hint() \
+			and not global_transform.is_equal_approx(_pushed):
 		_pull()
 
 
@@ -86,14 +89,13 @@ func max_corner() -> Vector3:
 
 ## Transform from the exact values (on load, or when `box` is typed into the Inspector).
 func _push() -> void:
-	_syncing = true
 	var c := (min_corner() + max_corner()) / 2.0
 	var s := (max_corner() - min_corner()).max(Vector3.ONE * 0.001)
 	if is_inside_tree():
 		global_transform = Transform3D(Basis.from_scale(s), c)
+		_pushed = global_transform
 	else:
 		transform = Transform3D(Basis.from_scale(s), c)
-	_syncing = false
 	_refresh()
 
 
