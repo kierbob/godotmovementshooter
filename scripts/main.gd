@@ -901,6 +901,7 @@ func _update_online(dt: float) -> void:
 	if not net.is_host():
 		badge += " · %d MS" % roundi(net.ping)
 	hud.online.update(dt, player, yaw, float(net.me.get("respawn_in", 0.0)), _killer, badge)
+	viewmodel.visible = state != "menu" and not player.dead # no gun while splatted
 	var rows := []
 	for p: Dictionary in net.players:
 		var info: Dictionary = net.roster.get(p.id, {"name": "Bean", "color": Color.WHITE})

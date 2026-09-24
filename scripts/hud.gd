@@ -108,6 +108,7 @@ func _ready() -> void:
 	_build_ability()
 	_build_trial()
 	online = OnlineHud.new()
+	online.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(online)
 	move_child(online, 0) # under the crosshair and words
 	_plain_dot = PlainDot.new()

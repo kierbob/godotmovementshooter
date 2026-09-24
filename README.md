@@ -1,6 +1,7 @@
 # Movement Shooter (Godot)
 
-Godot 4.6 port of the web game (`../movement-shooter`). Single player for now; multiplayer comes later.
+Godot 4.6 port of the web game (`../movement-shooter`). Play solo, or online with friends (one of
+you hosts, see "Playing online").
 
 ## Play
 
@@ -23,7 +24,8 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 | R | reload |
 | 1 / 2 / mouse wheel | primary / secondary weapon |
 | Q | ability (grenade / knife / impulse charge) |
-| K | respawn (on the time trial: restart the run) |
+| K | respawn (on the time trial: restart the run; not online) |
+| Tab | scoreboard (online, hold) |
 | Esc | pause menu |
 | F2 | next map (dev shortcut) |
 | F4 | stats panel (full / compact / off) |
@@ -36,6 +38,10 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   top: flying or jumping into a ramp uphill lands you on the slope instead of teleporting you back
   to its bottom (a bug the web game still has). Mouse look uses
   Godot's raw mouse input.
+- **Multiplayer** (see "Playing online"): host or join by address (playit.gg works), free-for-all
+  up to 8, other players as beans in their color with name tags and their gun, predicted
+  movement with corrections, lag-compensated hits, health / regen / respawns / spawn
+  protection, kill feed, hold-Tab scoreboard, hurt flash and a direction arrow.
 - **Maps**, as scenes you edit in the Godot editor (`maps/`, see "Editing maps" below):
   - **Dev Arena**: the web game's dev map with every number kept exact, plus the time trial.
   - **Bean Town**: a Nuketown-style FFA map. Two two-story houses face each other across a
@@ -76,13 +82,48 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   The clock starts at the start line and stops in the checkered finish gate; falling off or
   pressing K restarts; best and last times show on the timer board and the HUD and are saved.
 
+## Playing online
+
+One player hosts; the match runs on their PC and they play in it like everyone else. Up to 8
+players. Everyone needs the same version of the game (and the same maps).
+
+**Host:** Main menu → **MULTIPLAYER** → set your name → pick the map (**CHANGE**) → **HOST**.
+The game listens on UDP port 7777 (change it on the same screen). If Windows Firewall asks, allow
+it. Then give your friends an address:
+
+- **Friends over the internet: playit.gg** (free). Install and run the playit.gg program, sign
+  in, and add a **UDP** tunnel pointing at local port **7777** (the port on the host screen).
+  playit shows a public address like `abc.gl.at.ply.gg:12345`: send your friends that. Keep
+  playit running while you play. (Port-forwarding UDP 7777 on your router works too, then they
+  use your public IP.)
+- **Same Wi-Fi:** they can use your PC's local address; the host screen lists it
+  (like `192.168.1.20:7777`).
+
+**Join:** **MULTIPLAYER** → set your name → paste the address → **JOIN**. If the host is on a
+different map, your game switches to it by itself. You play with your own loadout.
+
+In the match: free-for-all. 100 HP, you regenerate 3 s after the last hit, respawn 2.5 s after
+getting splatted with 1.5 s of spawn protection (you blink, your health bar turns blue). Hold
+**Tab** for the scoreboard. Esc opens the menu but the match keeps going (**LEAVE MATCH** to
+go). If the host leaves, everyone goes back to the menu.
+
+How it works (the web game's netcode, ported): the host runs everyone's movement and guns at
+120 ticks/s (`MatchServer`) and sends 30 snapshots a second. Your own movement and gun run on
+your PC straight away (no input lag) and get corrected if the host disagrees; other players are
+drawn 100 ms in the past, smoothed between snapshots, and the host checks your shots against
+where people were on your screen (lag compensation). Tested headless with a relay adding 60 ms
+each way plus 2% packet loss.
+
+Shortcuts for testing: `-- --host`, `-- --host=7777`, `-- --join=address:port`, `-- --name=Bean`
+on the Godot command line (after `--`).
+
 ## Editing maps
 
 Open `maps/dev_map.tscn` or `maps/bean-town.tscn` in the Godot editor. Every piece is a node:
 
 - **MapBox**: a solid box. Move it and scale it with the normal gizmos (position = center, scale =
   size in meters). In the Inspector: `kind` (its color: floor, wall, grass, road, house_blue,
-  roof, bus...; the list is `WorldView.COLORS`) and `ramp`
+  roof, bus...; the list is `WorldView.COLORS`; `barrier` is an invisible wall) and `ramp`
   (a sloped top rising toward x+, x-, z+ or z-). Don't rotate boxes: collision is axis-aligned
   (the editor shows a warning if you do). Ctrl+D duplicates a box to make a new one.
 - **MapPad**: jump pad (radius, launch speed, directional launchers).
@@ -121,6 +162,9 @@ headshots on the dummies, knockback, rocket jumps, abilities and shots against r
 `tests/trial_test.gd` checks the time trial (portals, start line, finish, falling off, records,
 guns off/on), `tests/sound_test.gd` checks every sound is there and plays, and
 `tests/map_test.gd` checks map scenes (JSON to scene is exact, maps load, editing rewrites values).
+`tests/net_test.gd` checks multiplayer: packing, the host's simulation matching your prediction
+exactly, damage / kills / respawns, knockback on other players, lag compensation, corrections
+under lag, and a real host and client over localhost.
 
 ```
 godot --headless --path . --script res://tests/menu_test.gd
@@ -128,10 +172,13 @@ godot --headless --path . --script res://tests/combat_test.gd
 godot --headless --path . --script res://tests/trial_test.gd
 godot --headless --path . --script res://tests/sound_test.gd
 godot --headless --path . --script res://tests/map_test.gd
+godot --headless --path . --script res://tests/net_test.gd
 ```
 
 ## Next
 
-1. Bot Arena mode: bean bots that move, aim and shoot back; your health, dying and respawning.
-2. More menu and settings polish (a mode picker once the modes exist).
-3. Later: multiplayer.
+1. Bot Arena mode: bean bots that move, aim and shoot back (the health, dying and respawning from
+   multiplayer are ready for it).
+2. More multiplayer: team modes, a match timer / score limit, a dedicated server option, better
+   animations for other players than the crouch/slide squash.
+3. More menu and settings polish (a mode picker once the modes exist, crosshair options).

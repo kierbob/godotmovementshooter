@@ -60,6 +60,11 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(func() -> void: _drop("The host closed the match."))
 
 
+## Quitting mid-match hangs up properly, so the host drops us at once instead of timing out.
+func _exit_tree() -> void:
+	leave()
+
+
 ## The shared one, created on first use under the tree's root.
 static func get_instance(tree: SceneTree) -> Net:
 	if instance == null or not is_instance_valid(instance):
@@ -280,11 +285,21 @@ func _server_tick() -> void:
 # ---------- connection events ----------
 
 func _on_connected() -> void:
+	_quick_timeout(1)
 	_hello_rpc.rpc_id(1, _hello)
 
 
-func _on_peer_connected(_id: int) -> void:
-	pass # they introduce themselves with _hello_rpc
+func _on_peer_connected(id: int) -> void:
+	_quick_timeout(id) # they introduce themselves with _hello_rpc
+
+
+## Notice a vanished peer (crash, pulled cable) in seconds instead of ENet's default half minute.
+func _quick_timeout(id: int) -> void:
+	if _peer == null:
+		return
+	var p := _peer.get_peer(id)
+	if p:
+		p.set_timeout(32, 4000, 8000)
 
 
 func _on_peer_disconnected(id: int) -> void:
