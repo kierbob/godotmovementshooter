@@ -1,0 +1,1803 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/map/map_root.gd" id="1_ups0j"]
+[ext_resource type="Script" path="res://scripts/map/map_box.gd" id="2_8b0y2"]
+[ext_resource type="Script" path="res://scripts/map/map_target.gd" id="3_m3yyt"]
+[ext_resource type="Script" path="res://scripts/map/map_pad.gd" id="4_cjvs5"]
+[ext_resource type="Script" path="res://scripts/map/map_spawn.gd" id="5_qxlf1"]
+
+[node name="BeanTown" type="Node3D" unique_id=484528738]
+script = ExtResource("1_ups0j")
+map_name = "Bean Town"
+tag = "FFA map"
+desc = "Nuketown-style cul-de-sac · big windows, rooftops, a bus to launch over, street launchers"
+art = "TOWN"
+grad_from = Color(1, 0.7019608, 0.2784314, 1)
+grad_to = Color(1, 0.36862746, 0.38431373, 1)
+
+[node name="Ground" type="Node3D" parent="." unique_id=2106591749]
+
+[node name="Road" type="Node3D" parent="Ground" unique_id=1950122378]
+transform = Transform3D(100, 0, 0, 0, 1, 0, 0, 0, 14, 0, -0.5, 0)
+script = ExtResource("2_8b0y2")
+kind = "road"
+box = PackedFloat64Array(-50, -1, -7, 50, 0, 7)
+web_box = PackedFloat64Array()
+
+[node name="SidewalkNorth" type="Node3D" parent="Ground" unique_id=1633141775]
+transform = Transform3D(100, 0, 0, 0, 1, 0, 0, 0, 2, 0, -0.5, -8)
+script = ExtResource("2_8b0y2")
+kind = "sidewalk"
+box = PackedFloat64Array(-50, -1, -9, 50, 0, -7)
+web_box = PackedFloat64Array()
+
+[node name="SidewalkSouth" type="Node3D" parent="Ground" unique_id=96441883]
+transform = Transform3D(100, 0, 0, 0, 1, 0, 0, 0, 2, 0, -0.5, 8)
+script = ExtResource("2_8b0y2")
+kind = "sidewalk"
+box = PackedFloat64Array(-50, -1, 7, 50, 0, 9)
+web_box = PackedFloat64Array()
+
+[node name="GrassNorth1" type="Node3D" parent="Ground" unique_id=1785428110]
+transform = Transform3D(100, 0, 0, 0, 1, 0, 0, 0, 7.3999996, 0, -0.5, -30.3)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(-50, -1, -34, 50, 0, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="GrassNorth2" type="Node3D" parent="Ground" unique_id=213106424]
+transform = Transform3D(0.39999962, 0, 0, 0, 1, 0, 0, 0, 11.6, -10.2, -0.5, -20.8)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(-10.4, -1, -26.6, -10, 0, -15)
+web_box = PackedFloat64Array()
+
+[node name="GrassNorth3" type="Node3D" parent="Ground" unique_id=605164157]
+transform = Transform3D(51.4, 0, 0, 0, 1, 0, 0, 0, 11.6, 24.3, -0.5, -20.8)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(-1.4, -1, -26.6, 50, 0, -15)
+web_box = PackedFloat64Array()
+
+[node name="GrassNorth4" type="Node3D" parent="Ground" unique_id=455784664]
+transform = Transform3D(18.4, 0, 0, 0, 1, 0, 0, 0, 13.200001, -40.8, -0.5, -20)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(-50, -1, -26.6, -31.6, 0, -13.4)
+web_box = PackedFloat64Array()
+
+[node name="GrassNorth5" type="Node3D" parent="Ground" unique_id=1383382734]
+transform = Transform3D(60.4, 0, 0, 0, 1, 0, 0, 0, 1.6000004, 19.8, -0.5, -14.2)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(-10.4, -1, -15, 50, 0, -13.4)
+web_box = PackedFloat64Array()
+
+[node name="GrassNorth6" type="Node3D" parent="Ground" unique_id=1299597192]
+transform = Transform3D(100, 0, 0, 0, 1, 0, 0, 0, 4.3999996, 0, -0.5, -11.2)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(-50, -1, -13.4, 50, 0, -9)
+web_box = PackedFloat64Array()
+
+[node name="GrassSouth1" type="Node3D" parent="Ground" unique_id=1584318397]
+transform = Transform3D(100, 0, 0, 0, 1, 0, 0, 0, 4.3999996, 0, -0.5, 11.2)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(-50, -1, 9, 50, 0, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="GrassSouth2" type="Node3D" parent="Ground" unique_id=150212719]
+transform = Transform3D(60.4, 0, 0, 0, 1, 0, 0, 0, 1.6000004, -19.8, -0.5, 14.2)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(-50, -1, 13.4, 10.4, 0, 15)
+web_box = PackedFloat64Array()
+
+[node name="GrassSouth3" type="Node3D" parent="Ground" unique_id=16726795]
+transform = Transform3D(51.4, 0, 0, 0, 1, 0, 0, 0, 11.6, -24.3, -0.5, 20.8)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(-50, -1, 15, 1.4, 0, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="GrassSouth4" type="Node3D" parent="Ground" unique_id=703407951]
+transform = Transform3D(0.39999962, 0, 0, 0, 1, 0, 0, 0, 11.6, 10.2, -0.5, 20.8)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(10, -1, 15, 10.4, 0, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="GrassSouth5" type="Node3D" parent="Ground" unique_id=1707275212]
+transform = Transform3D(18.4, 0, 0, 0, 1, 0, 0, 0, 13.200001, 40.8, -0.5, 20)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(31.6, -1, 13.4, 50, 0, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="GrassSouth6" type="Node3D" parent="Ground" unique_id=1870944501]
+transform = Transform3D(100, 0, 0, 0, 1, 0, 0, 0, 7.3999996, 0, -0.5, 30.3)
+script = ExtResource("2_8b0y2")
+kind = "grass"
+box = PackedFloat64Array(-50, -1, 26.6, 50, 0, 34)
+web_box = PackedFloat64Array()
+
+[node name="Boundary" type="Node3D" parent="." unique_id=127773455]
+
+[node name="WallNorth" type="Node3D" parent="Boundary" unique_id=726148491]
+transform = Transform3D(102, 0, 0, 0, 9, 0, 0, 0, 1, 0, 3.5, -34.5)
+script = ExtResource("2_8b0y2")
+kind = "wall"
+box = PackedFloat64Array(-51, -1, -35, 51, 8, -34)
+web_box = PackedFloat64Array()
+
+[node name="WallSouth" type="Node3D" parent="Boundary" unique_id=757268225]
+transform = Transform3D(102, 0, 0, 0, 9, 0, 0, 0, 1, 0, 3.5, 34.5)
+script = ExtResource("2_8b0y2")
+kind = "wall"
+box = PackedFloat64Array(-51, -1, 34, 51, 8, 35)
+web_box = PackedFloat64Array()
+
+[node name="WallWest" type="Node3D" parent="Boundary" unique_id=486695362]
+transform = Transform3D(1, 0, 0, 0, 9, 0, 0, 0, 68, -50.5, 3.5, 0)
+script = ExtResource("2_8b0y2")
+kind = "wall"
+box = PackedFloat64Array(-51, -1, -34, -50, 8, 34)
+web_box = PackedFloat64Array()
+
+[node name="WallEast" type="Node3D" parent="Boundary" unique_id=1004032194]
+transform = Transform3D(1, 0, 0, 0, 9, 0, 0, 0, 68, 50.5, 3.5, 0)
+script = ExtResource("2_8b0y2")
+kind = "wall"
+box = PackedFloat64Array(50, -1, -34, 51, 8, 34)
+web_box = PackedFloat64Array()
+
+[node name="Street" type="Node3D" parent="." unique_id=593341759]
+
+[node name="SchoolBus" type="Node3D" parent="Street" unique_id=998910875]
+transform = Transform3D(12, 0, 0, 0, 3, 0, 0, 0, 2.8, 0, 1.5, 0)
+script = ExtResource("2_8b0y2")
+kind = "bus"
+box = PackedFloat64Array(-6, 0, -1.4, 6, 3, 1.4)
+web_box = PackedFloat64Array()
+
+[node name="BusRampWest" type="Node3D" parent="Street" unique_id=1196974450]
+transform = Transform3D(5, 0, 0, 0, 3, 0, 0, 0, 2.8, -8.5, 1.5, 0)
+script = ExtResource("2_8b0y2")
+kind = "crate"
+ramp = "x+"
+box = PackedFloat64Array(-11, 0, -1.4, -6, 3, 1.4)
+web_box = PackedFloat64Array()
+
+[node name="BusRampEast" type="Node3D" parent="Street" unique_id=1532325579]
+transform = Transform3D(5, 0, 0, 0, 3, 0, 0, 0, 2.8, 8.5, 1.5, 0)
+script = ExtResource("2_8b0y2")
+kind = "crate"
+ramp = "x-"
+box = PackedFloat64Array(6, 0, -1.4, 11, 3, 1.4)
+web_box = PackedFloat64Array()
+
+[node name="BlueHouse" type="Node3D" parent="." unique_id=1410558586]
+
+[node name="Floors" type="Node3D" parent="BlueHouse" unique_id=1435725068]
+
+[node name="GroundFloor" type="Node3D" parent="BlueHouse/Floors" unique_id=799019784]
+transform = Transform3D(21.2, 0, 0, 0, 1, 0, 0, 0, 13.200001, -21, -0.5, -20)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(-31.6, -1, -26.6, -10.4, 0, -13.4)
+web_box = PackedFloat64Array()
+
+[node name="GarageFloor" type="Node3D" parent="BlueHouse/Floors" unique_id=207517267]
+transform = Transform3D(8.6, 0, 0, 0, 1, 0, 0, 0, 11.6, -5.7, -0.5, -20.8)
+script = ExtResource("2_8b0y2")
+kind = "sidewalk"
+box = PackedFloat64Array(-10, -1, -26.6, -1.4, 0, -15)
+web_box = PackedFloat64Array()
+
+[node name="Upstairs1" type="Node3D" parent="BlueHouse/Floors" unique_id=1385421435]
+transform = Transform3D(5.6000004, 0, 0, 0, 0.4000001, 0, 0, 0, 2, -28.8, 4.2, -25.6)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(-31.6, 4, -26.6, -26, 4.4, -24.6)
+web_box = PackedFloat64Array()
+
+[node name="Upstairs2" type="Node3D" parent="BlueHouse/Floors" unique_id=2147063996]
+transform = Transform3D(6.6000004, 0, 0, 0, 0.4000001, 0, 0, 0, 2, -13.7, 4.2, -25.6)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(-17, 4, -26.6, -10.4, 4.4, -24.6)
+web_box = PackedFloat64Array()
+
+[node name="Upstairs3" type="Node3D" parent="BlueHouse/Floors" unique_id=2108711987]
+transform = Transform3D(21.2, 0, 0, 0, 0.4000001, 0, 0, 0, 11.200001, -21, 4.2, -19)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(-31.6, 4, -24.6, -10.4, 4.4, -13.4)
+web_box = PackedFloat64Array()
+
+[node name="Walls" type="Node3D" parent="BlueHouse" unique_id=1029942005]
+
+[node name="Front_Ground_Part1" type="Node3D" parent="BlueHouse/Walls" unique_id=581807146]
+transform = Transform3D(1.7999992, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, -31.1, 2.2, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 0, -13.4, -30.2, 4.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Opening1_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=662656827]
+transform = Transform3D(3.6000004, 0, 0, 0, 0.4, 0, 0, 0, 0.39999962, -28.400002, 0.2, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-30.2, 0, -13.4, -26.6, 0.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Opening1_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=1000386762]
+transform = Transform3D(3.6000004, 0, 0, 0, 1.4000001, 0, 0, 0, 0.39999962, -28.400002, 3.7, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-30.2, 3, -13.4, -26.6, 4.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Part2" type="Node3D" parent="BlueHouse/Walls" unique_id=1151814371]
+transform = Transform3D(4, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, -24.6, 2.2, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-26.6, 0, -13.4, -22.6, 4.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Opening2_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=1926834942]
+transform = Transform3D(3.2000008, 0, 0, 0, 1, 0, 0, 0, 0.39999962, -21, 3.9, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-22.6, 3.4, -13.4, -19.4, 4.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Part3" type="Node3D" parent="BlueHouse/Walls" unique_id=1371313719]
+transform = Transform3D(4, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, -17.4, 2.2, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-19.4, 0, -13.4, -15.4, 4.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Opening3_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=2059754346]
+transform = Transform3D(3.5999994, 0, 0, 0, 0.4, 0, 0, 0, 0.39999962, -13.6, 0.2, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-15.4, 0, -13.4, -11.8, 0.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Opening3_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=1127493644]
+transform = Transform3D(3.5999994, 0, 0, 0, 1.4000001, 0, 0, 0, 0.39999962, -13.6, 3.7, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-15.4, 3, -13.4, -11.8, 4.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Part4" type="Node3D" parent="BlueHouse/Walls" unique_id=863626915]
+transform = Transform3D(1.8000002, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, -10.9, 2.2, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-11.8, 0, -13.4, -10, 4.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Part1" type="Node3D" parent="BlueHouse/Walls" unique_id=417468128]
+transform = Transform3D(1.6000004, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, -31.2, 6.3999996, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 4.4, -13.4, -30.4, 8.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening1_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=1671148163]
+transform = Transform3D(4.799999, 0, 0, 0, 0.4000001, 0, 0, 0, 0.39999962, -28, 4.6000004, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-30.4, 4.4, -13.4, -25.6, 4.8, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening1_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=38745691]
+transform = Transform3D(4.799999, 0, 0, 0, 0.7999997, 0, 0, 0, 0.39999962, -28, 8, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-30.4, 7.6, -13.4, -25.6, 8.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Part2" type="Node3D" parent="BlueHouse/Walls" unique_id=1768077804]
+transform = Transform3D(2.2000008, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, -24.5, 6.3999996, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-25.6, 4.4, -13.4, -23.4, 8.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening2_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=500965424]
+transform = Transform3D(4.799999, 0, 0, 0, 0.4000001, 0, 0, 0, 0.39999962, -21, 4.6000004, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-23.4, 4.4, -13.4, -18.6, 4.8, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening2_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=1264633329]
+transform = Transform3D(4.799999, 0, 0, 0, 0.7999997, 0, 0, 0, 0.39999962, -21, 8, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-23.4, 7.6, -13.4, -18.6, 8.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Part3" type="Node3D" parent="BlueHouse/Walls" unique_id=1396221929]
+transform = Transform3D(2.2000008, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, -17.5, 6.3999996, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-18.6, 4.4, -13.4, -16.4, 8.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening3_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=986485036]
+transform = Transform3D(4.799999, 0, 0, 0, 0.4000001, 0, 0, 0, 0.39999962, -14, 4.6000004, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-16.4, 4.4, -13.4, -11.6, 4.8, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening3_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=509961715]
+transform = Transform3D(4.799999, 0, 0, 0, 0.7999997, 0, 0, 0, 0.39999962, -14, 8, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-16.4, 7.6, -13.4, -11.6, 8.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Part4" type="Node3D" parent="BlueHouse/Walls" unique_id=1256046063]
+transform = Transform3D(1.6000004, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, -10.8, 6.3999996, -13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-11.6, 4.4, -13.4, -10, 8.4, -13)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Part1" type="Node3D" parent="BlueHouse/Walls" unique_id=1661706398]
+transform = Transform3D(1, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, -31.5, 2.2, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 0, -27, -31, 4.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Opening1_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=1886677036]
+transform = Transform3D(3.2000008, 0, 0, 0, 0.4, 0, 0, 0, 0.39999962, -29.4, 0.2, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-31, 0, -27, -27.8, 0.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Opening1_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=1153375419]
+transform = Transform3D(3.2000008, 0, 0, 0, 1.4000001, 0, 0, 0, 0.39999962, -29.4, 3.7, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-31, 3, -27, -27.8, 4.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Part2" type="Node3D" parent="BlueHouse/Walls" unique_id=1315701083]
+transform = Transform3D(12.4, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, -21.599998, 2.2, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-27.8, 0, -27, -15.4, 4.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Opening2_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=805011570]
+transform = Transform3D(3.1999998, 0, 0, 0, 1, 0, 0, 0, 0.39999962, -13.799999, 3.9, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-15.4, 3.4, -27, -12.2, 4.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Part3" type="Node3D" parent="BlueHouse/Walls" unique_id=1037484340]
+transform = Transform3D(2.1999998, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, -11.1, 2.2, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-12.2, 0, -27, -10, 4.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Part1" type="Node3D" parent="BlueHouse/Walls" unique_id=1046923690]
+transform = Transform3D(1.6000004, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, -31.2, 6.3999996, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 4.4, -27, -30.4, 8.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Opening1_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=567688644]
+transform = Transform3D(4, 0, 0, 0, 0.4000001, 0, 0, 0, 0.39999962, -28.4, 4.6000004, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-30.4, 4.4, -27, -26.4, 4.8, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Opening1_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=109676880]
+transform = Transform3D(4, 0, 0, 0, 0.7999997, 0, 0, 0, 0.39999962, -28.4, 8, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-30.4, 7.6, -27, -26.4, 8.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Part2" type="Node3D" parent="BlueHouse/Walls" unique_id=977622484]
+transform = Transform3D(10, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, -21.4, 6.3999996, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-26.4, 4.4, -27, -16.4, 8.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Opening2_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=538032317]
+transform = Transform3D(4, 0, 0, 0, 0.4000001, 0, 0, 0, 0.39999962, -14.4, 4.6000004, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-16.4, 4.4, -27, -12.4, 4.8, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Opening2_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=572319230]
+transform = Transform3D(4, 0, 0, 0, 0.7999997, 0, 0, 0, 0.39999962, -14.4, 8, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-16.4, 7.6, -27, -12.4, 8.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Part3" type="Node3D" parent="BlueHouse/Walls" unique_id=98715883]
+transform = Transform3D(2.3999996, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, -11.2, 6.3999996, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-12.4, 4.4, -27, -10, 8.4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="West_Ground_Part1" type="Node3D" parent="BlueHouse/Walls" unique_id=943994377]
+transform = Transform3D(0.39999962, 0, 0, 0, 4.4, 0, 0, 0, 4.200001, -31.8, 2.2, -24.5)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 0, -26.6, -31.6, 4.4, -22.4)
+web_box = PackedFloat64Array()
+
+[node name="West_Ground_Opening1_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=771313775]
+transform = Transform3D(0.39999962, 0, 0, 0, 0.4, 0, 0, 0, 4.799999, -31.8, 0.2, -20)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 0, -22.4, -31.6, 0.4, -17.6)
+web_box = PackedFloat64Array()
+
+[node name="West_Ground_Opening1_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=864779905]
+transform = Transform3D(0.39999962, 0, 0, 0, 1.4000001, 0, 0, 0, 4.799999, -31.8, 3.7, -20)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 3, -22.4, -31.6, 4.4, -17.6)
+web_box = PackedFloat64Array()
+
+[node name="West_Ground_Part2" type="Node3D" parent="BlueHouse/Walls" unique_id=60388262]
+transform = Transform3D(0.39999962, 0, 0, 0, 4.4, 0, 0, 0, 4.200001, -31.8, 2.2, -15.5)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 0, -17.6, -31.6, 4.4, -13.4)
+web_box = PackedFloat64Array()
+
+[node name="West_Upstairs_Part1" type="Node3D" parent="BlueHouse/Walls" unique_id=762749614]
+transform = Transform3D(0.39999962, 0, 0, 0, 3.9999995, 0, 0, 0, 3.6000004, -31.8, 6.3999996, -24.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 4.4, -26.6, -31.6, 8.4, -23)
+web_box = PackedFloat64Array()
+
+[node name="West_Upstairs_Opening1_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=1149148807]
+transform = Transform3D(0.39999962, 0, 0, 0, 0.4000001, 0, 0, 0, 6, -31.8, 4.6000004, -20)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 4.4, -23, -31.6, 4.8, -17)
+web_box = PackedFloat64Array()
+
+[node name="West_Upstairs_Opening1_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=1194184955]
+transform = Transform3D(0.39999962, 0, 0, 0, 0.7999997, 0, 0, 0, 6, -31.8, 8, -20)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 7.6, -23, -31.6, 8.4, -17)
+web_box = PackedFloat64Array()
+
+[node name="West_Upstairs_Part2" type="Node3D" parent="BlueHouse/Walls" unique_id=620977205]
+transform = Transform3D(0.39999962, 0, 0, 0, 3.9999995, 0, 0, 0, 3.6000004, -31.8, 6.3999996, -15.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-32, 4.4, -17, -31.6, 8.4, -13.4)
+web_box = PackedFloat64Array()
+
+[node name="East_Ground_Part1" type="Node3D" parent="BlueHouse/Walls" unique_id=1934292225]
+transform = Transform3D(0.39999962, 0, 0, 0, 4.4, 0, 0, 0, 4, -10.2, 2.2, -24.6)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-10.4, 0, -26.6, -10, 4.4, -22.6)
+web_box = PackedFloat64Array()
+
+[node name="East_Ground_Opening1_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=1655205557]
+transform = Transform3D(0.39999962, 0, 0, 0, 1, 0, 0, 0, 3.2000008, -10.2, 3.9, -21)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-10.4, 3.4, -22.6, -10, 4.4, -19.4)
+web_box = PackedFloat64Array()
+
+[node name="East_Ground_Part2" type="Node3D" parent="BlueHouse/Walls" unique_id=1442979656]
+transform = Transform3D(0.39999962, 0, 0, 0, 4.4, 0, 0, 0, 6, -10.2, 2.2, -16.4)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-10.4, 0, -19.4, -10, 4.4, -13.4)
+web_box = PackedFloat64Array()
+
+[node name="East_Upstairs_Part1" type="Node3D" parent="BlueHouse/Walls" unique_id=1761464955]
+transform = Transform3D(0.39999962, 0, 0, 0, 3.9999995, 0, 0, 0, 2.2000008, -10.2, 6.3999996, -25.5)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-10.4, 4.4, -26.6, -10, 8.4, -24.4)
+web_box = PackedFloat64Array()
+
+[node name="East_Upstairs_Opening1_Below" type="Node3D" parent="BlueHouse/Walls" unique_id=892488130]
+transform = Transform3D(0.39999962, 0, 0, 0, 0.4000001, 0, 0, 0, 6.799999, -10.2, 4.6000004, -21)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-10.4, 4.4, -24.4, -10, 4.8, -17.6)
+web_box = PackedFloat64Array()
+
+[node name="East_Upstairs_Opening1_Above" type="Node3D" parent="BlueHouse/Walls" unique_id=850169564]
+transform = Transform3D(0.39999962, 0, 0, 0, 0.7999997, 0, 0, 0, 6.799999, -10.2, 8, -21)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-10.4, 7.6, -24.4, -10, 8.4, -17.6)
+web_box = PackedFloat64Array()
+
+[node name="East_Upstairs_Part2" type="Node3D" parent="BlueHouse/Walls" unique_id=1098183762]
+transform = Transform3D(0.39999962, 0, 0, 0, 3.9999995, 0, 0, 0, 4.200001, -10.2, 6.3999996, -15.5)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-10.4, 4.4, -17.6, -10, 8.4, -13.4)
+web_box = PackedFloat64Array()
+
+[node name="Inside" type="Node3D" parent="BlueHouse" unique_id=8719456]
+
+[node name="Stairs" type="Node3D" parent="BlueHouse/Inside" unique_id=1471106131]
+transform = Transform3D(9, 0, 0, 0, 4.4, 0, 0, 0, 2, -21.5, 2.2, -25.6)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+ramp = "x-"
+box = PackedFloat64Array(-26, 0, -26.6, -17, 4.4, -24.6)
+web_box = PackedFloat64Array()
+
+[node name="StairRailing" type="Node3D" parent="BlueHouse/Inside" unique_id=1668373989]
+transform = Transform3D(7, 0, 0, 0, 1, 0, 0, 0, 0.20000076, -20.5, 4.9, -24.5)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-24, 4.4, -24.6, -17, 5.4, -24.4)
+web_box = PackedFloat64Array()
+
+[node name="KitchenCounter" type="Node3D" parent="BlueHouse/Inside" unique_id=679006020]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 4, -10.9, 0.5, -16)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-11.4, 0, -18, -10.4, 1, -14)
+web_box = PackedFloat64Array()
+
+[node name="Couch" type="Node3D" parent="BlueHouse/Inside" unique_id=502242047]
+transform = Transform3D(4, 0, 0, 0, 0.8, 0, 0, 0, 1.2000008, -26, 0.4, -17.4)
+script = ExtResource("2_8b0y2")
+kind = "low"
+box = PackedFloat64Array(-28, 0, -18, -24, 0.8, -16.8)
+web_box = PackedFloat64Array()
+
+[node name="UpstairsPartition_Part1" type="Node3D" parent="BlueHouse/Inside" unique_id=2086511591]
+transform = Transform3D(0.40000153, 0, 0, 0, 3.9999995, 0, 0, 0, 4, -21, 6.3999996, -22.4)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-21.2, 4.4, -24.4, -20.8, 8.4, -20.4)
+web_box = PackedFloat64Array()
+
+[node name="UpstairsPartition_Opening1_Above" type="Node3D" parent="BlueHouse/Inside" unique_id=57666165]
+transform = Transform3D(0.40000153, 0, 0, 0, 1.3999996, 0, 0, 0, 3.6000004, -21, 7.7, -18.599998)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-21.2, 7, -20.4, -20.8, 8.4, -16.8)
+web_box = PackedFloat64Array()
+
+[node name="UpstairsPartition_Part2" type="Node3D" parent="BlueHouse/Inside" unique_id=1450337223]
+transform = Transform3D(0.40000153, 0, 0, 0, 3.9999995, 0, 0, 0, 1.3999996, -21, 6.3999996, -16.099998)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-21.2, 4.4, -16.8, -20.8, 8.4, -15.4)
+web_box = PackedFloat64Array()
+
+[node name="Roof" type="Node3D" parent="BlueHouse" unique_id=342862719]
+
+[node name="NorthSlope" type="Node3D" parent="BlueHouse/Roof" unique_id=255399562]
+transform = Transform3D(23.199999, 0, 0, 0, 2, 0, 0, 0, 7.6000004, -21, 9.4, -23.8)
+script = ExtResource("2_8b0y2")
+kind = "roof"
+ramp = "z+"
+box = PackedFloat64Array(-32.6, 8.4, -27.6, -9.4, 10.4, -20)
+web_box = PackedFloat64Array()
+
+[node name="SouthSlope" type="Node3D" parent="BlueHouse/Roof" unique_id=1205026352]
+transform = Transform3D(23.199999, 0, 0, 0, 2, 0, 0, 0, 7.6000004, -21, 9.4, -16.2)
+script = ExtResource("2_8b0y2")
+kind = "roof"
+ramp = "z-"
+box = PackedFloat64Array(-32.6, 8.4, -20, -9.4, 10.4, -12.4)
+web_box = PackedFloat64Array()
+
+[node name="Porch" type="Node3D" parent="BlueHouse" unique_id=2072534868]
+
+[node name="PorchRoof" type="Node3D" parent="BlueHouse/Porch" unique_id=1834708819]
+transform = Transform3D(6, 0, 0, 0, 0.4000001, 0, 0, 0, 3, -21, 4.2, -11.5)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-24, 4, -13, -18, 4.4, -10)
+web_box = PackedFloat64Array()
+
+[node name="PostWest" type="Node3D" parent="BlueHouse/Porch" unique_id=1679787525]
+transform = Transform3D(0.39999962, 0, 0, 0, 4, 0, 0, 0, 0.39999962, -23.599998, 2, -10.2)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-23.8, 0, -10.4, -23.4, 4, -10)
+web_box = PackedFloat64Array()
+
+[node name="PostEast" type="Node3D" parent="BlueHouse/Porch" unique_id=866287063]
+transform = Transform3D(0.39999962, 0, 0, 0, 4, 0, 0, 0, 0.39999962, -18.400002, 2, -10.2)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-18.6, 0, -10.4, -18.2, 4, -10)
+web_box = PackedFloat64Array()
+
+[node name="Mannequin" type="Node3D" parent="BlueHouse/Porch" unique_id=1601765600]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, 4.4, -11.5)
+script = ExtResource("3_m3yyt")
+at = PackedFloat64Array(-21, 4.4, -11.5)
+
+[node name="Garage" type="Node3D" parent="BlueHouse" unique_id=1194753442]
+
+[node name="BackWall" type="Node3D" parent="BlueHouse/Garage" unique_id=873512851]
+transform = Transform3D(9, 0, 0, 0, 4, 0, 0, 0, 0.39999962, -5.5, 2, -26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-10, 0, -27, -1, 4, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="SideWall_Part1" type="Node3D" parent="BlueHouse/Garage" unique_id=516525041]
+transform = Transform3D(0.39999998, 0, 0, 0, 4, 0, 0, 0, 3.2000008, -1.2, 2, -25)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-1.4, 0, -26.6, -1, 4, -23.4)
+web_box = PackedFloat64Array()
+
+[node name="SideWall_Opening1_Below" type="Node3D" parent="BlueHouse/Garage" unique_id=964585627]
+transform = Transform3D(0.39999998, 0, 0, 0, 0.4, 0, 0, 0, 4, -1.2, 0.2, -21.4)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-1.4, 0, -23.4, -1, 0.4, -19.4)
+web_box = PackedFloat64Array()
+
+[node name="SideWall_Opening1_Above" type="Node3D" parent="BlueHouse/Garage" unique_id=736714531]
+transform = Transform3D(0.39999998, 0, 0, 0, 1, 0, 0, 0, 4, -1.2, 3.5, -21.4)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-1.4, 3, -23.4, -1, 4, -19.4)
+web_box = PackedFloat64Array()
+
+[node name="SideWall_Part2" type="Node3D" parent="BlueHouse/Garage" unique_id=1955521945]
+transform = Transform3D(0.39999998, 0, 0, 0, 4, 0, 0, 0, 4.3999996, -1.2, 2, -17.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-1.4, 0, -19.4, -1, 4, -15)
+web_box = PackedFloat64Array()
+
+[node name="DoorLintel" type="Node3D" parent="BlueHouse/Garage" unique_id=1830311384]
+transform = Transform3D(8.6, 0, 0, 0, 0.5999999, 0, 0, 0, 0.39999962, -5.7, 3.7, -15.2)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(-10, 3.4, -15.4, -1.4, 4, -15)
+web_box = PackedFloat64Array()
+
+[node name="Roof" type="Node3D" parent="BlueHouse/Garage" unique_id=1887430952]
+transform = Transform3D(9.4, 0, 0, 0, 0.4000001, 0, 0, 0, 12, -5.7, 4.2, -21)
+script = ExtResource("2_8b0y2")
+kind = "roof"
+box = PackedFloat64Array(-10.4, 4, -27, -1, 4.4, -15)
+web_box = PackedFloat64Array()
+
+[node name="Car" type="Node3D" parent="BlueHouse/Garage" unique_id=873103845]
+transform = Transform3D(5, 0, 0, 0, 1, 0, 0, 0, 3.5, -6, 0.5, -23.25)
+script = ExtResource("2_8b0y2")
+kind = "truck"
+box = PackedFloat64Array(-8.5, 0, -25, -3.5, 1, -21.5)
+web_box = PackedFloat64Array()
+
+[node name="CarCabin" type="Node3D" parent="BlueHouse/Garage" unique_id=85823835]
+transform = Transform3D(2.5, 0, 0, 0, 0.79999995, 0, 0, 0, 3.5, -5.75, 1.4, -23.25)
+script = ExtResource("2_8b0y2")
+kind = "truck"
+box = PackedFloat64Array(-7, 1, -25, -4.5, 1.8, -21.5)
+web_box = PackedFloat64Array()
+
+[node name="Mannequin" type="Node3D" parent="BlueHouse/Garage" unique_id=2024958760]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -17.5)
+script = ExtResource("3_m3yyt")
+at = PackedFloat64Array(-6, 0, -17.5)
+
+[node name="FrontYard" type="Node3D" parent="BlueHouse" unique_id=456634764]
+
+[node name="FenceWest" type="Node3D" parent="BlueHouse/FrontYard" unique_id=1364982658]
+transform = Transform3D(8, 0, 0, 0, 0.9, 0, 0, 0, 0.19999981, -28, 0.45, -9.299999)
+script = ExtResource("2_8b0y2")
+kind = "fence"
+box = PackedFloat64Array(-32, 0, -9.4, -24, 0.9, -9.2)
+web_box = PackedFloat64Array()
+
+[node name="FenceEast" type="Node3D" parent="BlueHouse/FrontYard" unique_id=1969538699]
+transform = Transform3D(8, 0, 0, 0, 0.9, 0, 0, 0, 0.19999981, -14, 0.45, -9.299999)
+script = ExtResource("2_8b0y2")
+kind = "fence"
+box = PackedFloat64Array(-18, 0, -9.4, -10, 0.9, -9.2)
+web_box = PackedFloat64Array()
+
+[node name="Mailbox" type="Node3D" parent="BlueHouse/FrontYard" unique_id=1482315712]
+transform = Transform3D(0.40000153, 0, 0, 0, 1.2, 0, 0, 0, 0.39999962, -27, 0.6, -9.7)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-27.2, 0, -9.9, -26.8, 1.2, -9.5)
+web_box = PackedFloat64Array()
+
+[node name="BlueBackyard" type="Node3D" parent="." unique_id=2027226034]
+
+[node name="SwingPostWest" type="Node3D" parent="BlueBackyard" unique_id=67827448]
+transform = Transform3D(0.40000153, 0, 0, 0, 3.2, 0, 0, 0, 0.40000153, -38, 1.6, -31)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-38.2, 0, -31.2, -37.8, 3.2, -30.8)
+web_box = PackedFloat64Array()
+
+[node name="SwingPostEast" type="Node3D" parent="BlueBackyard" unique_id=1945433591]
+transform = Transform3D(0.40000153, 0, 0, 0, 3.2, 0, 0, 0, 0.40000153, -32, 1.6, -31)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-32.2, 0, -31.2, -31.8, 3.2, -30.8)
+web_box = PackedFloat64Array()
+
+[node name="SwingBar" type="Node3D" parent="BlueBackyard" unique_id=250750501]
+transform = Transform3D(6.4000015, 0, 0, 0, 0.29999995, 0, 0, 0, 0.40000153, -35, 3.35, -31)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-38.2, 3.2, -31.2, -31.8, 3.5, -30.8)
+web_box = PackedFloat64Array()
+
+[node name="PatioTable" type="Node3D" parent="BlueBackyard" unique_id=2043328843]
+transform = Transform3D(3, 0, 0, 0, 0.9, 0, 0, 0, 1.5, -22.5, 0.45, -30.75)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(-24, 0, -31.5, -21, 0.9, -30)
+web_box = PackedFloat64Array()
+
+[node name="Barbecue" type="Node3D" parent="BlueBackyard" unique_id=211170179]
+transform = Transform3D(1, 0, 0, 0, 1.1, 0, 0, 0, 1, -13.5, 0.55, -31)
+script = ExtResource("2_8b0y2")
+kind = "wall"
+box = PackedFloat64Array(-14, 0, -31.5, -13, 1.1, -30.5)
+web_box = PackedFloat64Array()
+
+[node name="WestYard" type="Node3D" parent="." unique_id=770893777]
+
+[node name="Trampoline" type="Node3D" parent="WestYard" unique_id=674338633]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.5, 0, -15)
+script = ExtResource("4_cjvs5")
+radius = 1.3
+launch = 24.0
+at = PackedFloat64Array(-39.5, 0, -15)
+
+[node name="Hedge" type="Node3D" parent="WestYard" unique_id=156093978]
+transform = Transform3D(8, 0, 0, 0, 1, 0, 0, 0, 1, -44, 0.5, -11.5)
+script = ExtResource("2_8b0y2")
+kind = "hedge"
+box = PackedFloat64Array(-48, 0, -12, -40, 1, -11)
+web_box = PackedFloat64Array()
+
+[node name="TreeTrunk" type="Node3D" parent="WestYard" unique_id=1125874848]
+transform = Transform3D(0.80000305, 0, 0, 0, 3.2, 0, 0, 0, 0.79999924, -45, 1.6, -24)
+script = ExtResource("2_8b0y2")
+kind = "trunk"
+box = PackedFloat64Array(-45.4, 0, -24.4, -44.6, 3.2, -23.6)
+web_box = PackedFloat64Array()
+
+[node name="TreeLeaves" type="Node3D" parent="WestYard" unique_id=1532279470]
+transform = Transform3D(4, 0, 0, 0, 2.3999999, 0, 0, 0, 4, -45, 4.4, -24)
+script = ExtResource("2_8b0y2")
+kind = "leaves"
+box = PackedFloat64Array(-47, 3.2, -26, -43, 5.6, -22)
+web_box = PackedFloat64Array()
+
+[node name="NorthEastYard" type="Node3D" parent="." unique_id=1498066587]
+
+[node name="Trampoline" type="Node3D" parent="NorthEastYard" unique_id=630013352]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0, -21)
+script = ExtResource("4_cjvs5")
+radius = 1.3
+at = PackedFloat64Array(3.5, 0, -21)
+
+[node name="Shed" type="Node3D" parent="NorthEastYard" unique_id=452419176]
+transform = Transform3D(6, 0, 0, 0, 2.6, 0, 0, 0, 5, 25, 1.3, -29.5)
+script = ExtResource("2_8b0y2")
+kind = "shed"
+box = PackedFloat64Array(22, 0, -32, 28, 2.6, -27)
+web_box = PackedFloat64Array()
+
+[node name="ShedRoof" type="Node3D" parent="NorthEastYard" unique_id=1111369827]
+transform = Transform3D(6.799999, 0, 0, 0, 0.3000002, 0, 0, 0, 5.800001, 25, 2.75, -29.5)
+script = ExtResource("2_8b0y2")
+kind = "roof"
+box = PackedFloat64Array(21.6, 2.6, -32.4, 28.4, 2.9, -26.6)
+web_box = PackedFloat64Array()
+
+[node name="CrateLow" type="Node3D" parent="NorthEastYard" unique_id=200148177]
+transform = Transform3D(1.2000008, 0, 0, 0, 1, 0, 0, 0, 1.2000008, 29, 0.5, -28.4)
+script = ExtResource("2_8b0y2")
+kind = "crate"
+box = PackedFloat64Array(28.4, 0, -29, 29.6, 1, -27.8)
+web_box = PackedFloat64Array()
+
+[node name="CrateHigh" type="Node3D" parent="NorthEastYard" unique_id=1231625007]
+transform = Transform3D(1.1999989, 0, 0, 0, 2, 0, 0, 0, 1.2000008, 30.2, 1, -28.4)
+script = ExtResource("2_8b0y2")
+kind = "crate"
+box = PackedFloat64Array(29.6, 0, -29, 30.8, 2, -27.8)
+web_box = PackedFloat64Array()
+
+[node name="PicnicTable" type="Node3D" parent="NorthEastYard" unique_id=321126272]
+transform = Transform3D(3.5, 0, 0, 0, 0.9, 0, 0, 0, 1.5, 9.75, 0.45, -21.25)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(8, 0, -22, 11.5, 0.9, -20.5)
+web_box = PackedFloat64Array()
+
+[node name="TreeTrunk" type="Node3D" parent="NorthEastYard" unique_id=2033908281]
+transform = Transform3D(0.80000305, 0, 0, 0, 3.2, 0, 0, 0, 0.79999924, 36, 1.6, -18)
+script = ExtResource("2_8b0y2")
+kind = "trunk"
+box = PackedFloat64Array(35.6, 0, -18.4, 36.4, 3.2, -17.6)
+web_box = PackedFloat64Array()
+
+[node name="TreeLeaves" type="Node3D" parent="NorthEastYard" unique_id=1104932224]
+transform = Transform3D(4, 0, 0, 0, 2.3999999, 0, 0, 0, 4, 36, 4.4, -18)
+script = ExtResource("2_8b0y2")
+kind = "leaves"
+box = PackedFloat64Array(34, 3.2, -20, 38, 5.6, -16)
+web_box = PackedFloat64Array()
+
+[node name="FenceWest" type="Node3D" parent="NorthEastYard" unique_id=1080853868]
+transform = Transform3D(16, 0, 0, 0, 0.9, 0, 0, 0, 0.19999981, 12, 0.45, -9.299999)
+script = ExtResource("2_8b0y2")
+kind = "fence"
+box = PackedFloat64Array(4, 0, -9.4, 20, 0.9, -9.2)
+web_box = PackedFloat64Array()
+
+[node name="FenceEast" type="Node3D" parent="NorthEastYard" unique_id=148061710]
+transform = Transform3D(18, 0, 0, 0, 0.9, 0, 0, 0, 0.19999981, 35, 0.45, -9.299999)
+script = ExtResource("2_8b0y2")
+kind = "fence"
+box = PackedFloat64Array(26, 0, -9.4, 44, 0.9, -9.2)
+web_box = PackedFloat64Array()
+
+[node name="Mannequin" type="Node3D" parent="NorthEastYard" unique_id=232700138]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, -26)
+script = ExtResource("3_m3yyt")
+move_axis = "x"
+move_amp = 3.0
+move_speed = 1.2
+at = PackedFloat64Array(16, 0, -26)
+
+[node name="BlueHouseStreet" type="Node3D" parent="." unique_id=2052755833]
+
+[node name="TruckBed" type="Node3D" parent="BlueHouseStreet" unique_id=1007192689]
+transform = Transform3D(4.5, 0, 0, 0, 1.3, 0, 0, 0, 3, -37.75, 0.65, -3.9)
+script = ExtResource("2_8b0y2")
+kind = "truck"
+box = PackedFloat64Array(-40, 0, -5.4, -35.5, 1.3, -2.4)
+web_box = PackedFloat64Array()
+
+[node name="TruckCab" type="Node3D" parent="BlueHouseStreet" unique_id=1727562520]
+transform = Transform3D(3, 0, 0, 0, 2.4, 0, 0, 0, 3, -34, 1.2, -3.9)
+script = ExtResource("2_8b0y2")
+kind = "truck"
+box = PackedFloat64Array(-35.5, 0, -5.4, -32.5, 2.4, -2.4)
+web_box = PackedFloat64Array()
+
+[node name="Hatchback" type="Node3D" parent="BlueHouseStreet" unique_id=2105136317]
+transform = Transform3D(5.5, 0, 0, 0, 1.1, 0, 0, 0, 2.6000001, 16.75, 0.55, -4.5)
+script = ExtResource("2_8b0y2")
+kind = "house_blue"
+box = PackedFloat64Array(14, 0, -5.8, 19.5, 1.1, -3.2)
+web_box = PackedFloat64Array()
+
+[node name="HatchbackCabin" type="Node3D" parent="BlueHouseStreet" unique_id=1152591848]
+transform = Transform3D(2.8000002, 0, 0, 0, 0.79999995, 0, 0, 0, 2.6000001, 16.6, 1.5, -4.5)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(15.2, 1.1, -5.8, 18, 1.9, -3.2)
+web_box = PackedFloat64Array()
+
+[node name="LampWestPost" type="Node3D" parent="BlueHouseStreet" unique_id=1314553388]
+transform = Transform3D(0.29999924, 0, 0, 0, 5.5, 0, 0, 0, 0.3000002, -25, 2.75, -8.200001)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-25.15, 0, -8.35, -24.85, 5.5, -8.05)
+web_box = PackedFloat64Array()
+
+[node name="LampWestHead" type="Node3D" parent="BlueHouseStreet" unique_id=94188073]
+transform = Transform3D(1.2000008, 0, 0, 0, 0.4000001, 0, 0, 0, 0.9000001, -25, 5.7, -8.05)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-25.6, 5.5, -8.5, -24.4, 5.9, -7.6)
+web_box = PackedFloat64Array()
+
+[node name="LampEastPost" type="Node3D" parent="BlueHouseStreet" unique_id=390632663]
+transform = Transform3D(0.29999924, 0, 0, 0, 5.5, 0, 0, 0, 0.3000002, 25, 2.75, -8.200001)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(24.85, 0, -8.35, 25.15, 5.5, -8.05)
+web_box = PackedFloat64Array()
+
+[node name="LampEastHead" type="Node3D" parent="BlueHouseStreet" unique_id=674875047]
+transform = Transform3D(1.2000008, 0, 0, 0, 0.4000001, 0, 0, 0, 0.9000001, 25, 5.7, -8.05)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(24.4, 5.5, -8.5, 25.6, 5.9, -7.6)
+web_box = PackedFloat64Array()
+
+[node name="StreetLauncher" type="Node3D" parent="BlueHouseStreet" unique_id=689366001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46, 0, 0)
+script = ExtResource("4_cjvs5")
+radius = 1.6
+launch = 9.0
+forward = 20.0
+directional = true
+dir_x = 1.0
+dir_z = 0.0
+at = PackedFloat64Array(-46, 0, 0)
+
+[node name="YellowHouse" type="Node3D" parent="." unique_id=218302269]
+
+[node name="Floors" type="Node3D" parent="YellowHouse" unique_id=1839190169]
+
+[node name="GroundFloor" type="Node3D" parent="YellowHouse/Floors" unique_id=1789536028]
+transform = Transform3D(21.2, 0, 0, 0, 1, 0, 0, 0, 13.200001, 21, -0.5, 20)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(10.4, -1, 13.4, 31.6, 0, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="GarageFloor" type="Node3D" parent="YellowHouse/Floors" unique_id=2056551556]
+transform = Transform3D(8.6, 0, 0, 0, 1, 0, 0, 0, 11.6, 5.7, -0.5, 20.8)
+script = ExtResource("2_8b0y2")
+kind = "sidewalk"
+box = PackedFloat64Array(1.4, -1, 15, 10, 0, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="Upstairs1" type="Node3D" parent="YellowHouse/Floors" unique_id=387412723]
+transform = Transform3D(5.6000004, 0, 0, 0, 0.4000001, 0, 0, 0, 2, 28.8, 4.2, 25.6)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(26, 4, 24.6, 31.6, 4.4, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="Upstairs2" type="Node3D" parent="YellowHouse/Floors" unique_id=982685011]
+transform = Transform3D(6.6000004, 0, 0, 0, 0.4000001, 0, 0, 0, 2, 13.7, 4.2, 25.6)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(10.4, 4, 24.6, 17, 4.4, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="Upstairs3" type="Node3D" parent="YellowHouse/Floors" unique_id=614280503]
+transform = Transform3D(21.2, 0, 0, 0, 0.4000001, 0, 0, 0, 11.200001, 21, 4.2, 19)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(10.4, 4, 13.4, 31.6, 4.4, 24.6)
+web_box = PackedFloat64Array()
+
+[node name="Walls" type="Node3D" parent="YellowHouse" unique_id=200021670]
+
+[node name="Front_Ground_Part1" type="Node3D" parent="YellowHouse/Walls" unique_id=2133528559]
+transform = Transform3D(1.7999992, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, 31.1, 2.2, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(30.2, 0, 13, 32, 4.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Opening1_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=1429628786]
+transform = Transform3D(3.6000004, 0, 0, 0, 0.4, 0, 0, 0, 0.39999962, 28.400002, 0.2, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(26.6, 0, 13, 30.2, 0.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Opening1_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=808172288]
+transform = Transform3D(3.6000004, 0, 0, 0, 1.4000001, 0, 0, 0, 0.39999962, 28.400002, 3.7, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(26.6, 3, 13, 30.2, 4.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Part2" type="Node3D" parent="YellowHouse/Walls" unique_id=1833539074]
+transform = Transform3D(4, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, 24.6, 2.2, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(22.6, 0, 13, 26.6, 4.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Opening2_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=1358345075]
+transform = Transform3D(3.2000008, 0, 0, 0, 1, 0, 0, 0, 0.39999962, 21, 3.9, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(19.4, 3.4, 13, 22.6, 4.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Part3" type="Node3D" parent="YellowHouse/Walls" unique_id=1928132835]
+transform = Transform3D(4, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, 17.4, 2.2, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(15.4, 0, 13, 19.4, 4.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Opening3_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=1007433462]
+transform = Transform3D(3.5999994, 0, 0, 0, 0.4, 0, 0, 0, 0.39999962, 13.6, 0.2, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(11.8, 0, 13, 15.4, 0.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Opening3_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=301632589]
+transform = Transform3D(3.5999994, 0, 0, 0, 1.4000001, 0, 0, 0, 0.39999962, 13.6, 3.7, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(11.8, 3, 13, 15.4, 4.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Ground_Part4" type="Node3D" parent="YellowHouse/Walls" unique_id=370673336]
+transform = Transform3D(1.8000002, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, 10.9, 2.2, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 0, 13, 11.8, 4.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Part1" type="Node3D" parent="YellowHouse/Walls" unique_id=101889334]
+transform = Transform3D(1.6000004, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, 31.2, 6.3999996, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(30.4, 4.4, 13, 32, 8.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening1_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=1217519053]
+transform = Transform3D(4.799999, 0, 0, 0, 0.4000001, 0, 0, 0, 0.39999962, 28, 4.6000004, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(25.6, 4.4, 13, 30.4, 4.8, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening1_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=646470392]
+transform = Transform3D(4.799999, 0, 0, 0, 0.7999997, 0, 0, 0, 0.39999962, 28, 8, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(25.6, 7.6, 13, 30.4, 8.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Part2" type="Node3D" parent="YellowHouse/Walls" unique_id=180925830]
+transform = Transform3D(2.2000008, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, 24.5, 6.3999996, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(23.4, 4.4, 13, 25.6, 8.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening2_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=1714913200]
+transform = Transform3D(4.799999, 0, 0, 0, 0.4000001, 0, 0, 0, 0.39999962, 21, 4.6000004, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(18.6, 4.4, 13, 23.4, 4.8, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening2_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=1163318106]
+transform = Transform3D(4.799999, 0, 0, 0, 0.7999997, 0, 0, 0, 0.39999962, 21, 8, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(18.6, 7.6, 13, 23.4, 8.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Part3" type="Node3D" parent="YellowHouse/Walls" unique_id=1587656930]
+transform = Transform3D(2.2000008, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, 17.5, 6.3999996, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(16.4, 4.4, 13, 18.6, 8.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening3_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=1444538255]
+transform = Transform3D(4.799999, 0, 0, 0, 0.4000001, 0, 0, 0, 0.39999962, 14, 4.6000004, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(11.6, 4.4, 13, 16.4, 4.8, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Opening3_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=403601751]
+transform = Transform3D(4.799999, 0, 0, 0, 0.7999997, 0, 0, 0, 0.39999962, 14, 8, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(11.6, 7.6, 13, 16.4, 8.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Front_Upstairs_Part4" type="Node3D" parent="YellowHouse/Walls" unique_id=1918446876]
+transform = Transform3D(1.6000004, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, 10.8, 6.3999996, 13.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 4.4, 13, 11.6, 8.4, 13.4)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Part1" type="Node3D" parent="YellowHouse/Walls" unique_id=738852286]
+transform = Transform3D(1, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, 31.5, 2.2, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(31, 0, 26.6, 32, 4.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Opening1_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=2003390850]
+transform = Transform3D(3.2000008, 0, 0, 0, 0.4, 0, 0, 0, 0.39999962, 29.4, 0.2, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(27.8, 0, 26.6, 31, 0.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Opening1_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=1226615093]
+transform = Transform3D(3.2000008, 0, 0, 0, 1.4000001, 0, 0, 0, 0.39999962, 29.4, 3.7, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(27.8, 3, 26.6, 31, 4.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Part2" type="Node3D" parent="YellowHouse/Walls" unique_id=363523224]
+transform = Transform3D(12.4, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, 21.599998, 2.2, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(15.4, 0, 26.6, 27.8, 4.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Opening2_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=736744466]
+transform = Transform3D(3.1999998, 0, 0, 0, 1, 0, 0, 0, 0.39999962, 13.799999, 3.9, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(12.2, 3.4, 26.6, 15.4, 4.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Ground_Part3" type="Node3D" parent="YellowHouse/Walls" unique_id=1636098008]
+transform = Transform3D(2.1999998, 0, 0, 0, 4.4, 0, 0, 0, 0.39999962, 11.1, 2.2, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 0, 26.6, 12.2, 4.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Part1" type="Node3D" parent="YellowHouse/Walls" unique_id=235818049]
+transform = Transform3D(1.6000004, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, 31.2, 6.3999996, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(30.4, 4.4, 26.6, 32, 8.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Opening1_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=1672971854]
+transform = Transform3D(4, 0, 0, 0, 0.4000001, 0, 0, 0, 0.39999962, 28.4, 4.6000004, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(26.4, 4.4, 26.6, 30.4, 4.8, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Opening1_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=2133058631]
+transform = Transform3D(4, 0, 0, 0, 0.7999997, 0, 0, 0, 0.39999962, 28.4, 8, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(26.4, 7.6, 26.6, 30.4, 8.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Part2" type="Node3D" parent="YellowHouse/Walls" unique_id=593148069]
+transform = Transform3D(10, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, 21.4, 6.3999996, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(16.4, 4.4, 26.6, 26.4, 8.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Opening2_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=82114131]
+transform = Transform3D(4, 0, 0, 0, 0.4000001, 0, 0, 0, 0.39999962, 14.4, 4.6000004, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(12.4, 4.4, 26.6, 16.4, 4.8, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Opening2_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=1788375556]
+transform = Transform3D(4, 0, 0, 0, 0.7999997, 0, 0, 0, 0.39999962, 14.4, 8, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(12.4, 7.6, 26.6, 16.4, 8.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Back_Upstairs_Part3" type="Node3D" parent="YellowHouse/Walls" unique_id=1893490972]
+transform = Transform3D(2.3999996, 0, 0, 0, 3.9999995, 0, 0, 0, 0.39999962, 11.2, 6.3999996, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 4.4, 26.6, 12.4, 8.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="West_Ground_Part1" type="Node3D" parent="YellowHouse/Walls" unique_id=2137617284]
+transform = Transform3D(0.39999962, 0, 0, 0, 4.4, 0, 0, 0, 4.200001, 31.8, 2.2, 24.5)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(31.6, 0, 22.4, 32, 4.4, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="West_Ground_Opening1_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=384510242]
+transform = Transform3D(0.39999962, 0, 0, 0, 0.4, 0, 0, 0, 4.799999, 31.8, 0.2, 20)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(31.6, 0, 17.6, 32, 0.4, 22.4)
+web_box = PackedFloat64Array()
+
+[node name="West_Ground_Opening1_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=428724598]
+transform = Transform3D(0.39999962, 0, 0, 0, 1.4000001, 0, 0, 0, 4.799999, 31.8, 3.7, 20)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(31.6, 3, 17.6, 32, 4.4, 22.4)
+web_box = PackedFloat64Array()
+
+[node name="West_Ground_Part2" type="Node3D" parent="YellowHouse/Walls" unique_id=73753199]
+transform = Transform3D(0.39999962, 0, 0, 0, 4.4, 0, 0, 0, 4.200001, 31.8, 2.2, 15.5)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(31.6, 0, 13.4, 32, 4.4, 17.6)
+web_box = PackedFloat64Array()
+
+[node name="West_Upstairs_Part1" type="Node3D" parent="YellowHouse/Walls" unique_id=2111571437]
+transform = Transform3D(0.39999962, 0, 0, 0, 3.9999995, 0, 0, 0, 3.6000004, 31.8, 6.3999996, 24.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(31.6, 4.4, 23, 32, 8.4, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="West_Upstairs_Opening1_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=1609908636]
+transform = Transform3D(0.39999962, 0, 0, 0, 0.4000001, 0, 0, 0, 6, 31.8, 4.6000004, 20)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(31.6, 4.4, 17, 32, 4.8, 23)
+web_box = PackedFloat64Array()
+
+[node name="West_Upstairs_Opening1_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=1140025982]
+transform = Transform3D(0.39999962, 0, 0, 0, 0.7999997, 0, 0, 0, 6, 31.8, 8, 20)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(31.6, 7.6, 17, 32, 8.4, 23)
+web_box = PackedFloat64Array()
+
+[node name="West_Upstairs_Part2" type="Node3D" parent="YellowHouse/Walls" unique_id=527875892]
+transform = Transform3D(0.39999962, 0, 0, 0, 3.9999995, 0, 0, 0, 3.6000004, 31.8, 6.3999996, 15.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(31.6, 4.4, 13.4, 32, 8.4, 17)
+web_box = PackedFloat64Array()
+
+[node name="East_Ground_Part1" type="Node3D" parent="YellowHouse/Walls" unique_id=663033371]
+transform = Transform3D(0.39999962, 0, 0, 0, 4.4, 0, 0, 0, 4, 10.2, 2.2, 24.6)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 0, 22.6, 10.4, 4.4, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="East_Ground_Opening1_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=1381639197]
+transform = Transform3D(0.39999962, 0, 0, 0, 1, 0, 0, 0, 3.2000008, 10.2, 3.9, 21)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 3.4, 19.4, 10.4, 4.4, 22.6)
+web_box = PackedFloat64Array()
+
+[node name="East_Ground_Part2" type="Node3D" parent="YellowHouse/Walls" unique_id=233985389]
+transform = Transform3D(0.39999962, 0, 0, 0, 4.4, 0, 0, 0, 6, 10.2, 2.2, 16.4)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 0, 13.4, 10.4, 4.4, 19.4)
+web_box = PackedFloat64Array()
+
+[node name="East_Upstairs_Part1" type="Node3D" parent="YellowHouse/Walls" unique_id=1173127035]
+transform = Transform3D(0.39999962, 0, 0, 0, 3.9999995, 0, 0, 0, 2.2000008, 10.2, 6.3999996, 25.5)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 4.4, 24.4, 10.4, 8.4, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="East_Upstairs_Opening1_Below" type="Node3D" parent="YellowHouse/Walls" unique_id=2070689231]
+transform = Transform3D(0.39999962, 0, 0, 0, 0.4000001, 0, 0, 0, 6.799999, 10.2, 4.6000004, 21)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 4.4, 17.6, 10.4, 4.8, 24.4)
+web_box = PackedFloat64Array()
+
+[node name="East_Upstairs_Opening1_Above" type="Node3D" parent="YellowHouse/Walls" unique_id=902289572]
+transform = Transform3D(0.39999962, 0, 0, 0, 0.7999997, 0, 0, 0, 6.799999, 10.2, 8, 21)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 7.6, 17.6, 10.4, 8.4, 24.4)
+web_box = PackedFloat64Array()
+
+[node name="East_Upstairs_Part2" type="Node3D" parent="YellowHouse/Walls" unique_id=879772666]
+transform = Transform3D(0.39999962, 0, 0, 0, 3.9999995, 0, 0, 0, 4.200001, 10.2, 6.3999996, 15.5)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(10, 4.4, 13.4, 10.4, 8.4, 17.6)
+web_box = PackedFloat64Array()
+
+[node name="Inside" type="Node3D" parent="YellowHouse" unique_id=412710962]
+
+[node name="Stairs" type="Node3D" parent="YellowHouse/Inside" unique_id=945587262]
+transform = Transform3D(9, 0, 0, 0, 4.4, 0, 0, 0, 2, 21.5, 2.2, 25.6)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+ramp = "x+"
+box = PackedFloat64Array(17, 0, 24.6, 26, 4.4, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="StairRailing" type="Node3D" parent="YellowHouse/Inside" unique_id=1317633372]
+transform = Transform3D(7, 0, 0, 0, 1, 0, 0, 0, 0.20000076, 20.5, 4.9, 24.5)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(17, 4.4, 24.4, 24, 5.4, 24.6)
+web_box = PackedFloat64Array()
+
+[node name="KitchenCounter" type="Node3D" parent="YellowHouse/Inside" unique_id=1198921034]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 4, 10.9, 0.5, 16)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(10.4, 0, 14, 11.4, 1, 18)
+web_box = PackedFloat64Array()
+
+[node name="Couch" type="Node3D" parent="YellowHouse/Inside" unique_id=804749643]
+transform = Transform3D(4, 0, 0, 0, 0.8, 0, 0, 0, 1.2000008, 26, 0.4, 17.4)
+script = ExtResource("2_8b0y2")
+kind = "low"
+box = PackedFloat64Array(24, 0, 16.8, 28, 0.8, 18)
+web_box = PackedFloat64Array()
+
+[node name="UpstairsPartition_Part1" type="Node3D" parent="YellowHouse/Inside" unique_id=422473692]
+transform = Transform3D(0.40000153, 0, 0, 0, 3.9999995, 0, 0, 0, 4, 21, 6.3999996, 22.4)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(20.8, 4.4, 20.4, 21.2, 8.4, 24.4)
+web_box = PackedFloat64Array()
+
+[node name="UpstairsPartition_Opening1_Above" type="Node3D" parent="YellowHouse/Inside" unique_id=1307700157]
+transform = Transform3D(0.40000153, 0, 0, 0, 1.3999996, 0, 0, 0, 3.6000004, 21, 7.7, 18.599998)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(20.8, 7, 16.8, 21.2, 8.4, 20.4)
+web_box = PackedFloat64Array()
+
+[node name="UpstairsPartition_Part2" type="Node3D" parent="YellowHouse/Inside" unique_id=72213175]
+transform = Transform3D(0.40000153, 0, 0, 0, 3.9999995, 0, 0, 0, 1.3999996, 21, 6.3999996, 16.099998)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(20.8, 4.4, 15.4, 21.2, 8.4, 16.8)
+web_box = PackedFloat64Array()
+
+[node name="Roof" type="Node3D" parent="YellowHouse" unique_id=921706287]
+
+[node name="NorthSlope" type="Node3D" parent="YellowHouse/Roof" unique_id=1239514277]
+transform = Transform3D(23.199999, 0, 0, 0, 2, 0, 0, 0, 7.6000004, 21, 9.4, 23.8)
+script = ExtResource("2_8b0y2")
+kind = "roof"
+ramp = "z-"
+box = PackedFloat64Array(9.4, 8.4, 20, 32.6, 10.4, 27.6)
+web_box = PackedFloat64Array()
+
+[node name="SouthSlope" type="Node3D" parent="YellowHouse/Roof" unique_id=1108617544]
+transform = Transform3D(23.199999, 0, 0, 0, 2, 0, 0, 0, 7.6000004, 21, 9.4, 16.2)
+script = ExtResource("2_8b0y2")
+kind = "roof"
+ramp = "z+"
+box = PackedFloat64Array(9.4, 8.4, 12.4, 32.6, 10.4, 20)
+web_box = PackedFloat64Array()
+
+[node name="Porch" type="Node3D" parent="YellowHouse" unique_id=2138318977]
+
+[node name="PorchRoof" type="Node3D" parent="YellowHouse/Porch" unique_id=1755508335]
+transform = Transform3D(6, 0, 0, 0, 0.4000001, 0, 0, 0, 3, 21, 4.2, 11.5)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(18, 4, 10, 24, 4.4, 13)
+web_box = PackedFloat64Array()
+
+[node name="PostWest" type="Node3D" parent="YellowHouse/Porch" unique_id=495926977]
+transform = Transform3D(0.39999962, 0, 0, 0, 4, 0, 0, 0, 0.39999962, 23.599998, 2, 10.2)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(23.4, 0, 10, 23.8, 4, 10.4)
+web_box = PackedFloat64Array()
+
+[node name="PostEast" type="Node3D" parent="YellowHouse/Porch" unique_id=221795857]
+transform = Transform3D(0.39999962, 0, 0, 0, 4, 0, 0, 0, 0.39999962, 18.400002, 2, 10.2)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(18.2, 0, 10, 18.6, 4, 10.4)
+web_box = PackedFloat64Array()
+
+[node name="Mannequin" type="Node3D" parent="YellowHouse/Porch" unique_id=1383110146]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 4.4, 11.5)
+script = ExtResource("3_m3yyt")
+at = PackedFloat64Array(21, 4.4, 11.5)
+
+[node name="Garage" type="Node3D" parent="YellowHouse" unique_id=529366541]
+
+[node name="BackWall" type="Node3D" parent="YellowHouse/Garage" unique_id=1520938518]
+transform = Transform3D(9, 0, 0, 0, 4, 0, 0, 0, 0.39999962, 5.5, 2, 26.8)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(1, 0, 26.6, 10, 4, 27)
+web_box = PackedFloat64Array()
+
+[node name="SideWall_Part1" type="Node3D" parent="YellowHouse/Garage" unique_id=469414902]
+transform = Transform3D(0.39999998, 0, 0, 0, 4, 0, 0, 0, 3.2000008, 1.2, 2, 25)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(1, 0, 23.4, 1.4, 4, 26.6)
+web_box = PackedFloat64Array()
+
+[node name="SideWall_Opening1_Below" type="Node3D" parent="YellowHouse/Garage" unique_id=213196902]
+transform = Transform3D(0.39999998, 0, 0, 0, 0.4, 0, 0, 0, 4, 1.2, 0.2, 21.4)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(1, 0, 19.4, 1.4, 0.4, 23.4)
+web_box = PackedFloat64Array()
+
+[node name="SideWall_Opening1_Above" type="Node3D" parent="YellowHouse/Garage" unique_id=1630301015]
+transform = Transform3D(0.39999998, 0, 0, 0, 1, 0, 0, 0, 4, 1.2, 3.5, 21.4)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(1, 3, 19.4, 1.4, 4, 23.4)
+web_box = PackedFloat64Array()
+
+[node name="SideWall_Part2" type="Node3D" parent="YellowHouse/Garage" unique_id=1893026497]
+transform = Transform3D(0.39999998, 0, 0, 0, 4, 0, 0, 0, 4.3999996, 1.2, 2, 17.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(1, 0, 15, 1.4, 4, 19.4)
+web_box = PackedFloat64Array()
+
+[node name="DoorLintel" type="Node3D" parent="YellowHouse/Garage" unique_id=368008764]
+transform = Transform3D(8.6, 0, 0, 0, 0.5999999, 0, 0, 0, 0.39999962, 5.7, 3.7, 15.2)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(1.4, 3.4, 15, 10, 4, 15.4)
+web_box = PackedFloat64Array()
+
+[node name="Roof" type="Node3D" parent="YellowHouse/Garage" unique_id=1465614666]
+transform = Transform3D(9.4, 0, 0, 0, 0.4000001, 0, 0, 0, 12, 5.7, 4.2, 21)
+script = ExtResource("2_8b0y2")
+kind = "roof"
+box = PackedFloat64Array(1, 4, 15, 10.4, 4.4, 27)
+web_box = PackedFloat64Array()
+
+[node name="Car" type="Node3D" parent="YellowHouse/Garage" unique_id=102952553]
+transform = Transform3D(5, 0, 0, 0, 1, 0, 0, 0, 3.5, 6, 0.5, 23.25)
+script = ExtResource("2_8b0y2")
+kind = "truck"
+box = PackedFloat64Array(3.5, 0, 21.5, 8.5, 1, 25)
+web_box = PackedFloat64Array()
+
+[node name="CarCabin" type="Node3D" parent="YellowHouse/Garage" unique_id=524714455]
+transform = Transform3D(2.5, 0, 0, 0, 0.79999995, 0, 0, 0, 3.5, 5.75, 1.4, 23.25)
+script = ExtResource("2_8b0y2")
+kind = "truck"
+box = PackedFloat64Array(4.5, 1, 21.5, 7, 1.8, 25)
+web_box = PackedFloat64Array()
+
+[node name="Mannequin" type="Node3D" parent="YellowHouse/Garage" unique_id=1418728170]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 17.5)
+script = ExtResource("3_m3yyt")
+at = PackedFloat64Array(6, 0, 17.5)
+
+[node name="FrontYard" type="Node3D" parent="YellowHouse" unique_id=902609486]
+
+[node name="FenceWest" type="Node3D" parent="YellowHouse/FrontYard" unique_id=1330179603]
+transform = Transform3D(8, 0, 0, 0, 0.9, 0, 0, 0, 0.19999981, 28, 0.45, 9.299999)
+script = ExtResource("2_8b0y2")
+kind = "fence"
+box = PackedFloat64Array(24, 0, 9.2, 32, 0.9, 9.4)
+web_box = PackedFloat64Array()
+
+[node name="FenceEast" type="Node3D" parent="YellowHouse/FrontYard" unique_id=1979987410]
+transform = Transform3D(8, 0, 0, 0, 0.9, 0, 0, 0, 0.19999981, 14, 0.45, 9.299999)
+script = ExtResource("2_8b0y2")
+kind = "fence"
+box = PackedFloat64Array(10, 0, 9.2, 18, 0.9, 9.4)
+web_box = PackedFloat64Array()
+
+[node name="Mailbox" type="Node3D" parent="YellowHouse/FrontYard" unique_id=195441987]
+transform = Transform3D(0.40000153, 0, 0, 0, 1.2, 0, 0, 0, 0.39999962, 27, 0.6, 9.7)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(26.8, 0, 9.5, 27.2, 1.2, 9.9)
+web_box = PackedFloat64Array()
+
+[node name="YellowBackyard" type="Node3D" parent="." unique_id=171218053]
+
+[node name="SwingPostWest" type="Node3D" parent="YellowBackyard" unique_id=1590899513]
+transform = Transform3D(0.40000153, 0, 0, 0, 3.2, 0, 0, 0, 0.40000153, 38, 1.6, 31)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(37.8, 0, 30.8, 38.2, 3.2, 31.2)
+web_box = PackedFloat64Array()
+
+[node name="SwingPostEast" type="Node3D" parent="YellowBackyard" unique_id=2114503024]
+transform = Transform3D(0.40000153, 0, 0, 0, 3.2, 0, 0, 0, 0.40000153, 32, 1.6, 31)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(31.8, 0, 30.8, 32.2, 3.2, 31.2)
+web_box = PackedFloat64Array()
+
+[node name="SwingBar" type="Node3D" parent="YellowBackyard" unique_id=1642362500]
+transform = Transform3D(6.4000015, 0, 0, 0, 0.29999995, 0, 0, 0, 0.40000153, 35, 3.35, 31)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(31.8, 3.2, 30.8, 38.2, 3.5, 31.2)
+web_box = PackedFloat64Array()
+
+[node name="PatioTable" type="Node3D" parent="YellowBackyard" unique_id=1530135259]
+transform = Transform3D(3, 0, 0, 0, 0.9, 0, 0, 0, 1.5, 22.5, 0.45, 30.75)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(21, 0, 30, 24, 0.9, 31.5)
+web_box = PackedFloat64Array()
+
+[node name="Barbecue" type="Node3D" parent="YellowBackyard" unique_id=255924781]
+transform = Transform3D(1, 0, 0, 0, 1.1, 0, 0, 0, 1, 13.5, 0.55, 31)
+script = ExtResource("2_8b0y2")
+kind = "wall"
+box = PackedFloat64Array(13, 0, 30.5, 14, 1.1, 31.5)
+web_box = PackedFloat64Array()
+
+[node name="EastYard" type="Node3D" parent="." unique_id=250903922]
+
+[node name="Trampoline" type="Node3D" parent="EastYard" unique_id=1245697781]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.5, 0, 15)
+script = ExtResource("4_cjvs5")
+radius = 1.3
+launch = 24.0
+at = PackedFloat64Array(39.5, 0, 15)
+
+[node name="Hedge" type="Node3D" parent="EastYard" unique_id=1240968425]
+transform = Transform3D(8, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0.5, 11.5)
+script = ExtResource("2_8b0y2")
+kind = "hedge"
+box = PackedFloat64Array(40, 0, 11, 48, 1, 12)
+web_box = PackedFloat64Array()
+
+[node name="TreeTrunk" type="Node3D" parent="EastYard" unique_id=704172376]
+transform = Transform3D(0.80000305, 0, 0, 0, 3.2, 0, 0, 0, 0.79999924, 45, 1.6, 24)
+script = ExtResource("2_8b0y2")
+kind = "trunk"
+box = PackedFloat64Array(44.6, 0, 23.6, 45.4, 3.2, 24.4)
+web_box = PackedFloat64Array()
+
+[node name="TreeLeaves" type="Node3D" parent="EastYard" unique_id=863334576]
+transform = Transform3D(4, 0, 0, 0, 2.3999999, 0, 0, 0, 4, 45, 4.4, 24)
+script = ExtResource("2_8b0y2")
+kind = "leaves"
+box = PackedFloat64Array(43, 3.2, 22, 47, 5.6, 26)
+web_box = PackedFloat64Array()
+
+[node name="SouthWestYard" type="Node3D" parent="." unique_id=20500627]
+
+[node name="Trampoline" type="Node3D" parent="SouthWestYard" unique_id=1695404620]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0, 21)
+script = ExtResource("4_cjvs5")
+radius = 1.3
+at = PackedFloat64Array(-3.5, 0, 21)
+
+[node name="Shed" type="Node3D" parent="SouthWestYard" unique_id=1818522799]
+transform = Transform3D(6, 0, 0, 0, 2.6, 0, 0, 0, 5, -25, 1.3, 29.5)
+script = ExtResource("2_8b0y2")
+kind = "shed"
+box = PackedFloat64Array(-28, 0, 27, -22, 2.6, 32)
+web_box = PackedFloat64Array()
+
+[node name="ShedRoof" type="Node3D" parent="SouthWestYard" unique_id=1584253800]
+transform = Transform3D(6.799999, 0, 0, 0, 0.3000002, 0, 0, 0, 5.800001, -25, 2.75, 29.5)
+script = ExtResource("2_8b0y2")
+kind = "roof"
+box = PackedFloat64Array(-28.4, 2.6, 26.6, -21.6, 2.9, 32.4)
+web_box = PackedFloat64Array()
+
+[node name="CrateLow" type="Node3D" parent="SouthWestYard" unique_id=794030127]
+transform = Transform3D(1.2000008, 0, 0, 0, 1, 0, 0, 0, 1.2000008, -29, 0.5, 28.4)
+script = ExtResource("2_8b0y2")
+kind = "crate"
+box = PackedFloat64Array(-29.6, 0, 27.8, -28.4, 1, 29)
+web_box = PackedFloat64Array()
+
+[node name="CrateHigh" type="Node3D" parent="SouthWestYard" unique_id=1838769815]
+transform = Transform3D(1.1999989, 0, 0, 0, 2, 0, 0, 0, 1.2000008, -30.2, 1, 28.4)
+script = ExtResource("2_8b0y2")
+kind = "crate"
+box = PackedFloat64Array(-30.8, 0, 27.8, -29.6, 2, 29)
+web_box = PackedFloat64Array()
+
+[node name="PicnicTable" type="Node3D" parent="SouthWestYard" unique_id=2142465961]
+transform = Transform3D(3.5, 0, 0, 0, 0.9, 0, 0, 0, 1.5, -9.75, 0.45, 21.25)
+script = ExtResource("2_8b0y2")
+kind = "wood"
+box = PackedFloat64Array(-11.5, 0, 20.5, -8, 0.9, 22)
+web_box = PackedFloat64Array()
+
+[node name="TreeTrunk" type="Node3D" parent="SouthWestYard" unique_id=1309872269]
+transform = Transform3D(0.80000305, 0, 0, 0, 3.2, 0, 0, 0, 0.79999924, -36, 1.6, 18)
+script = ExtResource("2_8b0y2")
+kind = "trunk"
+box = PackedFloat64Array(-36.4, 0, 17.6, -35.6, 3.2, 18.4)
+web_box = PackedFloat64Array()
+
+[node name="TreeLeaves" type="Node3D" parent="SouthWestYard" unique_id=1705489545]
+transform = Transform3D(4, 0, 0, 0, 2.3999999, 0, 0, 0, 4, -36, 4.4, 18)
+script = ExtResource("2_8b0y2")
+kind = "leaves"
+box = PackedFloat64Array(-38, 3.2, 16, -34, 5.6, 20)
+web_box = PackedFloat64Array()
+
+[node name="FenceWest" type="Node3D" parent="SouthWestYard" unique_id=593365529]
+transform = Transform3D(16, 0, 0, 0, 0.9, 0, 0, 0, 0.19999981, -12, 0.45, 9.299999)
+script = ExtResource("2_8b0y2")
+kind = "fence"
+box = PackedFloat64Array(-20, 0, 9.2, -4, 0.9, 9.4)
+web_box = PackedFloat64Array()
+
+[node name="FenceEast" type="Node3D" parent="SouthWestYard" unique_id=1823126336]
+transform = Transform3D(18, 0, 0, 0, 0.9, 0, 0, 0, 0.19999981, -35, 0.45, 9.299999)
+script = ExtResource("2_8b0y2")
+kind = "fence"
+box = PackedFloat64Array(-44, 0, 9.2, -26, 0.9, 9.4)
+web_box = PackedFloat64Array()
+
+[node name="Mannequin" type="Node3D" parent="SouthWestYard" unique_id=591497668]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, 26)
+script = ExtResource("3_m3yyt")
+move_axis = "x"
+move_amp = 3.0
+move_speed = 1.2
+at = PackedFloat64Array(-16, 0, 26)
+
+[node name="YellowHouseStreet" type="Node3D" parent="." unique_id=982047093]
+
+[node name="TruckBed" type="Node3D" parent="YellowHouseStreet" unique_id=1778409628]
+transform = Transform3D(4.5, 0, 0, 0, 1.3, 0, 0, 0, 3, 37.75, 0.65, 3.9)
+script = ExtResource("2_8b0y2")
+kind = "truck"
+box = PackedFloat64Array(35.5, 0, 2.4, 40, 1.3, 5.4)
+web_box = PackedFloat64Array()
+
+[node name="TruckCab" type="Node3D" parent="YellowHouseStreet" unique_id=78569742]
+transform = Transform3D(3, 0, 0, 0, 2.4, 0, 0, 0, 3, 34, 1.2, 3.9)
+script = ExtResource("2_8b0y2")
+kind = "truck"
+box = PackedFloat64Array(32.5, 0, 2.4, 35.5, 2.4, 5.4)
+web_box = PackedFloat64Array()
+
+[node name="Hatchback" type="Node3D" parent="YellowHouseStreet" unique_id=738641349]
+transform = Transform3D(5.5, 0, 0, 0, 1.1, 0, 0, 0, 2.6000001, -16.75, 0.55, 4.5)
+script = ExtResource("2_8b0y2")
+kind = "house_yellow"
+box = PackedFloat64Array(-19.5, 0, 3.2, -14, 1.1, 5.8)
+web_box = PackedFloat64Array()
+
+[node name="HatchbackCabin" type="Node3D" parent="YellowHouseStreet" unique_id=1954769023]
+transform = Transform3D(2.8000002, 0, 0, 0, 0.79999995, 0, 0, 0, 2.6000001, -16.6, 1.5, 4.5)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-18, 1.1, 3.2, -15.2, 1.9, 5.8)
+web_box = PackedFloat64Array()
+
+[node name="LampWestPost" type="Node3D" parent="YellowHouseStreet" unique_id=1135822348]
+transform = Transform3D(0.29999924, 0, 0, 0, 5.5, 0, 0, 0, 0.3000002, 25, 2.75, 8.200001)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(24.85, 0, 8.05, 25.15, 5.5, 8.35)
+web_box = PackedFloat64Array()
+
+[node name="LampWestHead" type="Node3D" parent="YellowHouseStreet" unique_id=1271631099]
+transform = Transform3D(1.2000008, 0, 0, 0, 0.4000001, 0, 0, 0, 0.9000001, 25, 5.7, 8.05)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(24.4, 5.5, 7.6, 25.6, 5.9, 8.5)
+web_box = PackedFloat64Array()
+
+[node name="LampEastPost" type="Node3D" parent="YellowHouseStreet" unique_id=511324863]
+transform = Transform3D(0.29999924, 0, 0, 0, 5.5, 0, 0, 0, 0.3000002, -25, 2.75, 8.200001)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-25.15, 0, 8.05, -24.85, 5.5, 8.35)
+web_box = PackedFloat64Array()
+
+[node name="LampEastHead" type="Node3D" parent="YellowHouseStreet" unique_id=1238738674]
+transform = Transform3D(1.2000008, 0, 0, 0, 0.4000001, 0, 0, 0, 0.9000001, -25, 5.7, 8.05)
+script = ExtResource("2_8b0y2")
+kind = "trim"
+box = PackedFloat64Array(-25.6, 5.5, 7.6, -24.4, 5.9, 8.5)
+web_box = PackedFloat64Array()
+
+[node name="StreetLauncher" type="Node3D" parent="YellowHouseStreet" unique_id=691170521]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46, 0, 0)
+script = ExtResource("4_cjvs5")
+radius = 1.6
+launch = 9.0
+forward = 20.0
+directional = true
+dir_x = -1.0
+dir_z = 0.0
+at = PackedFloat64Array(46, 0, 0)
+
+[node name="Spawns" type="Node3D" parent="." unique_id=1884954853]
+
+[node name="Spawn1" type="Node3D" parent="Spawns" unique_id=289825985]
+transform = Transform3D(-0.00020365318, 0, -1, 0, 1, 0, 1, 0, -0.00020365318, -44, 0, 4)
+script = ExtResource("5_qxlf1")
+yaw = -1.571
+at = PackedFloat64Array(-44, 0, 4)
+
+[node name="Spawn2" type="Node3D" parent="Spawns" unique_id=238543253]
+transform = Transform3D(-0.00020365318, 0, -1, 0, 1, 0, 1, 0, -0.00020365318, -42, 0, -31)
+script = ExtResource("5_qxlf1")
+yaw = -1.571
+at = PackedFloat64Array(-42, 0, -31)
+
+[node name="Spawn3" type="Node3D" parent="Spawns" unique_id=1363945772]
+transform = Transform3D(-0.00020365318, 0, 1, 0, 1, 0, -1, 0, -0.00020365318, -6, 0, -31)
+script = ExtResource("5_qxlf1")
+yaw = 1.571
+at = PackedFloat64Array(-6, 0, -31)
+
+[node name="Spawn4" type="Node3D" parent="Spawns" unique_id=1830730163]
+transform = Transform3D(-0.00020365318, 0, -1, 0, 1, 0, 1, 0, -0.00020365318, -46, 0, -16)
+script = ExtResource("5_qxlf1")
+yaw = -1.571
+at = PackedFloat64Array(-46, 0, -16)
+
+[node name="Spawn5" type="Node3D" parent="Spawns" unique_id=1097628810]
+transform = Transform3D(-0.00020365318, 0, 1, 0, 1, 0, -1, 0, -0.00020365318, 44, 0, -30)
+script = ExtResource("5_qxlf1")
+yaw = 1.571
+at = PackedFloat64Array(44, 0, -30)
+
+[node name="Spawn6" type="Node3D" parent="Spawns" unique_id=1378744066]
+transform = Transform3D(-0.99999994, 0, -0.00040730633, 0, 1, 0, 0.00040730633, 0, -0.99999994, 32, 0, -13)
+script = ExtResource("5_qxlf1")
+yaw = 3.142
+at = PackedFloat64Array(32, 0, -13)
+
+[node name="Spawn7" type="Node3D" parent="Spawns" unique_id=342360043]
+transform = Transform3D(-0.00020365318, 0, 1, 0, 1, 0, -1, 0, -0.00020365318, 44, 0, -4)
+script = ExtResource("5_qxlf1")
+yaw = 1.571
+at = PackedFloat64Array(44, 0, -4)
+
+[node name="Spawn8" type="Node3D" parent="Spawns" unique_id=727719913]
+transform = Transform3D(-0.00020365318, 0, 1, 0, 1, 0, -1, 0, -0.00020365318, 42, 0, 31)
+script = ExtResource("5_qxlf1")
+yaw = 1.571
+at = PackedFloat64Array(42, 0, 31)
+
+[node name="Spawn9" type="Node3D" parent="Spawns" unique_id=1777925402]
+transform = Transform3D(-0.00020365318, 0, -1, 0, 1, 0, 1, 0, -0.00020365318, 6, 0, 31)
+script = ExtResource("5_qxlf1")
+yaw = -1.571
+at = PackedFloat64Array(6, 0, 31)
+
+[node name="Spawn10" type="Node3D" parent="Spawns" unique_id=833509676]
+transform = Transform3D(-0.00020365318, 0, 1, 0, 1, 0, -1, 0, -0.00020365318, 46, 0, 16)
+script = ExtResource("5_qxlf1")
+yaw = 1.571
+at = PackedFloat64Array(46, 0, 16)
+
+[node name="Spawn11" type="Node3D" parent="Spawns" unique_id=514365931]
+transform = Transform3D(-0.00020365318, 0, -1, 0, 1, 0, 1, 0, -0.00020365318, -44, 0, 30)
+script = ExtResource("5_qxlf1")
+yaw = -1.571
+at = PackedFloat64Array(-44, 0, 30)
+
+[node name="Spawn12" type="Node3D" parent="Spawns" unique_id=1700242988]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 0, 13)
+script = ExtResource("5_qxlf1")
+at = PackedFloat64Array(-32, 0, 13)

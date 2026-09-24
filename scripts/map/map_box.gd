@@ -13,7 +13,10 @@ extends Node3D
 ## Editing the box in the editor rewrites `box` from the transform, rounded to the millimeter, and
 ## clears `web_box`; boxes you don't touch keep their exact values.
 
-@export_enum("floor", "wall", "block", "stair", "pillar", "low", "test", "plat", "trialfloor", "arenafloor", "gate")
+## Its color (see WorldView.COLORS).
+@export_enum("floor", "wall", "block", "stair", "pillar", "low", "test", "plat", "trialfloor", "arenafloor", "gate",
+	"grass", "road", "sidewalk", "wood", "house_blue", "house_yellow", "trim", "roof", "fence", "hedge", "bus", "truck",
+	"shed", "leaves", "trunk", "crate")
 var kind := "block":
 	set(v):
 		kind = v

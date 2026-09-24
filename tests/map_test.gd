@@ -83,6 +83,19 @@ func run() -> void:
 		var info := MapData.info(id)
 		check("%s loads (%d boxes, %d spawns) with a card name '%s'" % [id, m.boxes.size(), m.spawns.size(), info.get("name", "")],
 			m.boxes.size() > 0 and not m.spawns.is_empty() and info.get("name", "") != "")
+	for id in ids:
+		var m := MapData.load_map(id)
+		var bad := []
+		for s: Dictionary in m.spawns:
+			var p := PlayerSim.new(s.x, s.y, s.z)
+			var stuck := p._blocked(m.nearby(p.px, p.py, p.pz, 2.0))
+			for i in 60:
+				p.step(Cmd.new(), m, Cfg.TICK_DT)
+			if stuck or not p.grounded or absf(p.py - float(s.y)) > 0.5:
+				bad.append(Vector3(s.x, s.y, s.z))
+		check("%s: every spawn is clear of walls and stands on something" % id, bad.is_empty())
+		if not bad.is_empty():
+			print("      bad spawns: ", bad)
 	var dev := MapData.load_map("dev_map")
 	check("the dev map has its time trial and both portals", not dev.trial.is_empty() and dev.portals.size() == 2)
 
