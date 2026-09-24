@@ -121,12 +121,13 @@ func _init() -> void:
 	body.slot = ""
 	body.fire_pressed = true
 	tick(body)
-	check("pistol body shot: 20 damage", is_equal_approx(dummy.hp, 130.0) and count("hit") == 1)
+	var pd: float = Items.WEAPONS.pistol.damage
+	check("pistol body shot: %d damage" % pd, is_equal_approx(dummy.hp, Combat.DUMMY_HP - pd) and count("hit") == 1)
 	ticks(int(Cfg.TICK_RATE / 6.0) + 1, cmd())
 	var head := cmd(0.0, pitch_to(1.73, DIST))
 	head.fire_pressed = true
 	tick(head)
-	check("pistol headshot: 40 damage (2x)", is_equal_approx(dummy.hp, 90.0))
+	check("pistol headshot: %d damage (2x)" % (pd * 2), is_equal_approx(dummy.hp, Combat.DUMMY_HP - pd * 3))
 	var hits := combat.fx.filter(func(e: Dictionary) -> bool: return e.type == "hit")
 	check("headshot is reported as a head hit", hits.size() == 2 and hits[1].zone == "head")
 
