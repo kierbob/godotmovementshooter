@@ -200,6 +200,18 @@ func recipe(name: String) -> void:
 		"pad": # BOING
 			tone("sine", 140, 620, 0.4, 0.55, {"vibrato": [18, 40]})
 			tone("triangle", 280, 1240, 0.3, 0.15)
+		# ---- getting hit (online) ----
+		"hurt": # oof
+			noise(0.14, 0.45, 900, 200, {"type": "bandpass", "q": 2})
+			tone("sine", 320, 120, 0.16, 0.45)
+		"death": # sad trombone
+			var notes := [392, 370, 349, 311]
+			for i in notes.size():
+				var last := i == 3
+				var o := {"delay": i * 0.26}
+				if last:
+					o.vibrato = [6, 10]
+				tone("triangle", notes[i], notes[i] * 0.85 if last else notes[i], 0.6 if last else 0.24, 0.22, o)
 		# ---- time trial ----
 		"teleport":
 			tone("sine", 200, 1600, 0.35, 0.35, {"vibrato": [25, 80]})
@@ -221,7 +233,7 @@ func recipe(name: String) -> void:
 const RANDOM := ["rifle", "smg", "impact"]
 const NAMES := ["shotgun", "rifle", "smg", "pistol", "kickpistol", "sniper", "deagle", "rocket", "dry", "reload",
 	"switch", "throw", "knifeThrow", "explosion", "impulse", "impact", "hit", "headshot", "kill", "jump", "land",
-	"slide", "wallJump", "pad", "teleport", "go", "finish", "ui"]
+	"slide", "wallJump", "pad", "teleport", "go", "finish", "ui", "hurt", "death"]
 
 
 func save(name: String) -> void:

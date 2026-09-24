@@ -1,7 +1,7 @@
 # Movement Shooter (Godot) — notes for Claude
 
 Godot 4.6 port of the web movement shooter. Read README.md first, then the scripts.
-Single player for now, multiplayer later. The owner plays on Windows (`play.bat` or F5 in Godot)
+Solo modes plus online multiplayer (one player hosts over ENet/UDP; friends join via playit.gg). The owner plays on Windows (`play.bat` or F5 in Godot)
 and works on the game in Claude Code cloud sessions.
 
 ## The web game
@@ -12,8 +12,8 @@ Useful files: `src/items.js` (weapon/ability data), `src/combat.js`, `src/hud.js
 `src/config.js`, `src/world.js`.
 
 Port only what the current step needs, not the whole web game. Guns, gun models, the combat HUD,
-the loadout screen, the cartoon effects, sound and the time trial are in; bots come later, in their
-own step.
+the loadout screen, the cartoon effects, sound, the time trial and multiplayer are in; bots come
+later, in their own step.
 
 ## Files
 
@@ -25,7 +25,8 @@ own step.
   `MapData.load_map(id)` reads a map scene; `MapConvert` / `tools/json_to_map.gd` make one from a
   map JSON. Maps: `dev_map` (web dev arena + time trial) and `bean-town` (Nuketown-style FFA,
   grouped by place; the yellow half mirrors the blue half through the center). A box's `kind` is
-  its color from `WorldView.COLORS` (add new kinds there and to MapBox's enum).
+  its color from `WorldView.COLORS` (add new kinds there and to MapBox's enum). Kind `barrier` is
+  an invisible wall: solid for players, not drawn, ignored by shots.
 - `scripts/main.gd`: game entry. Builds the map, runs the sim at a fixed 120 ticks/s, moves the
   camera between ticks, switches menu/playing/paused. Test flags: `--map=`, `--at=`, `--screen=`, `--shot=`.
 - `scripts/player_sim.gd`: the movement, line for line from the web game's `src/player.js`. It uses
@@ -48,6 +49,17 @@ own step.
 - `scripts/trial.gd` (time trial logic, port of `trial.js`; records in `user://trials.cfg`) and
   `trial_view.gd` (portals, timer board, banners). The course, portals and trial settings are in
   `maps/dev_map.tscn` (the MapTrial node and MapPortals).
+- Multiplayer (port of the web game's `src/net.js` + `server/server.js`):
+  `scripts/match_server.gd` (MatchServer: every player's PlayerSim + Combat on the host, one step
+  per input, lag compensation, damage/kills/respawns/regen, snapshots and events; no sockets, so
+  tests drive it directly), `scripts/net.gd` (Net: ENet host/join, RPCs, input resend, snapshot
+  interpolation, ping; lives under the tree root so it survives reloading into the host's map),
+  `scripts/net_codec.gd` (byte packing; inputs and your own state stay 64-bit so prediction
+  matches exactly), `scripts/remote_view.gd` (other players' beans), `scripts/online_hud.gd`
+  (health, kill feed, scoreboard, death screen). main.gd does prediction + reconciliation
+  (`_online_tick`, `_reconcile`) and handles host events. `PlayerSim.save_state/load_state` and
+  its impulse log exist for this. Anything that changes the player's state on the host but not
+  on their screen (like resetting their guns) makes the two drift: keep them in step.
 - `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
 - `scripts/world_view.gd`: map meshes, jump pads, bean dummies, clouds.
 - `scripts/menu.gd`, `ui_style.gd`, `hud.gd`, `settings.gd`: menus, styling, HUD, saved settings
@@ -57,7 +69,8 @@ own step.
   frozen original maps in `tests/maps/*.json` (so map edits don't break it). The combat and trial
   logic tests use those too; `tests/map_test.gd` checks the map scenes.
   `tests/menu_test.gd` clicks through the menus headless. `tests/combat_test.gd` checks the guns,
-  `tests/trial_test.gd` the time trial, `tests/sound_test.gd` the sounds.
+  `tests/trial_test.gd` the time trial, `tests/sound_test.gd` the sounds, `tests/net_test.gd`
+  multiplayer (codec, server matches prediction, combat, lag comp, a real ENet host + client).
 
 ## Rules
 
@@ -66,7 +79,8 @@ own step.
   the air, moving uphill into a ramp rides up onto it (the web game teleports you to the ramp's
   low end); see `PlayerSim._move_horizontal` and the ramp check in `tests/map_test.gd`.
 - After touching combat or menus, run `tests/combat_test.gd` and `tests/menu_test.gd` (and
-  `tests/trial_test.gd` / `tests/sound_test.gd` for those areas).
+  `tests/trial_test.gd` / `tests/sound_test.gd` for those areas). After touching multiplayer,
+  PlayerSim or Combat, run `tests/net_test.gd`.
 - Don't regenerate traces: `tools/make_traces.mjs` needs the web project next to this folder.
 - Style: a `##` doc comment at the top of each script, typed GDScript, short comments that
   explain why.
@@ -94,7 +108,11 @@ godot --headless --path . --script res://tests/combat_test.gd
 godot --headless --path . --script res://tests/trial_test.gd
 godot --headless --path . --script res://tests/sound_test.gd
 godot --headless --path . --script res://tests/map_test.gd
+godot --headless --path . --script res://tests/net_test.gd
 ```
+
+To try two real games against each other, start one with `-- --host=7777` and another with
+`-- --join=127.0.0.1:7777` (both work headless too).
 
 Headless runs draw nothing. To see the game, render under Xvfb (it falls back to OpenGL, so the
 lighting differs a little from Forward+ on Windows) and use the `--shot` flag:
@@ -110,4 +128,5 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 3. ~~Cartoon effects and sounds~~ (done).
 4. Bot Arena mode (still to do) and a time trial mode (done: guns off and guns on).
 5. More menu and settings polish.
-6. Later: multiplayer.
+6. ~~Multiplayer~~ (first version done: host/join, FFA, prediction, lag compensation). Later:
+   teams, match rules, dedicated server.

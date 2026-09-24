@@ -13,10 +13,11 @@ extends Node3D
 ## Editing the box in the editor rewrites `box` from the transform, rounded to the millimeter, and
 ## clears `web_box`; boxes you don't touch keep their exact values.
 
-## Its color (see WorldView.COLORS).
+## Its color (see WorldView.COLORS). "barrier" is an invisible wall: solid for players, not
+## drawn in the game, and shots pass through it.
 @export_enum("floor", "wall", "block", "stair", "pillar", "low", "test", "plat", "trialfloor", "arenafloor", "gate",
 	"grass", "road", "sidewalk", "wood", "house_blue", "house_yellow", "trim", "roof", "fence", "hedge", "bus", "truck",
-	"shed", "leaves", "trunk", "crate")
+	"shed", "leaves", "trunk", "crate", "barrier")
 var kind := "block":
 	set(v):
 		kind = v
@@ -164,5 +165,14 @@ func _refresh() -> void:
 	_view.mesh = st.commit()
 	var s := global_transform.basis.get_scale().abs().max(Vector3.ONE * 0.001)
 	_view.scale = Vector3.ONE / s
-	_view.material_override = WorldView.toon_material(WorldView.COLORS.get(kind, Color.WHITE), true)
+	if kind == "barrier":
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.albedo_color = Color(0.56, 0.83, 1.0, 0.18)
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_view.material_override = m
+		_view.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	else:
+		_view.material_override = WorldView.toon_material(WorldView.COLORS.get(kind, Color.WHITE), true)
 	update_configuration_warnings()

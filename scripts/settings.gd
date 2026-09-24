@@ -20,6 +20,7 @@ const ACTIONS := [
 	["secondary", "Secondary Weapon", "Combat", "key:%d" % KEY_2],
 	["ability", "Ability", "Combat", "key:%d" % KEY_Q],
 	["respawn", "Respawn", "Other", "key:%d" % KEY_K],
+	["scoreboard", "Scoreboard (online)", "Other", "key:%d" % KEY_TAB],
 	["stats", "Stats Panel", "Other", "key:%d" % KEY_F4],
 	["fullscreen", "Fullscreen", "Other", "key:%d" % KEY_F11],
 	["next_map", "Next Map (dev)", "Other", "key:%d" % KEY_F2],
@@ -44,6 +45,9 @@ static var stats_mode := 1 # 0 off, 1 compact, 2 full
 static var map := "dev_map"
 static var loadout := Items.DEFAULT_LOADOUT.duplicate() # {primary, secondary, ability} item ids
 static var binds := {} # action -> "key:..." / "mouse:..."
+static var player_name := "" # online name
+static var join_address := "" # last address joined ("host:port", e.g. a playit.gg address)
+static var host_port := 7777
 static var _loaded := false
 
 
@@ -67,6 +71,9 @@ static func load_settings() -> void:
 	lighting = l if Look.PRESETS.has(l) else lighting
 	stats_mode = cf.get_value("hud", "stats_mode", stats_mode)
 	map = cf.get_value("game", "map", map)
+	player_name = str(cf.get_value("online", "name", player_name)).substr(0, 16)
+	join_address = str(cf.get_value("online", "address", join_address))
+	host_port = clampi(int(cf.get_value("online", "port", host_port)), 1024, 65535)
 	for slot: String in loadout:
 		var id: String = cf.get_value("loadout", slot, loadout[slot])
 		if Items.is_valid(slot, id):
@@ -89,6 +96,9 @@ static func save_settings() -> void:
 	cf.set_value("video", "lighting", lighting)
 	cf.set_value("hud", "stats_mode", stats_mode)
 	cf.set_value("game", "map", map)
+	cf.set_value("online", "name", player_name)
+	cf.set_value("online", "address", join_address)
+	cf.set_value("online", "port", host_port)
 	for slot: String in loadout:
 		cf.set_value("loadout", slot, loadout[slot])
 	for a: String in binds:

@@ -152,6 +152,34 @@ kind = "wall"
 box = PackedFloat64Array(50, -1, -34, 51, 8, 34)
 web_box = PackedFloat64Array()
 
+[node name="BarrierNorth" type="Node3D" parent="Boundary" unique_id=1911002001]
+transform = Transform3D(102, 0, 0, 0, 32, 0, 0, 0, 1, 0, 24, -34.5)
+script = ExtResource("2_8b0y2")
+kind = "barrier"
+box = PackedFloat64Array(-51, 8, -35, 51, 40, -34)
+web_box = PackedFloat64Array()
+
+[node name="BarrierSouth" type="Node3D" parent="Boundary" unique_id=1911002002]
+transform = Transform3D(102, 0, 0, 0, 32, 0, 0, 0, 1, 0, 24, 34.5)
+script = ExtResource("2_8b0y2")
+kind = "barrier"
+box = PackedFloat64Array(-51, 8, 34, 51, 40, 35)
+web_box = PackedFloat64Array()
+
+[node name="BarrierWest" type="Node3D" parent="Boundary" unique_id=1911002003]
+transform = Transform3D(1, 0, 0, 0, 32, 0, 0, 0, 68, -50.5, 24, 0)
+script = ExtResource("2_8b0y2")
+kind = "barrier"
+box = PackedFloat64Array(-51, 8, -34, -50, 40, 34)
+web_box = PackedFloat64Array()
+
+[node name="BarrierEast" type="Node3D" parent="Boundary" unique_id=1911002004]
+transform = Transform3D(1, 0, 0, 0, 32, 0, 0, 0, 68, 50.5, 24, 0)
+script = ExtResource("2_8b0y2")
+kind = "barrier"
+box = PackedFloat64Array(50, 8, -34, 51, 40, 34)
+web_box = PackedFloat64Array()
+
 [node name="Street" type="Node3D" parent="." unique_id=593341759]
 
 [node name="SchoolBus" type="Node3D" parent="Street" unique_id=998910875]

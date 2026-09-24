@@ -108,6 +108,21 @@ func _init() -> void:
 	menu.to_main_menu.emit()
 	await frames()
 
+	# multiplayer screen: tab, name saved, a bad address explains itself, Esc goes back
+	(menu._top_tabs.online as Button).pressed.emit()
+	await frames()
+	check("MULTIPLAYER tab opens the multiplayer screen", menu.screen == "online" and menu._top.visible)
+	Settings.player_name = "Tester"
+	Settings.save_settings()
+	menu.join_match.emit("")
+	await frames()
+	check("joining with no address says what to do", menu._online_status.text.contains("address") and not game.online)
+	cf = ConfigFile.new()
+	check("your online name is saved", cf.load(Settings.path) == OK and cf.get_value("online", "name", "") == "Tester")
+	key(KEY_ESCAPE)
+	await frames()
+	check("Esc on the multiplayer screen goes back to the main menu", menu.screen == "main")
+
 	menu.play.emit("bean-town")
 	await frames(8)
 	game = current_scene

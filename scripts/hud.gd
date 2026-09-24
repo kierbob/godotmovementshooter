@@ -42,6 +42,8 @@ var _trial_box: VBoxContainer
 var _trial_mode: Label
 var _trial_time: Label
 var _trial_best: Label
+var online: OnlineHud # health, kill feed, scoreboard... (multiplayer only)
+var _online := false
 
 
 func _ready() -> void:
@@ -105,6 +107,10 @@ func _ready() -> void:
 	_build_weapon_panel()
 	_build_ability()
 	_build_trial()
+	online = OnlineHud.new()
+	online.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(online)
+	move_child(online, 0) # under the crosshair and words
 	_plain_dot = PlainDot.new()
 	_plain_dot.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_plain_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -258,10 +264,16 @@ func _build_ability() -> void:
 ## Everything except the stats panel is hidden in menus.
 func set_in_game(on: bool) -> void:
 	_in_game = on
+	online.visible = on and _online
 	_speed.visible = on
 	_speed_sub.visible = on
 	_panel.visible = on and debug_mode > 0
 	_apply_guns_visible()
+
+
+func set_online(on: bool) -> void:
+	_online = on
+	online.visible = on and _in_game
 
 
 ## Guns-off modes hide the crosshair, weapon panel and ability.

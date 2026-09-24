@@ -134,12 +134,17 @@ func on_events(events: Array[Dictionary], muzzle: Vector3, player: PlayerSim) ->
 					shake = maxf(shake, w.knockback * 0.006)
 			"hit":
 				_hit_splat(e)
-				if e.kill:
+				if e.get("quiet", false):
+					pass # someone else's hit, online: just the splat
+				elif e.kill:
 					word.emit("SPLAT!", e.pos, null, "kill")
 				elif e.zone == "head" and randf() < 0.5:
 					word.emit("BONK!", e.pos, null, "head")
 			"impact":
-				_impact(e.pos, e.normal)
+				if e.get("on_player", false):
+					add_star(e.pos, 0.3, 0.08, Color("fff3b0")) # the shot stopped on another player: no hole in the air
+				else:
+					_impact(e.pos, e.normal)
 			"explosion":
 				_explosion(e.pos, e.radius, e.kind)
 				var blue: bool = e.kind == "impulse"
@@ -152,6 +157,14 @@ func on_events(events: Array[Dictionary], muzzle: Vector3, player: PlayerSim) ->
 				slot.life = 0.25
 				var d := (e.pos as Vector3).distance_to(Vector3(player.px, player.py, player.pz))
 				shake = maxf(shake, maxf(0.0, 0.06 * (1 - d / 15)))
+
+
+## Another online player fired: a flash at their gun and tracers from it (no comic words, they're
+## not yours).
+func remote_shot(e: Dictionary, gun: Vector3) -> void:
+	add_star(gun, 0.28, 0.06, Color("fff3a0"))
+	for end: Vector3 in e.get("ends", []):
+		_add_tracer(gun, end)
 
 
 func _add_tracer(from: Vector3, to: Vector3) -> void:
@@ -360,11 +373,12 @@ func _update_tossed(dt: float) -> void:
 
 # ---------- per frame ----------
 
-func update(dt: float, combat: Combat) -> void:
+## extra: other online players' projectiles (drawn the same way, from snapshots).
+func update(dt: float, combat: Combat, extra: Array = []) -> void:
 	_combat = combat
 	_time += dt
 	var alive := {}
-	for pr in combat.projectiles:
+	for pr: Combat.Projectile in combat.projectiles + extra:
 		alive[pr] = true
 		var mesh: Node3D = _meshes.get(pr)
 		if mesh == null:

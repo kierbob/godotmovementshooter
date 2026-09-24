@@ -1,9 +1,9 @@
 class_name Combat
 extends RefCounted
 ## Weapons, abilities, projectiles, damage and knockback: a port of the web game's src/combat.js
-## (bots and online players left out for now). Pure logic that runs inside the fixed sim tick, so
-## a server could run it later. Visuals and the HUD read `fx` (a queue of events) every frame and
-## clear it.
+## (bots left out for now). Pure logic that runs inside the fixed sim tick, so the multiplayer
+## server (MatchServer) runs the same code. Visuals and the HUD read `fx` (a queue of events)
+## every frame and clear it.
 ##
 ## Vector3 is fine here (unlike PlayerSim): spread is random anyway, so nothing needs to match the
 ## web game bit for bit. Knockback goes into the player through PlayerSim.apply_impulse.
@@ -22,7 +22,10 @@ const DUMMY_RESPAWN := 2.5
 
 
 class Target:
-	var id := 0
+	var id := 0 # dummies: their index; online players: their peer id
+	var kind := "dummy" # "dummy" | "player" (server side, has a body) | "remote" (client side)
+	var name := ""
+	var body: PlayerSim = null # a real player: explosions push it, spawn protection applies
 	var base := Vector3.ZERO
 	var pos := Vector3.ZERO
 	var move := {} # {axis: "x"|"z", amp, speed} for sliding dummies
@@ -33,6 +36,7 @@ class Target:
 
 
 class Projectile:
+	var id := 0
 	var kind := ""
 	var def := {}
 	var pos := Vector3.ZERO
@@ -67,6 +71,7 @@ var ability := {}
 var ability_cd := 0.0
 var fire_queued := 0.0
 var last_hit := {}
+var _next_projectile := 1
 
 
 func _init(map_boxes: Array[MapData.Box], map_targets: Array) -> void:
@@ -325,6 +330,8 @@ static func ray_capsule(o: Vector3, d: Vector3, a: Vector3, b: Vector3, r: float
 func raycast(o: Vector3, d: Vector3, max_t: float, pad := 0.0, with_targets := true) -> Hit:
 	var best: Hit = null
 	for b in boxes:
+		if b.kind == "barrier":
+			continue # invisible walls only stop players
 		var h := ray_box(o, d, b, best.t if best else max_t)
 		if not h.is_empty():
 			best = Hit.new()
@@ -378,6 +385,13 @@ static func zone_mult(zone: String, head_mult: float) -> float:
 func damage_target(t: Target, dmg: float, zone: String, point: Vector3) -> void:
 	if t.dead:
 		return
+	if t.body and t.body.invuln > 0:
+		return # spawn protection
+	if t.kind == "remote":
+		# Another online player on our screen: the shot stops on them, but the server decides the
+		# damage (and sends the hit back so the hitmarker only shows real hits).
+		fx.append({"type": "impact", "pos": point, "normal": Vector3.UP, "on_player": true})
+		return
 	t.hp -= dmg
 	var kill := t.hp <= 0
 	if kill:
@@ -430,6 +444,8 @@ func _throw_ability(p: PlayerSim, c: Cmd) -> void:
 
 func _spawn_projectile(kind: String, def: Dictionary, origin: Vector3, d: Vector3, inherit: bool, p: PlayerSim) -> void:
 	var pr := Projectile.new()
+	pr.id = _next_projectile
+	_next_projectile += 1
 	pr.kind = kind
 	pr.def = def
 	pr.vel = d * float(def.speed) + Vector3(0, def.get("up", 0.0), 0)
@@ -499,6 +515,11 @@ func _explode(pos: Vector3, e: Dictionary, p: PlayerSim, kind: String) -> void:
 		if d_min < e.radius:
 			var dmg: float = e.damage * (1 - 0.6 * (d_min / e.radius))
 			damage_target(t, dmg, "body", t.pos + Vector3(0, 1.2, 0))
+			# Players have real bodies: explosions launch them too.
+			if t.body and not t.dead:
+				var kdir := ((t.pos + Vector3(0, 0.9, 0) - pos).normalized() + Vector3(0, 0.5, 0)).normalized()
+				var ks: float = e.knockback * (1 - 0.5 * (d_min / e.radius))
+				t.body.apply_impulse(kdir.x * ks, kdir.y * ks, kdir.z * ks, kind)
 
 	# Knockback on the player (no self-damage).
 	var hw := Cfg.PLAYER_HALF_WIDTH
@@ -518,6 +539,8 @@ func _explode(pos: Vector3, e: Dictionary, p: PlayerSim, kind: String) -> void:
 
 func _update_targets(p: PlayerSim, dt: float) -> void:
 	for t in targets:
+		if t.kind != "dummy":
+			continue # players respawn on the server's clock
 		if t.dead:
 			t.respawn_t -= dt
 			if t.respawn_t <= 0:
