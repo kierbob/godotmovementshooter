@@ -115,6 +115,50 @@ func run() -> void:
 				if front.dot(n[i]) <= 0 or (slope and n[i].y < 0):
 					wrong += 1
 		check("%s: all %d ramps face outward (none invisible from outside)" % [id, ramps], wrong == 0)
+		# the collision grid finds exactly what scanning every box finds, in the same order
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 3
+		var lo := Vector3(INF, INF, INF)
+		var hi := -lo
+		for b in m.boxes:
+			lo = lo.min(Vector3(b.min_x, b.min_y, b.min_z))
+			hi = hi.max(Vector3(b.max_x, b.max_y, b.max_z))
+		var mismatch := 0
+		for i in 3000:
+			var q := Vector3(rng.randf_range(lo.x, hi.x), rng.randf_range(maxf(lo.y, -20.0), minf(hi.y, 50.0)), rng.randf_range(lo.z, hi.z))
+			var r: float = [0.5, 2.0, 5.0, 12.0][i % 4]
+			var got := m.nearby(q.x, q.y, q.z, r)
+			var want: Array[MapData.Box] = []
+			for b in m.boxes:
+				if b.max_x < q.x - r or b.min_x > q.x + r or b.max_z < q.z - r or b.min_z > q.z + r \
+						or b.max_y < q.y - r or b.min_y > q.y + Cfg.PLAYER_HEIGHT + r:
+					continue
+				want.append(b)
+			if got != want:
+				mismatch += 1
+		check("%s: the collision grid finds the same boxes as a full scan" % id, mismatch == 0)
+		# every launcher (directional pad) throws you onto something, not out of the map: stand on
+		# it holding forward along its arrow until you land. (Plain pads are trampolines: you land
+		# back on them.)
+		var lost := []
+		var launchers := 0
+		for pd in m.pads:
+			if not pd.has_dir:
+				continue
+			launchers += 1
+			var p := PlayerSim.new(pd.x, pd.y, pd.z)
+			var c := Cmd.new()
+			c.forward = 1.0
+			c.yaw = atan2(-pd.dir_x, -pd.dir_z)
+			for i in 8 * Cfg.TICK_RATE:
+				p.step(c, m, Cfg.TICK_DT)
+				if p.grounded and p.pad_launches > 0 and i > 60:
+					break
+			if not p.grounded:
+				lost.append(Vector3(pd.x, pd.y, pd.z))
+		check("%s: all %d launch pads land you on something" % [id, launchers], lost.is_empty())
+		if not lost.is_empty():
+			print("      pads: ", lost)
 	var dev := MapData.load_map("dev_map")
 	check("the dev map has its time trial and both portals", not dev.trial.is_empty() and dev.portals.size() == 2)
 	ramp_collision()

@@ -26,7 +26,9 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   values are the truth; the node transform (32-bit) mirrors them and edits write back rounded to
   the millimeter. Only store short decimals: Godot misreads some 17-digit numbers from scenes.
   `MapData.load_map(id)` reads a map scene; `MapConvert` / `tools/json_to_map.gd` make one from a
-  map JSON. Maps: `dev_map` (web dev arena + time trial) and `bean-town` (Nuketown-style FFA,
+  map JSON. Maps: `dev_map` (web dev arena + time trial), `sunstone-valley` (stage 1, the
+  first run stage: a 240 m valley, grouped by area; big maps set `MapRoot.view_scale` to push the
+  haze out) and `bean-town` (Nuketown-style FFA,
   grouped by place; the yellow half mirrors the blue half through the center). A box's `kind` is
   its color from `WorldView.COLORS` (add new kinds there and to MapBox's enum). Kind `barrier` is
   an invisible wall: solid for players, not drawn, ignored by shots.
@@ -75,6 +77,7 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   Fair-play rules for every attack are in the enemies.gd header; `tests/enemy_test.gd` checks
   them, so keep it passing when adding or tuning enemies.
 - `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
+  `nearby()` looks boxes up in an 8 m grid but returns exactly what a full scan would, in map order.
 - `scripts/world_view.gd`: map meshes, jump pads, bean dummies, clouds.
 - `scripts/menu.gd`, `ui_style.gd`, `hud.gd`, `settings.gd`: menus, styling, HUD, saved settings
   and keybinds. The main screen is a Risk of Rain style column (singleplayer, multiplayer,
@@ -86,7 +89,7 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
 - `shaders/`: toon shading, sky, clouds.
 - `tests/compare.gd`: replays web-game movement (`tests/traces.json`) and checks every tick, on the
   frozen original maps in `tests/maps/*.json` (so map edits don't break it). The combat and trial
-  logic tests use those too; `tests/map_test.gd` checks the map scenes.
+  logic tests use those too; `tests/map_test.gd` checks the map scenes (spawns, ramps, the collision grid, every launcher lands).
   `tests/menu_test.gd` clicks through the menus headless. `tests/combat_test.gd` checks the guns,
   `tests/trial_test.gd` the time trial, `tests/sound_test.gd` the sounds, `tests/net_test.gd`
   multiplayer (codec, server matches prediction, combat, lag comp, a real ENet host + client),
@@ -149,7 +152,7 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 3. ~~Cartoon effects and sounds~~ (done).
 4. ~~Time trial~~ (done: guns off and guns on). ~~Risk of Rain style menus~~ (done: characters,
    lobby, loading screen).
-5. Roguelite: ~~enemies~~ (9 types + F10 admin console), spawn director, run over on death,
+5. Roguelite: ~~enemies~~ (9 types + F10 admin console), ~~stage 1 map~~ (Sunstone Valley), spawn director, run over on death,
    gold + chests + stacking items, teleporter/boss/next stage, more stages, character passives.
 6. ~~Multiplayer~~ (first version done: host/join, FFA, prediction, lag compensation). Later:
    teams, match rules, dedicated server.

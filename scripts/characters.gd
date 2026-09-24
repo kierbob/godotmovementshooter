@@ -26,7 +26,7 @@ const ORDER := ["brawler", "bomber", "sharpshooter"]
 const DEFAULT := "brawler"
 
 ## Runs start here (later: a random pick from the stage pool, then the next floors).
-const FIRST_STAGE := "bean-town"
+const FIRST_STAGE := "sunstone-valley"
 
 
 static func get_info(id: String) -> Dictionary:

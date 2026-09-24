@@ -117,7 +117,7 @@ func _ready() -> void:
 	add_child(enemy_view)
 	_build_beans()
 	_setup_environment()
-	Look.apply(Settings.lighting, env, sun, sky_mat, WorldView.cloud_material)
+	_apply_lighting()
 	if _shot_path == "":
 		Settings.apply_display()
 	Settings.apply_quality(get_viewport())
@@ -131,7 +131,7 @@ func _ready() -> void:
 	camera = Camera3D.new()
 	camera.fov = Settings.fov
 	camera.near = 0.05
-	camera.far = 500.0
+	camera.far = 500.0 * map.view_scale
 	add_child(camera)
 
 	player = PlayerSim.new(map.spawn.x, map.spawn.y, map.spawn.z)
@@ -331,7 +331,14 @@ func _on_settings_changed(what: String) -> void:
 			Settings.apply_quality(get_viewport())
 			viewmodel.set_msaa(Settings.QUALITY[Settings.quality].msaa)
 		"lighting":
-			Look.apply(Settings.lighting, env, sun, sky_mat, WorldView.cloud_material)
+			_apply_lighting()
+
+
+## The lighting preset, with the haze pushed out on big maps so the far side isn't washed out.
+func _apply_lighting() -> void:
+	Look.apply(Settings.lighting, env, sun, sky_mat, WorldView.cloud_material)
+	env.fog_depth_begin *= map.view_scale
+	env.fog_depth_end *= map.view_scale
 
 
 func _notification(what: int) -> void:

@@ -44,6 +44,14 @@ var targets: Array = [] # bean dummies: { x, y, z, move? }
 var trial := {} # time trial course (dev map only): start, startLineZ, killY, finish, exit, board
 var portals: Array = [] # hub portals to the time trial: { x, y, z, guns, label, sub }
 var arena := {} # bot arena layout (for the future Bot Arena mode)
+var view_scale := 1.0 # big maps push the haze out (MapRoot.view_scale)
+
+# nearby() looks boxes up in a grid of GRID_CELL m columns instead of scanning every box (big
+# stages have hundreds, and every enemy steps through here each tick).
+const GRID_CELL := 8.0
+var _grid := {} # Vector2i cell -> PackedInt32Array of box indices, in map order
+var _grid_of: Array[Box] = [] # the box list the grid was built from
+var _grid_count := -1
 
 const MAPS_DIR := "res://maps/"
 
@@ -97,6 +105,7 @@ static func load_map(id: String, path := "") -> MapData:
 		return m
 	m.name = root.map_name
 	m.arena = root.arena.duplicate(true)
+	m.view_scale = root.view_scale
 	_collect(root, m)
 	if m.spawns.is_empty():
 		m.spawns = [{"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0}]
@@ -219,11 +228,52 @@ func nearby(x: float, y: float, z: float, r: float) -> Array[Box]:
 	var z1 := z + r
 	var y0 := y - r
 	var y1 := y + Cfg.PLAYER_HEIGHT + r
-	for b in boxes:
+	var cx0 := floori(x0 / GRID_CELL)
+	var cx1 := floori(x1 / GRID_CELL)
+	var cz0 := floori(z0 / GRID_CELL)
+	var cz1 := floori(z1 / GRID_CELL)
+	if (cx1 - cx0 + 1) * (cz1 - cz0 + 1) > 16:
+		# a wide query (a long enemy sight line): just check every box
+		for b in boxes:
+			if b.max_x < x0 or b.min_x > x1 or b.max_z < z0 or b.min_z > z1 or b.max_y < y0 or b.min_y > y1:
+				continue
+			out.append(b)
+		return out
+	if not is_same(_grid_of, boxes) or _grid_count != boxes.size():
+		_build_grid()
+	# Candidates from the grid cells the query touches, then back into map order so the result
+	# (and so the movement) is exactly what the full scan gives.
+	var ids := PackedInt32Array()
+	for cx in range(cx0, cx1 + 1):
+		for cz in range(cz0, cz1 + 1):
+			ids.append_array(_grid.get(Vector2i(cx, cz), PackedInt32Array()))
+	ids.sort()
+	var last := -1
+	for i in ids:
+		if i == last:
+			continue
+		last = i
+		var b := boxes[i]
 		if b.max_x < x0 or b.min_x > x1 or b.max_z < z0 or b.min_z > z1 or b.max_y < y0 or b.min_y > y1:
 			continue
 		out.append(b)
 	return out
+
+
+## Bucket every box into the GRID_CELL-sized columns it covers (built on first use, and again if
+## the box list is replaced or grows).
+func _build_grid() -> void:
+	_grid.clear()
+	_grid_of = boxes
+	_grid_count = boxes.size()
+	for i in boxes.size():
+		var b := boxes[i]
+		for cx in range(floori(b.min_x / GRID_CELL), floori(b.max_x / GRID_CELL) + 1):
+			for cz in range(floori(b.min_z / GRID_CELL), floori(b.max_z / GRID_CELL) + 1):
+				var k := Vector2i(cx, cz)
+				var cell: PackedInt32Array = _grid.get(k, PackedInt32Array())
+				cell.append(i)
+				_grid[k] = cell
 
 
 # ---------- collision helpers (mirror src/world.js) ----------

@@ -12,7 +12,7 @@ The game is heading toward a Risk of Rain style roguelite (runs over several sta
 items that stack). The menus already work that way:
 
 - **SINGLEPLAYER** → the lobby: pick your character (Brawler, Bomber, Sharpshooter; each is a
-  fixed kit), press **READY** → the loading screen → stage 1 (Bean Town for now).
+  fixed kit), press **READY** → the loading screen → stage 1, Sunstone Valley.
 - **MULTIPLAYER**: greyed out for now (the code is there, parked while the solo game comes
   together).
 - **PRACTICE** → the Dev Arena (free play with the dummies) and the two **time trials** (guns
@@ -54,6 +54,22 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   protection, kill feed, hold-Tab scoreboard, hurt flash and a direction arrow.
 - **Maps**, as scenes you edit in the Godot editor (`maps/`, see "Editing maps" below):
   - **Dev Arena**: the web game's dev map with every number kept exact, plus the time trial.
+  - **Sunstone Valley** (stage 1): a big valley (about 240 x 240 m, 8x Bean Town) walled in by
+    cliffs, with a set piece in every direction:
+    - **Center, the Sunstone Ruins**: a stepped plaza with four 22 m pillars holding up a crown
+      you can walk around, a gold platform floating above it and a giant gem above that (you can
+      see it from anywhere). Pads chain you up: ground → pillar ledge → crown → Sunstone.
+    - **North, the highlands**: a plateau 10 m up with two ramps (slide down them), a cave with a
+      chamber and a skylight pad up through the roof, and three mesas (18, 28 and 18 m) with a
+      sky bridge across and launch pads between them.
+    - **East, the canyon**: 10 m deep. Slide in down the north ramp; a stone bridge, a broken
+      bridge you jump, ramps and pads out, launchers that fling you across, a grotto at the end.
+    - **South, the ridge**: 20 m up, with a ski slope down into the valley (slide it for speed)
+      and a kicker at the bottom that throws you into the air.
+    - **West, the old fort**: walls you can walk along (stairs inside), two towers with pads up,
+      a ruined keep, breaches and a gate.
+    - **Around**: four floating sky isles (a pad up to each, a cannon from each to the crown),
+      trees, boulders and sunstone shards.
   - **Bean Town**: a Nuketown-style FFA map. Two two-story houses face each other across a
     cul-de-sac, with a school bus, trucks and cars in the street. Built for speed: doors and windows
     3-5 m wide with knee-high sills you can sprint or slide straight through, stairs to the upstairs,
@@ -164,7 +180,7 @@ on the Godot command line (after `--`).
 
 ## Editing maps
 
-Open `maps/dev_map.tscn` or `maps/bean-town.tscn` in the Godot editor. Every piece is a node:
+Open a map in `maps/` (`dev_map.tscn`, `sunstone-valley.tscn`, `bean-town.tscn`) in the Godot editor. Every piece is a node:
 
 - **MapBox**: a solid box. Move it and scale it with the normal gizmos (position = center, scale =
   size in meters). In the Inspector: `kind` (its color: floor, wall, grass, road, house_blue,
@@ -177,12 +193,16 @@ Open `maps/dev_map.tscn` or `maps/bean-town.tscn` in the Godot editor. Every pie
 - **MapPortal**: the hub portals to the time trial (guns on / off).
 - **MapTrial** (Dev Arena): the course's Start, Exit portal, Finish zone and timer Board, plus the
   start line and fall-off height. The course itself is ordinary boxes under it.
-- The root (**MapRoot**) holds the map's name and its card text and colors for the map screen.
+- The root (**MapRoot**) holds the map's name and its card text and colors for the map screen,
+  and `view_scale` (big maps push the distance haze out; Sunstone Valley uses 1.6).
 
 Group nodes under plain Node3Ds however you like; moving a group moves everything in it. Bean
 Town is grouped by place (`BlueHouse/Walls`, `BlueHouse/Roof`, `Street`, `BlueBackyard`...), and the
 yellow side is the blue side turned around, so change both if you want it to stay fair. Save
-(Ctrl+S) and press F5. Positions snap to the millimeter; turn on Godot's grid snap for tidy
+(Ctrl+S) and press F5. Sunstone Valley is grouped the same way (`SunstoneRuins/Crown`,
+`Highlands/Cave`, `Mesas/MesaWest`, `Canyon/StoneBridge`, `OldFort/Walls`, `SkyIsles/IsleNE`...);
+when you move a platform, move the pads that throw you onto it too (`tests/map_test.gd` checks
+every launcher still lands you on something). Positions snap to the millimeter; turn on Godot's grid snap for tidy
 numbers. A new map: duplicate a `.tscn` in `maps/` and rename it; it shows up on the map screen.
 
 Maps from the web game's map editor can be brought in with
@@ -231,6 +251,6 @@ The roguelite, in this order:
    time, harder as the clock runs), tuning from playtests.
 2. "Run over" when you die in a run (solo health and dying are in).
 3. Gold, chests and stacking items (movement-themed: speed, extra wall jumps, slide damage...).
-4. Run structure: teleporter + boss wave, then the next stage (the loading screen is ready for
-   it), a difficulty clock.
+4. Run structure: teleporter + boss wave (the altar in the middle of the Sunstone Ruins is the
+   spot), then the next stage (the loading screen is ready for it), a difficulty clock.
 5. More stages, character passives, unlocks. Multiplayer becomes co-op.

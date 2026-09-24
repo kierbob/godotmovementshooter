@@ -13,5 +13,7 @@ extends Node3D
 @export var art := "MAP" ## big faded word on the card
 @export var grad_from := Color("2f6bff")
 @export var grad_to := Color("8a3dff")
+## Big maps: pushes the distance haze (and the camera's far plane) out this many times.
+@export_range(1.0, 3.0, 0.1) var view_scale := 1.0
 ## Bot arena layout for the future Bot Arena mode (kept as data for now).
 @export var arena := {}
