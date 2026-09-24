@@ -1,6 +1,7 @@
 class_name Items
-## Weapon and ability definitions, copied 1:1 from the web game's src/items.js. Pure data: add a
-## gun by adding an entry here (and a model in MODELS). The loadout screen lists everything here.
+## Weapon and ability definitions, from the web game's src/items.js (balance tweaks since: Boomstick
+## pellets 9 -> 11, Sidearm 20 -> 25). Pure data: add a gun by adding an entry here (and a model in
+## MODELS). The loadout screen lists everything here.
 ##
 ## Weapon fields:
 ##   slot        "primary" | "secondary"
@@ -29,7 +30,7 @@ const WEAPONS := {
 	"shotgun": {
 		"id": "shotgun", "slot": "primary", "name": "Boomstick",
 		"desc": "Close-range blast. Shoot the floor to launch yourself.",
-		"type": "hitscan", "auto": false, "damage": 9.0, "head_mult": 1.25, "pellets": 10, "spread": 5.0,
+		"type": "hitscan", "auto": false, "damage": 11.0, "head_mult": 1.25, "pellets": 10, "spread": 5.0,
 		"fire_rate": 1.3, "mag": 4, "reload": 1.5, "range": 60.0, "knockback": 16.0, "kick": 1.0, "crosshair": "ring",
 		"fx": {"star": 0.34, "lines": true, "words": ["BLAM!", "KA-BLAM!", "POW!"], "word_chance": 1.0, "shell": Color("e0483a")},
 	},
@@ -61,7 +62,7 @@ const WEAPONS := {
 	"pistol": {
 		"id": "pistol", "slot": "secondary", "name": "Sidearm",
 		"desc": "Reliable semi-auto. Rewards headshots.",
-		"type": "hitscan", "auto": false, "damage": 20.0, "head_mult": 2.0, "pellets": 1, "spread": 0.3,
+		"type": "hitscan", "auto": false, "damage": 25.0, "head_mult": 2.0, "pellets": 1, "spread": 0.3,
 		"fire_rate": 6.0, "mag": 12, "reload": 1.1, "range": 150.0, "knockback": 0.0, "kick": 0.35, "crosshair": "dot",
 		"fx": {"star": 0.18, "lines": false, "words": ["BANG!", "PEW!"], "word_chance": 0.35, "shell": Color("ffc23d")},
 	},
