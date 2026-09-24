@@ -62,7 +62,9 @@ own step.
 ## Rules
 
 - Movement must stay identical to the web game. After touching `player_sim.gd`, `cfg.gd` or
-  collision in `map_data.gd`, run `tests/compare.gd`; it must pass.
+  collision in `map_data.gd`, run `tests/compare.gd`; it must pass. One deliberate difference: in
+  the air, moving uphill into a ramp rides up onto it (the web game teleports you to the ramp's
+  low end); see `PlayerSim._move_horizontal` and the ramp check in `tests/map_test.gd`.
 - After touching combat or menus, run `tests/combat_test.gd` and `tests/menu_test.gd` (and
   `tests/trial_test.gd` / `tests/sound_test.gd` for those areas).
 - Don't regenerate traces: `tools/make_traces.mjs` needs the web project next to this folder.

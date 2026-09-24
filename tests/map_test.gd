@@ -117,6 +117,7 @@ func run() -> void:
 		check("%s: all %d ramps face outward (none invisible from outside)" % [id, ramps], wrong == 0)
 	var dev := MapData.load_map("dev_map")
 	check("the dev map has its time trial and both portals", not dev.trial.is_empty() and dev.portals.size() == 2)
+	ramp_collision()
 
 	# ---- editing: what the editor does after you drag a gizmo ----
 	await process_frame # the tree only takes nodes once the main loop runs
@@ -148,3 +149,44 @@ func run() -> void:
 		and is_equal_approx(sp.global_rotation.y, 1.5))
 	holder.queue_free()
 	await process_frame
+
+
+## Jumping or flying into a ramp uphill rides up onto it. (The web game pushes you out to the
+## ramp's low end instead, a teleport of meters; see PlayerSim._move_horizontal.)
+func ramp_collision() -> void:
+	var m := MapData.new()
+	var floor_box := MapData.Box.new()
+	floor_box.min_x = -30.0
+	floor_box.min_y = -1.0
+	floor_box.min_z = -5.0
+	floor_box.max_x = 30.0
+	floor_box.max_y = 0.0
+	floor_box.max_z = 5.0
+	var ramp := MapData.Box.new()
+	ramp.min_x = 0.0
+	ramp.min_y = 0.0
+	ramp.min_z = -2.0
+	ramp.max_x = 5.0
+	ramp.max_y = 3.0
+	ramp.max_z = 2.0
+	ramp.ramp_axis = 0
+	ramp.ramp_dir = 1
+	m.boxes = [floor_box, ramp]
+	# jump at several moments so the landing hits the slope at different heights
+	var worst := 0.0
+	var tops := 0
+	for jump_tick in range(40, 80, 4):
+		var p := PlayerSim.new(-10.0, 0.0, 0.0)
+		for i in 240:
+			var c := Cmd.new()
+			c.forward = 1.0
+			c.sprint = true
+			c.yaw = -PI / 2 # +x, uphill
+			c.jump = i == jump_tick
+			c.jump_held = c.jump
+			var ox := p.px
+			p.step(c, m, Cfg.TICK_DT)
+			worst = maxf(worst, ox - p.px)
+		if p.px > 5.0:
+			tops += 1
+	check("jumping onto a ramp uphill rides up it (no push back: %.2f m)" % worst, worst < 0.01 and tops == 10)
