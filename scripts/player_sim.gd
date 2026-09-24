@@ -40,6 +40,9 @@ var state := "air"
 var time := 0.0
 var events: Array = [] # recent movement events for the debug panel: { t, name, detail }
 var quiet := false # don't log events (replays)
+# Online: knockback this tick is recorded so a prediction correction can replay it.
+var log_impulses := false
+var impulse_log: Array = [] # [[x, y, z], ...]
 # Ramp we're standing on this tick: downhill direction + slide acceleration (JS p.rampDown).
 var ramp_down := false
 var ramp_down_x := 0.0
@@ -76,6 +79,62 @@ func _log(event_name: String, detail := "") -> void:
 		events.pop_front()
 
 
+## Everything step() carries from one tick to the next, as 64-bit numbers (web snapshotState).
+## Online, the server sends this; the client restores it and replays its newer inputs on top.
+func save_state() -> PackedFloat64Array:
+	return PackedFloat64Array([px, py, pz, vx, vy, vz, height, float(grounded), float(crouching),
+		float(sliding), slide_cooldown, coyote, jump_buffer, air_time, friction_grace, land_grace,
+		hp, max_hp, float(dead), regen_delay, invuln, float(sprinting), pad_cooldown, float(pad_launches),
+		float(last_pad), float(has_wall_n), float(wall_n.x), float(wall_n.y), wall_coyote, float(wall_jumps),
+		last_wall_jump_t, float(has_last_wall_n), float(last_wall_n.x), float(last_wall_n.y), time,
+		float(ramp_down), ramp_down_x, ramp_down_z, ramp_down_a])
+
+
+const STATE_SIZE := 39
+
+
+func load_state(s: PackedFloat64Array) -> void:
+	if s.size() != STATE_SIZE:
+		return
+	px = s[0]
+	py = s[1]
+	pz = s[2]
+	vx = s[3]
+	vy = s[4]
+	vz = s[5]
+	height = s[6]
+	grounded = s[7] != 0.0
+	crouching = s[8] != 0.0
+	sliding = s[9] != 0.0
+	slide_cooldown = s[10]
+	coyote = s[11]
+	jump_buffer = s[12]
+	air_time = s[13]
+	friction_grace = s[14]
+	land_grace = s[15]
+	hp = s[16]
+	max_hp = s[17]
+	dead = s[18] != 0.0
+	regen_delay = s[19]
+	invuln = s[20]
+	sprinting = s[21] != 0.0
+	pad_cooldown = s[22]
+	pad_launches = int(s[23])
+	last_pad = int(s[24])
+	has_wall_n = s[25] != 0.0
+	wall_n = Vector2i(int(s[26]), int(s[27]))
+	wall_coyote = s[28]
+	wall_jumps = int(s[29])
+	last_wall_jump_t = s[30]
+	has_last_wall_n = s[31] != 0.0
+	last_wall_n = Vector2i(int(s[32]), int(s[33]))
+	time = s[34]
+	ramp_down = s[35] != 0.0
+	ramp_down_x = s[36]
+	ramp_down_z = s[37]
+	ramp_down_a = s[38]
+
+
 func eye_y() -> float:
 	return py + (Cfg.PLAYER_CROUCH_EYE_HEIGHT if crouching else Cfg.PLAYER_EYE_HEIGHT)
 
@@ -83,6 +142,8 @@ func eye_y() -> float:
 ## Knockback from guns/explosions. Anything pushing up cancels your fall first, so a rocket
 ## jump works the same whether you're rising or falling.
 func apply_impulse(ix: float, iy: float, iz: float, source := "") -> void:
+	if log_impulses:
+		impulse_log.append([ix, iy, iz])
 	if iy > 0:
 		vy = maxf(vy, 0.0)
 		grounded = false
