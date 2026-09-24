@@ -148,7 +148,10 @@ static func _add_ramp(st: SurfaceTool, b: MapData.Box) -> void:
 		[P.call(lo, o0, y0), P.call(hi, o0, y0), P.call(hi, o0, y1)], # sides
 		[P.call(lo, o1, y0), P.call(hi, o1, y0), P.call(hi, o1, y1)],
 	]
-	var center := Vector3((b.min_x + b.max_x) / 2, (b.min_y + b.max_y) / 2, (b.min_z + b.max_z) / 2)
+	# A point inside the wedge (its cross-section's centroid) to point every face away from. Not the
+	# box center: the slope passes right through it, so which way the slope faced came down to
+	# rounding and some slopes faced inward (culled, invisible from outside).
+	var center: Vector3 = P.call(lo + (hi - lo) * 2.0 / 3.0, (o0 + o1) / 2, y0 + (y1 - y0) / 3.0)
 	for f: Array in faces:
 		var verts: Array[Vector3] = []
 		for p: Vector3 in f:
