@@ -11,7 +11,7 @@ you hosts, see "Playing online").
 The game is heading toward a Risk of Rain style roguelite (runs over several stages, enemies,
 items that stack). The menus already work that way:
 
-- **SINGLEPLAYER** → the lobby: pick your character (Brawler, Bomber, Sharpshooter; each is a
+- **SINGLEPLAYER** → the lobby: pick your character (Brawler, Bomber, Sharpshooter, Commando; each is a
   fixed kit), press **READY** → the loading screen → stage 1, Sunstone Valley.
 - **MULTIPLAYER**: greyed out for now (the code is there, parked while the solo game comes
   together).
@@ -90,7 +90,11 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   hitmarkers, weapon slots, ammo, reload bar and the ability cooldown.
 - **Characters** (`scripts/characters.gd`): Brawler (Boomstick, Kick Pistol, Impulse Charge),
   Bomber (Rocket Launcher, Sidearm, Impact Grenade), Sharpshooter (Long Shot, Buzz SMG, Throwing
-  Knife). Picked in the lobby, shown on a 3D stage in their color; saved with your settings.
+  Knife), Commando (Pulse Rifle, Deagle, Combat Dash: 22 m/s wherever you look plus a hop, on the
+  ground or in the air, every 3.5 s). Picked in the lobby, shown on a 3D stage in their color;
+  saved with your settings.
+- **Levels**: kills give XP (the same as their gold); each level is +10% damage, +12 max health and
+  a full heal ("LEVEL UP!", a gold ring). Your level and XP bar sit over your health.
 - **Lobby and loading screen**: Risk of Rain style. Everyone ready → (online: a 3 s countdown) →
   a loading card with the stage number, name, progress and tips, which stays up while the stage
   loads and, online, until everyone has loaded.
@@ -160,17 +164,29 @@ spawn 12 m in front of you, facing you. The console gives items too (see "Items"
 
 `scripts/upgrades.gd` (the list and what they do), `scripts/status_fx.gd` (statuses on beans),
 `scripts/item_hud.gd` (the item bar and pickup banner). Risk of Rain style: 34 items in three
-rarities, every one stacks.
+rarities plus 6 legendaries, every one stacks.
 
 **Getting them** (`scripts/loot.gd`, `scripts/loot_view.gd`): every kill pays gold (a swarmer $3,
-most enemies $7-10, a brute $18; shown top right). Each run puts 14 chests on a random pick of the
-stage's chest spots, some out in the open, some as rewards up high (the crown, the Sunstone, the
-mesa tops, the sky isles, the fort towers) or tucked away (the cave chamber, the canyon grotto).
-Walk up to one and press **E**: a chest costs $25 (79% common, 20% uncommon, 1% rare), a large
-chest $50 (80% uncommon, 20% rare). The item hops out toward you and floats in the loot glow for
-its rarity (white, green, red: the BinbunVFX loot pack in `assets/fx/GodotLootVFX`); walk into it
-to take it. Chest spots are MapChest nodes (under `Chests` in the map): move them, add more, set
-`size` to any / small / large.
+most enemies $7-10, a brute $18; shown top right). Each run fills 14 of the stage's chest spots,
+some out in the open, some as rewards up high (the crown, the Sunstone, the mesa tops, the sky
+isles, the fort towers) or tucked away (the cave chamber, the canyon grotto), and puts barrels on
+8 of the rest. Walk up to one and press **E**:
+
+| What | Cost | Inside |
+| --- | --- | --- |
+| Chest (wood) | $25 | 79% common, 20% uncommon, 1% rare |
+| Large Chest (purple) | $50 | 80% uncommon, 20% rare |
+| Golden Chest (in a pillar of gold light) | $150 | always a **legendary** |
+| Damage / Utility / Healing Chest (red / blue / green) | $30 | only that kind of item: guns and damage, movement and kills, or staying alive |
+| Terminals (three in a row, each showing its item) | $35 | buy the one you want; the other two shut |
+| Shrine of Chance | $20, then more each try | 45%: an item; otherwise nothing. Two gifts, then it's spent |
+| Barrel | free | smash it for a little gold |
+
+Opening one shoots a beam of the item's rarity color into the sky (a rare shouts "RARE!", a
+legendary "LEGENDARY!!"); the item hops out toward you and floats in the loot glow for its rarity
+(white, green, red, gold: the BinbunVFX loot pack in `assets/fx/GodotLootVFX`); walk into it to take
+it. Chest spots are MapChest nodes (under `Chests` in the map): move them, add more, and set `size`
+(any rolls it; or small, large, golden, damage, utility, healing, shop, shrine).
 
 | Rarity | Item | One of them | More of them |
 | --- | --- | --- | --- |
@@ -208,6 +224,12 @@ to take it. Chest spots are MapChest nodes (under `Chests` in the map): move the
 | Rare | Stomp Boots | landing from a big fall slams the ground (faster = harder) | +50%, +1 m |
 | Rare | Wisp Jar | kills release 2 wisps that hunt enemies for 40 each | +1 wisp |
 | Rare | Four Leaf | every chance rolls twice | +1 reroll |
+| Legendary | Drone Buddy | a drone orbits you and shoots enemies (12 a shot, 4 a second) | +1 drone |
+| Legendary | Orbital Strike | every 6 s a laser from the sky hits the toughest enemy near you for 250 | 1 s sooner |
+| Legendary | Hydra Launcher | every 5th shot also fires 4 homing missiles | +2 missiles |
+| Legendary | Singularity | 10% chance on hit: a black hole drags enemies in, grinds them, implodes for 120 | +5% |
+| Legendary | Phoenix Feather | the hit that would kill you doesn't: back up at half health | +1 life |
+| Legendary | Glass Cannon | double damage, half max health | again |
 
 How they work together: only your guns' own hits (bullets, rockets, knives, Slide Spikes) roll
 the "on hit" items; burn/bleed ticks, lightning, item explosions and wisps don't, so chains can't
@@ -221,7 +243,8 @@ burn, dark red bleed, light blue item damage. They work on the practice dummies 
 **Console:** `give triple tap 3`, `give random 5`, `take <item>`, `items` (what you carry),
 `items all` (every item), `clearitems`; or the item buttons under the text bar (hover for the
 name; the x1 / x3 / x5 count applies). `gold [amount]` (+100 GOLD button), `chest [small|large]`
-(CHEST button) puts one right in front of you.
+(CHEST button) puts one right in front of you (`chest golden`, `chest shop`, `chest shrine`...),
+`levelup [n]` gains levels.
 
 ## Playing online
 
@@ -331,8 +354,9 @@ The roguelite, in this order:
 1. ~~Enemies~~ (done: 9 types, admin console). Next: the spawn director (enemies arrive over
    time, harder as the clock runs), tuning from playtests.
 2. "Run over" when you die in a run (solo health and dying are in).
-3. ~~Stacking items~~ (done: 34, see "Items"). ~~Gold and chests~~ (done). Next: chest prices
-   that rise over the run, more chest kinds (equipment, a shrine), more items.
+3. ~~Stacking items~~ (done: 40 with 6 legendaries, see "Items"). ~~Gold, chests, shops, shrines,
+   barrels~~ (done). ~~Levels~~ (done). Next: chest prices that rise over the run, equipment
+   (an active item on a key), more items.
 4. Run structure: teleporter + boss wave (the altar in the middle of the Sunstone Ruins is the
    spot), then the next stage (the loading screen is ready for it), a difficulty clock.
 5. More stages, character passives, unlocks. Multiplayer becomes co-op.

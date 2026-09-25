@@ -24,20 +24,34 @@ func _init() -> void:
 	# ---- the stage's chests ----
 	check("Sunstone Valley has chest spots (%d)" % map.chests.size(), map.chests.size() >= 20)
 	loot.place_chests()
-	var on_spots := loot.chests.all(func(c: Loot.Chest) -> bool:
-		return map.chests.any(func(s: Dictionary) -> bool: return Vector3(s.x, s.y, s.z).distance_to(c.pos) < 0.01))
-	check("a run puts %d chests on a random pick of them" % Loot.CHESTS_PER_RUN, loot.chests.size() == Loot.CHESTS_PER_RUN and on_spots)
+	var spot_at := func(c: Loot.Chest) -> bool:
+		return map.chests.any(func(s: Dictionary) -> bool: return Vector3(s.x, s.y, s.z).distance_to(c.pos) < 0.01)
+	var main_ones := loot.chests.filter(func(c: Loot.Chest) -> bool: return c.size != "barrel" and (c.size != "shop" or spot_at.call(c)))
+	var barrels := loot.chests.filter(func(c: Loot.Chest) -> bool: return c.size == "barrel")
+	check("a run fills %d chest spots (%d) and puts barrels on some of the rest (%d)" % [Loot.CHESTS_PER_RUN, main_ones.size(), barrels.size()],
+		main_ones.size() == Loot.CHESTS_PER_RUN and main_ones.all(spot_at) and barrels.size() == Loot.BARRELS_PER_RUN and barrels.all(spot_at))
 	var other := Loot.new(map, combat.up)
 	other.rng.seed = 99
 	other.place_chests()
 	check("...a different pick next run", other.chests.map(func(c: Loot.Chest) -> Vector3: return c.pos) != loot.chests.map(func(c: Loot.Chest) -> Vector3: return c.pos))
-	var big := 0
-	for i in 40:
+	var kinds := {}
+	var shops_ok := true
+	for i in 60:
 		var l := Loot.new(map, combat.up)
 		l.rng.seed = i
 		l.place_chests()
-		big += l.chests.filter(func(c: Loot.Chest) -> bool: return c.size == "large").size()
-	check("some are large chests (%.1f a run)" % (big / 40.0), big > 40 and big < 40 * Loot.CHESTS_PER_RUN / 2)
+		for c in l.chests:
+			kinds[c.size] = kinds.get(c.size, 0) + 1
+		var groups := {}
+		for c in l.chests:
+			if c.size == "shop":
+				groups[c.group] = groups.get(c.group, []) + [c.item]
+		for g: Variant in groups:
+			var items: Array = groups[g]
+			if items.size() != 3 or items[0] == items[1] or items[1] == items[2] or items[0] == items[2]:
+				shops_ok = false
+	check("runs mix every kind of thing (%s)" % str(kinds), Loot.CHESTS.keys().all(func(k: String) -> bool: return kinds.get(k, 0) > 0))
+	check("shops come as three terminals with three different items", kinds.get("shop", 0) > 0 and shops_ok)
 
 	# ---- gold ----
 	var player := PlayerSim.new(0, 0, 46)
@@ -99,6 +113,54 @@ func _init() -> void:
 		got[Upgrades.LIST[loot.roll_item("large")].rarity] += 1
 	check("large chests: never common, %.1f%% uncommon, %.1f%% rare (80 / 20)" % [got.uncommon / 200.0, got.rare / 200.0],
 		got.common == 0 and absf(got.uncommon / 200.0 - 80.0) < 1.5)
+
+	# ---- every kind ----
+	var buyer := PlayerSim.new(0, 0, 46)
+	for i in 5:
+		buyer.step(Cmd.new(), map, Cfg.TICK_DT)
+	loot = Loot.new(map, combat.up)
+	loot.rng.seed = 3
+	loot.gold = 100000
+	var golden := loot.add_chest(Vector3(0, 0, 44), "golden")
+	loot.open(golden, buyer)
+	check("a golden chest ($%d) always holds a legendary (%s)" % [Loot.CHESTS.golden.cost, loot.drops[0].item],
+		Upgrades.LIST[loot.drops[0].item].rarity == "legendary")
+	var themed_ok := true
+	for kind: String in ["damage", "utility", "healing"]:
+		for i in 60:
+			var it := loot.roll_item(kind)
+			if Upgrades.LIST[it].tag not in Loot.CHESTS[kind].tags:
+				themed_ok = false
+	check("themed chests only hold their kind of item (damage / utility / healing)", themed_ok)
+	loot.drops.clear()
+	loot._place_shop(Vector3(0, 0, 40), 0.0)
+	var terms := loot.chests.filter(func(c: Loot.Chest) -> bool: return c.size == "shop")
+	var pick: Loot.Chest = terms[1]
+	loot.open(pick, buyer)
+	check("buying from one terminal gives its item and shuts the other two", loot.drops.size() == 1
+		and loot.drops[0].item == pick.item and terms.all(func(c: Loot.Chest) -> bool: return c.opened))
+	loot.drops.clear()
+	var tries := 0
+	var gifts := 0
+	var rising := true
+	var dry := true
+	for n in 10:
+		loot.drops.clear()
+		var shrine := loot.add_chest(Vector3(0, 0, 36), "shrine")
+		var last := 0
+		while not shrine.opened and tries < 500:
+			rising = rising and shrine.cost > last
+			last = shrine.cost
+			loot.open(shrine, buyer)
+			tries += 1
+		gifts += loot.drops.size()
+		dry = dry and shrine.opened and loot.drops.size() == Loot.SHRINE.gifts
+	check("shrines: sometimes nothing (%d prayers for %d gifts), pricier every try, dry after %d gifts" % [tries, gifts, Loot.SHRINE.gifts],
+		tries > gifts and rising and dry)
+	loot.gold = 0
+	var barrel := loot.add_chest(Vector3(0, 0, 32), "barrel")
+	check("barrels are free: smash one for a little gold ($%d)" % (0 if not loot.open(barrel, buyer) else loot.gold),
+		barrel.opened and loot.gold >= 6 and loot.gold <= 14)
 
 	# ---- items can't get lost ----
 	loot.gold = 100

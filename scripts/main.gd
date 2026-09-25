@@ -123,6 +123,7 @@ func _ready() -> void:
 	enemy_view.particles = combat_view.particles # burning, bleeding, snow on chilled ones
 	add_child(enemy_view)
 	loot_view = LootView.new()
+	loot_view.particles = combat_view.particles
 	add_child(loot_view)
 	_build_beans()
 	_setup_environment()
@@ -1277,6 +1278,7 @@ func _handle_enemy_events(evs: Array[Dictionary]) -> void:
 ## Chests, dropped items, gold and the "open chest" prompt.
 func _update_loot(dt: float) -> void:
 	loot_view.update(loot, camera, dt)
+	loot_view.on_events(loot.events)
 	for e in loot.events:
 		match e.type:
 			"gold":
@@ -1284,6 +1286,19 @@ func _update_loot(dt: float) -> void:
 				sound.play("coin", {"gap": 0.05, "vol": 0.6})
 			"chest_open":
 				sound.play("chest", {"pos": e.pos})
+				if e.rarity == "legendary":
+					hud.word("LEGENDARY!!", e.pos + Vector3(0, 2.2, 0), null, "big")
+					sound.play("finish")
+				elif e.rarity == "rare":
+					hud.word("RARE!", e.pos + Vector3(0, 2.2, 0), null, "kill")
+			"barrel":
+				hud.items.gold_added(e.amount)
+				sound.play("impact", {"pos": e.pos})
+				sound.play("coin", {"gap": 0.0, "vol": 0.6})
+				hud.word("CRUNCH!", e.pos + Vector3(0, 1.2, 0), null, "small")
+			"shrine_fail":
+				sound.play("deny", {"gap": 0.1})
+				hud.word("NOTHING...", e.pos + Vector3(0, 2.6, 0), null, "small")
 			"pickup":
 				hud.items.pickup(e.item, e.count)
 				sound.play("pickup")
@@ -1297,8 +1312,8 @@ func _update_loot(dt: float) -> void:
 	var chest := loot.chest_in_reach(player) if in_run and not player.dead else null
 	if chest:
 		var key := Settings.bind_label(Settings.binds.get("interact", ""))
-		hud.items.set_prompt("%s   OPEN %s   $%d" % [key, String(Loot.CHESTS[chest.size].name).to_upper(), Loot.cost(chest)],
-			loot.gold >= Loot.cost(chest))
+		var price := "   $%d" % chest.cost if chest.cost > 0 else ""
+		hud.items.set_prompt("%s   %s%s" % [key, Loot.action(chest), price], loot.gold >= chest.cost)
 	else:
 		hud.items.set_prompt("")
 
@@ -1400,7 +1415,8 @@ func admin(what: String, data: Dictionary) -> String:
 			var at := Vector3(player.px, player.py, player.pz) + fwd * 2.2 # right in reach
 			var g := enemies._ground_under(at + Vector3(0, 3, 0))
 			at.y = g if g > -30 else player.py
-			loot.add_chest(at, data.size, yaw + PI) # front facing you
+			if data.size != "shop" or not loot._place_shop(at, yaw + PI): # a shop: all three terminals
+				loot.add_chest(at, data.size, yaw + PI) # front facing you
 			return "A %s appeared ($%d)" % [String(Loot.CHESTS[data.size].name).to_lower(), Loot.CHESTS[data.size].cost]
 		"clearitems":
 			var had := combat.up.total

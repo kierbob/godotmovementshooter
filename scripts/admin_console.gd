@@ -9,7 +9,8 @@ extends CanvasLayer
 ##   list                  every enemy type
 ##   give <item> [count]   an item (give triple tap 3, give random 5); take <item> [count]
 ##   items                 what you're carrying; clearitems drops the lot
-##   gold [amount]         money for chests (100 if no amount); chest [small|large] puts one in front of you
+##   gold [amount]         money for chests (100 if no amount); chest [kind] puts one in front of you
+##                         (small, large, golden, damage, utility, healing, shop, shrine, barrel)
 ##   levelup [n]           gain levels (1 if no number)
 ##   help
 ## Up / Down walk through what you typed before. Next to the text bar there are buttons for all
@@ -21,7 +22,7 @@ const HELP := [
 	"spawn <enemy> [variant] [count]   e.g. spawn flyer beam, spawn swarmer 5, spawn runner",
 	"killall · god [on/off] · heal · freeze / unfreeze · list · help",
 	"give <item> [count] (give random 5) · take <item> · items · clearitems",
-	"gold [amount] · chest [small/large] · levelup [n]",
+	"gold [amount] · chest [small/large/golden/damage/utility/healing/shop/shrine/barrel] · levelup [n]",
 ]
 const VARIANT_WORDS := {"projectile": "flyer_projectile", "beam": "flyer_beam", "healer": "flyer_healer",
 	"charger": "charger", "brute": "brute", "swarmer": "swarmer", "gunner": "gunner", "lobber": "lobber", "sniper": "sniper"}
@@ -287,7 +288,12 @@ func execute(text: String) -> String:
 		"levelup", "level":
 			return _call("levelup", {"n": clampi(int(words[1]), 1, 50) if words.size() > 1 and words[1].is_valid_int() else 1})
 		"chest":
-			return _call("chest", {"size": "large" if words.size() > 1 and words[1] in ["large", "big"] else "small"})
+			var kind := "small"
+			if words.size() > 1:
+				kind = "large" if words[1] == "big" else "golden" if words[1] == "gold" else words[1]
+			if not Loot.CHESTS.has(kind):
+				return "Kinds: " + ", ".join(Loot.CHESTS.keys())
+			return _call("chest", {"size": kind})
 		"list":
 			var out := PackedStringArray()
 			for fam: String in Enemies.FAMILIES:

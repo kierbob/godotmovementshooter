@@ -273,8 +273,11 @@ func _init() -> void:
 		and game.combat.slots.secondary.id == kit.secondary and game.combat.ability.id == kit.ability)
 
 	# the run's loot: chests on the stage, gold on the HUD, E opens one, the item floats, walk in
-	check("the stage has its chests (%d)" % game.loot.chests.size(), game.loot.chests.size() == Loot.CHESTS_PER_RUN
-		and game.loot_view.get_child_count() >= Loot.CHESTS_PER_RUN)
+	var things: Array = game.loot.chests
+	check("the stage has its chests, shrines and barrels (%d)" % things.size(),
+		things.filter(func(c: Loot.Chest) -> bool: return c.size != "barrel").size() >= Loot.CHESTS_PER_RUN
+		and things.filter(func(c: Loot.Chest) -> bool: return c.size == "barrel").size() == Loot.BARRELS_PER_RUN
+		and game.loot_view.get_child_count() >= things.size())
 	await frames(2)
 	check("your gold shows ($0)", game.hud.items._gold.visible and game.hud.items._gold.text == "$0")
 	game.console.execute("chest")

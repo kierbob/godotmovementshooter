@@ -77,7 +77,7 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   ticks enemies after the player (not on time trials) and runs solo health (`_tick_health`).
   Fair-play rules for every attack are in the enemies.gd header; `tests/enemy_test.gd` checks
   them, so keep it passing when adding or tuning enemies.
-- Items: `scripts/upgrades.gd` (Upgrades: the 34 items in `LIST`, stacks, and every effect;
+- Items: `scripts/upgrades.gd` (Upgrades: the 40 items in `LIST` (6 legendary), stacks, and every effect;
   Combat owns one as `combat.up` and calls its hooks: fire_dirs, modify_damage, on_hit, on_kill,
   on_hurt from Enemies.hurt_player, tick). Damage has a source: "gun" procs items, "dot" and
   "item" don't (no endless chains). Statuses live on `Combat.Target.status`; Enemies slows or
@@ -86,11 +86,16 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   `extra_wall_jumps`, `air_jumps` whose defaults change nothing (compare.gd must keep passing).
   With no items every hook is a no-op. F10: give/take/items/clearitems + item buttons.
   `tests/item_test.gd` checks every item.
-- Loot: `scripts/loot.gd` (Loot: gold per kill from `Enemies.deaths`, chests with costs and rarity
-  odds on a random pick of the map's MapChest spots, drops that hop out, land, float and get picked
-  up; ticked after the enemies), `scripts/loot_view.gd` (chest models, price tags, dropped items in
-  the BinbunVFX floating loot effects from `assets/fx/GodotLootVFX`), `scripts/map/map_chest.gd`
-  (chest spots in the editor). E ("interact") opens a chest. `tests/loot_test.gd` checks it.
+- Loot: `scripts/loot.gd` (Loot: gold + XP per kill from `Enemies.deaths`; what's in `CHESTS`:
+  small / large / golden / themed (damage, utility, healing) chests, shop terminals (a row of three,
+  buy one), the Shrine of Chance, barrels; each run fills a random pick of the map's MapChest spots
+  (`KIND_WEIGHTS` for "any" spots) and puts barrels on some of the rest; drops hop out, land, float
+  and get picked up; ticked after the enemies), `scripts/loot_view.gd` (their models, price tags,
+  the rarity beam, dropped items in the BinbunVFX floating loot effects from `assets/fx/GodotLootVFX`),
+  `scripts/map/map_chest.gd` (chest spots in the editor). E ("interact") opens one. Levels live in
+  Upgrades (`add_xp`, `level`: +10% damage, +12 health each). `tests/loot_test.gd` checks loot.
+  Characters: Brawler, Bomber, Sharpshooter, Commando (Combat Dash: an ability with `dash` instead of
+  a projectile, see `Combat._dash`). Enemies push apart from each other (`Enemies._separate`).
 - `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
   `nearby()` looks boxes up in an 8 m grid but returns exactly what a full scan would, in map order;
   `ray_boxes()` walks a ray through that grid (Combat.raycast uses it when `combat.grid` is set,
@@ -173,6 +178,7 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 4. ~~Time trial~~ (done: guns off and guns on). ~~Risk of Rain style menus~~ (done: characters,
    lobby, loading screen).
 5. Roguelite: ~~enemies~~ (9 types + F10 admin console), ~~stage 1 map~~ (Sunstone Valley),
-   ~~stacking items~~ (34, F10 give), ~~gold + chests~~, spawn director, run over on death, teleporter/boss/next stage, more stages, character passives.
+   ~~stacking items~~ (40, F10 give), ~~gold + chests~~ (+ shops, shrines, barrels), ~~levels~~,
+   spawn director, run over on death, teleporter/boss/next stage, more stages, character passives.
 6. ~~Multiplayer~~ (first version done: host/join, FFA, prediction, lag compensation). Later:
    teams, match rules, dedicated server.
