@@ -474,11 +474,27 @@ func _fire(p: PlayerSim, c: Cmd, w: Dictionary) -> void:
 
 
 func _throw_ability(p: PlayerSim, c: Cmd) -> void:
+	if ability.has("dash"):
+		_dash(p, c)
+		return
 	var dirs := up.fire_dirs(aim_dir(c.yaw, c.pitch))
 	for i in dirs.size():
 		_spawn_projectile(ability.id, ability.projectile, eye_position(p), dirs[i], ability.projectile.get("inherit", true), p).copy = i > 0
 	ability_cd = ability.cooldown
 	fx.append({"type": "throw", "ability": ability.id})
+
+
+## Combat Dash: at least dash.speed along your aim (flattened), plus a little hop.
+func _dash(p: PlayerSim, c: Cmd) -> void:
+	var d: Dictionary = ability.dash
+	var dx := -sin(c.yaw)
+	var dz := -cos(c.yaw)
+	var along := p.vx * dx + p.vz * dz
+	var push := maxf(0.0, float(d.speed) - along)
+	# (an upward impulse first stops any fall, so the hop is up to d.up from there)
+	p.apply_impulse(dx * push, maxf(0.0, float(d.up) - maxf(p.vy, 0.0)), dz * push, ability.name)
+	ability_cd = ability.cooldown
+	fx.append({"type": "dash", "ability": ability.id})
 
 
 func _spawn_projectile(kind: String, def: Dictionary, origin: Vector3, d: Vector3, inherit: bool, p: PlayerSim) -> Projectile:

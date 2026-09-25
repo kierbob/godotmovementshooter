@@ -759,6 +759,10 @@ func _play_combat_sounds(events: Array[Dictionary]) -> void:
 			"freeze", "shatter": sound.play("dry" if e.type == "freeze" else "impact", {"pos": e.pos, "gap": 0.05})
 			"item_proc": sound.play("reload", {"gap": 0.1, "vol": 0.6})
 			"throw": sound.play("knifeThrow" if e.ability == "knife" else "throw")
+			"dash":
+				sound.play("wallJump")
+				sound.play("slide", {"gap": 0.0})
+				combat_view.shake = maxf(combat_view.shake, 0.02)
 			"switch": sound.play("switch")
 			# (reload sounds come from the gun toss animation: throw, then catch)
 

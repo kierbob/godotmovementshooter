@@ -176,6 +176,22 @@ func _init() -> void:
 	tick(again)
 	check("can't throw again while recharging", combat.projectiles.size() == 0)
 
+	# ---- Combat Dash (the Commando): a burst where you look, then a cooldown ----
+	setup(Characters.loadout("commando"))
+	check("the Commando carries the Pulse Rifle, the Deagle and the Dash", combat.slots.primary.id == "rifle"
+		and combat.slots.secondary.id == "deagle" and combat.ability.id == "dash")
+	var dash := cmd(PI / 2) # facing -x
+	dash.ability = true
+	tick(dash)
+	check("dashing: %.1f m/s toward where you look, a little hop, no projectile" % player.horizontal_speed(),
+		player.vx < -21.0 and absf(player.vz) < 0.01 and player.vy > 0.0 and combat.projectiles.is_empty() and count("dash") == 1)
+	ticks(30, cmd(PI / 2))
+	var fast := player.horizontal_speed()
+	var dash2 := cmd(PI / 2)
+	dash2.ability = true
+	tick(dash2)
+	check("can't dash again while it recharges (%.1f s)" % combat.ability_cd, combat.ability_cd > 3.0 and player.horizontal_speed() <= fast + 0.1)
+
 	# ---- ramps (Bean Street): rays hit the sloped top, not the bounding box ----
 	var street := MapData.load_file("res://tests/maps/bean-street.json")
 	var walls := Combat.new(street.boxes, [])

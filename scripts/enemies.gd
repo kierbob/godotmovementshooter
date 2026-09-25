@@ -26,6 +26,9 @@ extends RefCounted
 ## you, so a crowd ticked every tick eats the frame. Their timings are in seconds, so nothing gets
 ## faster or slower; their shots still fly every tick.
 const LOD_FAR := 40.0
+const SEP_RADIUS := 0.42 # enemies keep this x (their sizes added) apart: a bean's width
+const SEP_CELL := 2.0
+const SEP_MAX_STEP := 0.12 # most a push moves one in a tick
 const REGEN_DELAY := 3.0 # the player heals this long after the last hit (same as online)
 const REGEN_RATE := 30.0
 
@@ -208,7 +211,58 @@ func tick(p: PlayerSim, dt: float) -> void:
 		else:
 			combat.targets.erase(e.target)
 	list = alive
+	if not frozen:
+		_separate()
 	_tick_projectiles(p, dt)
+
+
+## Enemies are solid to each other: any two standing inside one another get pushed apart (half
+## each), so a crowd spreads out instead of stacking into one bean. Ground ones move through their
+## body (walls still stop them), flyers get pushed out of walls afterwards. A 2 m grid keeps it
+## cheap in a big crowd.
+func _separate() -> void:
+	if list.size() < 2:
+		return
+	var cells := {}
+	for e in list:
+		var c := e.target.pos
+		var k := Vector2i(floori(c.x / SEP_CELL), floori(c.z / SEP_CELL))
+		if not cells.has(k):
+			cells[k] = []
+		(cells[k] as Array).append(e)
+	var push := {} # enemy -> Vector3 (horizontal)
+	for e in list:
+		var a := e.target.pos
+		var k := Vector2i(floori(a.x / SEP_CELL), floori(a.z / SEP_CELL))
+		for dx in range(-1, 2):
+			for dz in range(-1, 2):
+				for o: Enemy in cells.get(k + Vector2i(dx, dz), []):
+					if o.id <= e.id:
+						continue
+					var b := o.target.pos
+					if absf(a.y - b.y) > 1.6 * maxf(e.target.size, o.target.size):
+						continue # one's on a ledge above the other
+					var off := Vector3(a.x - b.x, 0, a.z - b.z)
+					var d := off.length()
+					var min_d := SEP_RADIUS * (e.target.size + o.target.size)
+					if d >= min_d:
+						continue
+					var dir := off / d if d > 1e-4 else Vector3(cos(e.id), 0, sin(e.id)) # exactly on top: any way out
+					var half := dir * (min_d - d) * 0.5
+					push[e] = push.get(e, Vector3.ZERO) + half
+					push[o] = push.get(o, Vector3.ZERO) - half
+	for e: Enemy in push:
+		var v: Vector3 = push[e]
+		if v.length() > SEP_MAX_STEP:
+			v = v.normalized() * SEP_MAX_STEP # a few ticks to untangle a pile, not a teleport
+		if e.body:
+			var boxes := map.nearby(e.body.px, e.body.py, e.body.pz, 1.0)
+			e.body._move_axis(0, v.x, boxes)
+			e.body._move_axis(2, v.z, boxes)
+			e.target.pos = Vector3(e.body.px, e.body.py, e.body.pz)
+		else:
+			e.pos = _push_out(e.pos + v, 0.6 * e.target.size)
+			e.target.pos = e.pos - Vector3(0, 1.0 * e.target.size, 0)
 
 
 ## The player takes a hit (from an enemy at `from`).

@@ -21,8 +21,14 @@ const LIST := {
 		"desc": "Headshots from across the map, a buzz SMG for anything close, and a knife that kills.",
 		"primary": "sniper", "secondary": "smg", "ability": "knife",
 	},
+	"commando": {
+		"id": "commando", "name": "Commando", "color": Color("6fdc6a"),
+		"role": "Steady fire, never still",
+		"desc": "A Pulse Rifle that shreds at any range, a Deagle for the big hits, and a dash to be anywhere else.",
+		"primary": "rifle", "secondary": "deagle", "ability": "dash",
+	},
 }
-const ORDER := ["brawler", "bomber", "sharpshooter"]
+const ORDER := ["brawler", "bomber", "sharpshooter", "commando"]
 const DEFAULT := "brawler"
 
 ## Runs start here (later: a random pick from the stage pool, then the next floors).

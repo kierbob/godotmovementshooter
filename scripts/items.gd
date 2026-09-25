@@ -89,7 +89,9 @@ const WEAPONS := {
 	},
 }
 
-## Abilities are thrown on the ability key and recharge on a cooldown.
+## Abilities fire on the ability key and recharge on a cooldown. Most throw a projectile; "dash"
+## throws you instead: a burst along where you look (level, so it never buries you in the floor).
+##   dash    {speed, up}: at least `speed` m/s that way (keeps more if you were faster), plus a hop
 const ABILITIES := {
 	"frag": {
 		"id": "frag", "name": "Impact Grenade",
@@ -119,6 +121,12 @@ const ABILITIES := {
 			"speed": 24.0, "up": 2.0, "gravity": 22.0, "radius": 0.15, "impact": "explode",
 			"explode": {"radius": 4.5, "damage": 15.0, "knockback": 17.0},
 		},
+	},
+	"dash": {
+		"id": "dash", "name": "Combat Dash",
+		"desc": "A burst of speed wherever you're looking, on the ground or in the air.",
+		"cooldown": 3.5,
+		"dash": {"speed": 22.0, "up": 3.5},
 	},
 }
 
