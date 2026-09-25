@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bhuq4qkr2ati3"
-path.s3tc="res://.godot/imported/batch_heart_icon.png-c2113a5a79934a7d65414884d7b438f3.s3tc.ctex"
+path.s3tc="res://.godot/imported/batch_heart_icon.png-edf312694f9e0e684a26d178ca67a44f.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/BinbunVFX/shared/texture/icon/pickup_icons/batch_heart_icon.png"
-dest_files=["res://.godot/imported/batch_heart_icon.png-c2113a5a79934a7d65414884d7b438f3.s3tc.ctex"]
+source_file="res://assets/fx/GodotLootVFX/assets/BinbunVFX/shared/texture/icon/pickup_icons/batch_heart_icon.png"
+dest_files=["res://.godot/imported/batch_heart_icon.png-edf312694f9e0e684a26d178ca67a44f.s3tc.ctex"]
 
 [params]
 

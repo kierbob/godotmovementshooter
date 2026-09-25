@@ -227,13 +227,29 @@ func recipe(name: String) -> void:
 		# ---- UI ----
 		"ui":
 			tone("triangle", 660, 990, 0.06, 0.12)
+		# ---- loot ----
+		"coin": # ka-ching
+			tone("square", 988, 988, 0.06, 0.1)
+			tone("square", 1318, 1318, 0.18, 0.1, {"delay": 0.06})
+		"chest": # creak, then a bright pop
+			noise(0.22, 0.25, 300, 900, {"type": "bandpass", "q": 3})
+			tone("sawtooth", 110, 180, 0.2, 0.08)
+			tone("triangle", 523, 1046, 0.18, 0.2, {"delay": 0.2})
+			noise(0.12, 0.15, 3000, 6000, {"type": "bandpass", "q": 1.5, "delay": 0.22})
+		"pickup": # a quick rising arpeggio
+			var notes := [784, 988, 1175, 1568]
+			for i in notes.size():
+				tone("triangle", notes[i], notes[i], 0.12, 0.2, {"delay": i * 0.05})
+		"deny": # can't afford it
+			tone("square", 196, 185, 0.12, 0.12)
+			tone("square", 147, 139, 0.16, 0.12, {"delay": 0.1})
 
 
 ## Recipes with random pitch get a few baked variants.
 const RANDOM := ["rifle", "smg", "impact"]
 const NAMES := ["shotgun", "rifle", "smg", "pistol", "kickpistol", "sniper", "deagle", "rocket", "dry", "reload",
 	"switch", "throw", "knifeThrow", "explosion", "impulse", "impact", "hit", "headshot", "kill", "jump", "land",
-	"slide", "wallJump", "pad", "teleport", "go", "finish", "ui", "hurt", "death"]
+	"slide", "wallJump", "pad", "teleport", "go", "finish", "ui", "hurt", "death", "coin", "chest", "pickup", "deny"]
 
 
 func save(name: String) -> void:

@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://bcwgv45b4rps8" path="res://scripts/map/map_box.gd" id="2_e5yd8"]
 [ext_resource type="Script" uid="uid://qw0top6ns17w" path="res://scripts/map/map_pad.gd" id="3_irwad"]
 [ext_resource type="Script" uid="uid://cot8rlhx7ym82" path="res://scripts/map/map_spawn.gd" id="4_bb17s"]
+[ext_resource type="Script" path="res://scripts/map/map_chest.gd" id="chest_script"]
 
 [node name="SunstoneValley" type="Node3D" unique_id=1833882276]
 script = ExtResource("1_5cw0f")
@@ -3460,3 +3461,201 @@ script = ExtResource("2_e5yd8")
 kind = "sunstone"
 box = PackedFloat64Array(-101.268, 0, -43.739, -100.38, 1.954, -42.851)
 web_box = PackedFloat64Array()
+
+[node name="Chests" type="Node3D" parent="."]
+
+[node name="PlazaSW" type="Node3D" parent="Chests"]
+transform = Transform3D(0.7074, 0, 0.7068, 0, 1, 0, -0.7068, 0, 0.7074, -20.5, 1.2, 20.5)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-20.5, 1.2, 20.5)
+size = "any"
+yaw = -0.785
+
+[node name="PlazaNE" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.707, 0, -0.7072, 0, 1, 0, 0.7072, 0, -0.707, 20.5, 1.2, -20.5)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(20.5, 1.2, -20.5)
+size = "any"
+yaw = 2.356
+
+[node name="Crown" type="Node3D" parent="Chests"]
+transform = Transform3D(0.8823, 0, -0.4706, 0, 1, 0, 0.4706, 0, 0.8823, 8.0, 24.0, 15.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(8.0, 24.0, 15.0)
+size = "large"
+yaw = 0.49
+
+[node name="SunstoneTop" type="Node3D" parent="Chests"]
+transform = Transform3D(0.7074, 0, -0.7068, 0, 1, 0, 0.7068, 0, 0.7074, 2.8, 35.0, 2.8)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(2.8, 35.0, 2.8)
+size = "large"
+yaw = 0.785
+
+[node name="CaveChamber" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.9378, 0, 0.3472, 0, 1, 0, -0.3472, 0, -0.9378, -37.0, 0.0, -100.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-37.0, 0.0, -100.0)
+size = "large"
+yaw = -2.787
+
+[node name="WatchPost" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.9997, 0, 0.0236, 0, 1, 0, -0.0236, 0, -0.9997, -2.0, 10.4, -86.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-2.0, 10.4, -86.0)
+size = "any"
+yaw = -3.118
+
+[node name="PlateauWest" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.8323, 0, 0.5544, 0, 1, 0, -0.5544, 0, -0.8323, -60.0, 10.0, -90.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-60.0, 10.0, -90.0)
+size = "any"
+yaw = -2.554
+
+[node name="PlateauEast" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.9785, 0, -0.2061, 0, 1, 0, 0.2061, 0, -0.9785, 20.0, 10.0, -95.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(20.0, 10.0, -95.0)
+size = "any"
+yaw = 2.934
+
+[node name="PlateauFarWest" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.6444, 0, 0.7647, 0, 1, 0, -0.7647, 0, -0.6444, -95.0, 10.0, -80.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-95.0, 10.0, -80.0)
+size = "any"
+yaw = -2.271
+
+[node name="MesaMid" type="Node3D" parent="Chests"]
+transform = Transform3D(-1.0, 0, 0.0004, 0, 1, 0, -0.0004, 0, -1.0, 0.0, 28.0, -53.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(0.0, 28.0, -53.0)
+size = "large"
+yaw = 3.142
+
+[node name="MesaWest" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.8512, 0, 0.5249, 0, 1, 0, -0.5249, 0, -0.8512, -29.0, 18.0, -47.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-29.0, 18.0, -47.0)
+size = "any"
+yaw = -2.589
+
+[node name="MesaEast" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.8512, 0, -0.5249, 0, 1, 0, 0.5249, 0, -0.8512, 29.0, 18.0, -47.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(29.0, 18.0, -47.0)
+size = "any"
+yaw = 2.589
+
+[node name="IsleNE" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.7258, 0, -0.6879, 0, 1, 0, 0.6879, 0, -0.7258, 37.0, 12.0, -39.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(37.0, 12.0, -39.0)
+size = "any"
+yaw = 2.383
+
+[node name="IsleSW" type="Node3D" parent="Chests"]
+transform = Transform3D(0.7255, 0, 0.6882, 0, 1, 0, -0.6882, 0, 0.7255, -37.0, 12.0, 39.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-37.0, 12.0, 39.0)
+size = "any"
+yaw = -0.759
+
+[node name="CanyonFloor" type="Node3D" parent="Chests"]
+transform = Transform3D(0.2278, 0, -0.9737, 0, 1, 0, 0.9737, 0, 0.2278, 64.0, -10.0, 15.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(64.0, -10.0, 15.0)
+size = "any"
+yaw = 1.341
+
+[node name="Grotto" type="Node3D" parent="Chests"]
+transform = Transform3D(0.852, 0, -0.5235, 0, 1, 0, 0.5235, 0, 0.852, 62.0, -10.0, 101.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(62.0, -10.0, 101.0)
+size = "large"
+yaw = 0.551
+
+[node name="Ridge" type="Node3D" parent="Chests"]
+transform = Transform3D(0.7924, 0, 0.61, 0, 1, 0, -0.61, 0, 0.7924, -80.0, 20.0, 104.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-80.0, 20.0, 104.0)
+size = "any"
+yaw = -0.656
+
+[node name="RidgeStep" type="Node3D" parent="Chests"]
+transform = Transform3D(0.9597, 0, -0.2812, 0, 1, 0, 0.2812, 0, 0.9597, 27.0, 10.0, 92.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(27.0, 10.0, 92.0)
+size = "any"
+yaw = 0.285
+
+[node name="FortKeep" type="Node3D" parent="Chests"]
+transform = Transform3D(0.0358, 0, 0.9994, 0, 1, 0, -0.9994, 0, 0.0358, -84.0, 0.0, 3.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-84.0, 0.0, 3.0)
+size = "any"
+yaw = -1.535
+
+[node name="FortTowerNW" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.2038, 0, 0.979, 0, 1, 0, -0.979, 0, -0.2038, -101.0, 14.0, -21.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-101.0, 14.0, -21.0)
+size = "any"
+yaw = -1.776
+
+[node name="FortTowerSE" type="Node3D" parent="Chests"]
+transform = Transform3D(0.2991, 0, 0.9542, 0, 1, 0, -0.9542, 0, 0.2991, -67.0, 14.0, 21.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-67.0, 14.0, 21.0)
+size = "any"
+yaw = -1.267
+
+[node name="FortYard" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.104, 0, 0.9946, 0, 1, 0, -0.9946, 0, -0.104, -96.0, 0.0, -10.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-96.0, 0.0, -10.0)
+size = "any"
+yaw = -1.675
+
+[node name="BasinSE" type="Node3D" parent="Chests"]
+transform = Transform3D(0.8403, 0, -0.5422, 0, 1, 0, 0.5422, 0, 0.8403, 40.0, 0.0, 62.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(40.0, 0.0, 62.0)
+size = "any"
+yaw = 0.573
+
+[node name="BasinNW" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.4962, 0, 0.8682, 0, 1, 0, -0.8682, 0, -0.4962, -70.0, 0.0, -40.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-70.0, 0.0, -40.0)
+size = "any"
+yaw = -2.09
+
+[node name="EastRimNorth" type="Node3D" parent="Chests"]
+transform = Transform3D(-0.5998, 0, -0.8002, 0, 1, 0, 0.8002, 0, -0.5998, 80.0, 0.0, -60.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(80.0, 0.0, -60.0)
+size = "any"
+yaw = 2.214
+
+[node name="EastRimSouth" type="Node3D" parent="Chests"]
+transform = Transform3D(0.3011, 0, -0.9536, 0, 1, 0, 0.9536, 0, 0.3011, 95.0, 0.0, 30.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(95.0, 0.0, 30.0)
+size = "any"
+yaw = 1.265
+
+[node name="BasinWest" type="Node3D" parent="Chests"]
+transform = Transform3D(0.7074, 0, 0.7068, 0, 1, 0, -0.7068, 0, 0.7074, -70.0, 0.0, 70.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(-70.0, 0.0, 70.0)
+size = "any"
+yaw = -0.785
+
+[node name="BasinNorth" type="Node3D" parent="Chests"]
+transform = Transform3D(-1.0, 0, 0.0004, 0, 1, 0, -0.0004, 0, -1.0, 0.0, 0.0, -30.0)
+script = ExtResource("chest_script")
+at = PackedFloat64Array(0.0, 0.0, -30.0)
+size = "any"
+yaw = 3.142

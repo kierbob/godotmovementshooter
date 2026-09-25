@@ -19,6 +19,7 @@ const ACTIONS := [
 	["primary", "Primary Weapon", "Combat", "key:%d" % KEY_1],
 	["secondary", "Secondary Weapon", "Combat", "key:%d" % KEY_2],
 	["ability", "Ability", "Combat", "key:%d" % KEY_Q],
+	["interact", "Open Chest / Use", "Combat", "key:%d" % KEY_E],
 	["respawn", "Respawn", "Other", "key:%d" % KEY_K],
 	["scoreboard", "Scoreboard (online)", "Other", "key:%d" % KEY_TAB],
 	["stats", "Stats Panel", "Other", "key:%d" % KEY_F4],

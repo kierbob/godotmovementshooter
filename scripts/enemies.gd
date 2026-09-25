@@ -102,6 +102,7 @@ var combat: Combat
 var list: Array[Enemy] = []
 var projectiles: Array[Dictionary] = [] # {id, pos, vel, radius, damage, kind, gravity, splash, owner, alive}
 var events: Array[Dictionary] = [] # for the view and sounds; main clears it every frame
+var deaths: Array[Dictionary] = [] # this tick's kills {type, pos} (Loot pays gold for them)
 var god := false # admin: the player can't be hurt
 var frozen := false # admin: enemies stand still and don't attack
 var time := 0.0
@@ -161,10 +162,12 @@ func clear() -> void:
 func tick(p: PlayerSim, dt: float) -> void:
 	time += dt
 	player_center = _player_center(p)
+	deaths.clear()
 	for e in list:
 		if e.target.dead or e.target.hp <= 0:
 			e.alive = false
 			events.append({"type": "died", "id": e.id, "enemy": e.type, "pos": e.center()})
+			deaths.append({"type": e.type, "pos": e.center()})
 			continue
 		if e.body and e.body.py < -30:
 			e.alive = false # fell out of the world

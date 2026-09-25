@@ -2,7 +2,8 @@ class_name ItemHud
 extends Control
 ## The items you carry: a row of chips along the top (icon letters in the item's color, a border
 ## in its rarity's color, the stack count), and the Risk of Rain style banner when you pick one up
-## (name in its rarity color, what it does, what another one adds).
+## (name in its rarity color, what it does, what another one adds). Also your gold (top right,
+## with a "+7" that pops up for each kill) and the "E  OPEN CHEST  $25" prompt near a chest.
 
 const BANNER_TIME := 3.2
 
@@ -14,6 +15,11 @@ var _b_desc: Label
 var _b_stack: Label
 var _banner_t := 0.0
 var _comic: Font
+var _gold: Label
+var _gold_add: Label
+var _gold_add_t := 0.0
+var _gold_shown := -1
+var _prompt: Label
 
 
 func _ready() -> void:
@@ -48,6 +54,32 @@ func _ready() -> void:
 		_banner.add_child(l)
 	_banner.modulate.a = 0.0
 
+	_gold = _text(40, Color("ffd84a"), _comic)
+	_gold.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_gold.offset_left = -260
+	_gold.offset_right = -28
+	_gold.offset_top = 14
+	_gold.offset_bottom = 60
+	_gold.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_gold.visible = false
+	add_child(_gold)
+	_gold_add = _text(26, Color("fff1a0"), _comic)
+	_gold_add.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_gold_add.offset_left = -260
+	_gold_add.offset_right = -28
+	_gold_add.offset_top = 58
+	_gold_add.offset_bottom = 90
+	_gold_add.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	add_child(_gold_add)
+	_prompt = _text(26, Color.WHITE, _comic)
+	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_prompt.offset_left = -300
+	_prompt.offset_right = 300
+	_prompt.offset_top = 70
+	_prompt.offset_bottom = 110
+	_prompt.visible = false
+	add_child(_prompt)
+
 
 func _text(size: int, color: Color, font: Font) -> Label:
 	var l := UiStyle.label("", size, color)
@@ -69,6 +101,31 @@ func update(dt: float, up: Upgrades) -> void:
 		_rebuild(up)
 	_banner_t = maxf(0.0, _banner_t - dt)
 	_banner.modulate.a = clampf(_banner_t / 0.5, 0.0, 1.0)
+	_gold_add_t = maxf(0.0, _gold_add_t - dt)
+	_gold_add.modulate.a = clampf(_gold_add_t / 0.4, 0.0, 1.0)
+
+
+## Gold in the corner (only in runs: gold < 0 hides it).
+func set_gold(gold: int) -> void:
+	_gold.visible = gold >= 0
+	if gold != _gold_shown and gold >= 0:
+		_gold_shown = gold
+		_gold.text = "$%d" % gold
+
+
+## A "+7" under the gold for a moment (quick kills add up into one number).
+func gold_added(amount: int) -> void:
+	var prev := int(_gold_add.text.trim_prefix("+")) if _gold_add_t > 0 and _gold_add.text.begins_with("+") else 0
+	_gold_add.text = "+%d" % (prev + amount)
+	_gold_add_t = 1.2
+
+
+## The interact prompt ("" hides it); red when you can't afford it.
+func set_prompt(text: String, ok := true) -> void:
+	_prompt.visible = text != ""
+	if text != "":
+		_prompt.text = text
+		_prompt.add_theme_color_override("font_color", Color.WHITE if ok else Color("ff6a5a"))
 
 
 ## Picked one up: show its banner.

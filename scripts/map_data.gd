@@ -45,6 +45,7 @@ var trial := {} # time trial course (dev map only): start, startLineZ, killY, fi
 var portals: Array = [] # hub portals to the time trial: { x, y, z, guns, label, sub }
 var arena := {} # bot arena layout (for the future Bot Arena mode)
 var view_scale := 1.0 # big maps push the haze out (MapRoot.view_scale)
+var chests: Array = [] # chest spots {x, y, z, size, yaw} (MapChest); each run uses some
 
 # nearby() looks boxes up in a grid of GRID_CELL m columns instead of scanning every box (big
 # stages have hundreds, and every enemy steps through here each tick).
@@ -133,6 +134,9 @@ static func _collect(n: Node, m: MapData) -> void:
 			m.targets.append((c as MapTarget).to_dict())
 		elif c is MapPortal:
 			m.portals.append((c as MapPortal).to_dict())
+		elif c is MapChest:
+			var ch := c as MapChest
+			m.chests.append({"x": ch.at[0], "y": ch.at[1], "z": ch.at[2], "size": ch.size, "yaw": ch.yaw})
 		_collect(c, m)
 
 

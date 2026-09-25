@@ -9,6 +9,7 @@ extends CanvasLayer
 ##   list                  every enemy type
 ##   give <item> [count]   an item (give triple tap 3, give random 5); take <item> [count]
 ##   items                 what you're carrying; clearitems drops the lot
+##   gold [amount]         money for chests (100 if no amount); chest [small|large] puts one in front of you
 ##   help
 ## Up / Down walk through what you typed before. Next to the text bar there are buttons for all
 ## of it (every enemy, a count, god / freeze / heal / kill all), and under it a button per item
@@ -19,6 +20,7 @@ const HELP := [
 	"spawn <enemy> [variant] [count]   e.g. spawn flyer beam, spawn swarmer 5, spawn runner",
 	"killall · god [on/off] · heal · freeze / unfreeze · list · help",
 	"give <item> [count] (give random 5) · take <item> · items · clearitems",
+	"gold [amount] · chest [small/large]",
 ]
 const VARIANT_WORDS := {"projectile": "flyer_projectile", "beam": "flyer_beam", "healer": "flyer_healer",
 	"charger": "charger", "brute": "brute", "swarmer": "swarmer", "gunner": "gunner", "lobber": "lobber", "sniper": "sniper"}
@@ -121,6 +123,8 @@ func _build_buttons() -> Control:
 	tools.add_child(_freeze_btn)
 	tools.add_child(_btn("HEAL", func() -> void: _press("heal")))
 	tools.add_child(_btn("KILL ALL", func() -> void: _press("killall")))
+	tools.add_child(_btn("+100 GOLD", func() -> void: _press("gold 100")))
+	tools.add_child(_btn("CHEST", func() -> void: _press("chest")))
 	grid.add_child(tools)
 	_refresh_buttons()
 	return grid
@@ -277,6 +281,10 @@ func execute(text: String) -> String:
 			return _call("items", {"all": words.size() > 1})
 		"clearitems":
 			return _call("clearitems", {})
+		"gold", "money":
+			return _call("gold", {"amount": int(words[1]) if words.size() > 1 and words[1].is_valid_int() else 100})
+		"chest":
+			return _call("chest", {"size": "large" if words.size() > 1 and words[1] in ["large", "big"] else "small"})
 		"list":
 			var out := PackedStringArray()
 			for fam: String in Enemies.FAMILIES:

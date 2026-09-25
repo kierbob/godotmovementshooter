@@ -86,6 +86,11 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   `extra_wall_jumps`, `air_jumps` whose defaults change nothing (compare.gd must keep passing).
   With no items every hook is a no-op. F10: give/take/items/clearitems + item buttons.
   `tests/item_test.gd` checks every item.
+- Loot: `scripts/loot.gd` (Loot: gold per kill from `Enemies.deaths`, chests with costs and rarity
+  odds on a random pick of the map's MapChest spots, drops that hop out, land, float and get picked
+  up; ticked after the enemies), `scripts/loot_view.gd` (chest models, price tags, dropped items in
+  the BinbunVFX floating loot effects from `assets/fx/GodotLootVFX`), `scripts/map/map_chest.gd`
+  (chest spots in the editor). E ("interact") opens a chest. `tests/loot_test.gd` checks it.
 - `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
   `nearby()` looks boxes up in an 8 m grid but returns exactly what a full scan would, in map order;
   `ray_boxes()` walks a ray through that grid (Combat.raycast uses it when `combat.grid` is set,
@@ -106,7 +111,7 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   `tests/trial_test.gd` the time trial, `tests/sound_test.gd` the sounds, `tests/net_test.gd`
   multiplayer (codec, server matches prediction, combat, lag comp, a real ENet host + client),
   `tests/enemy_test.gd` the enemies (fairness, every type, console parsing), `tests/item_test.gd`
-  the items.
+  the items, `tests/loot_test.gd` gold, chests and drops.
 
 ## Rules
 
@@ -147,6 +152,7 @@ godot --headless --path . --script res://tests/map_test.gd
 godot --headless --path . --script res://tests/net_test.gd
 godot --headless --path . --script res://tests/enemy_test.gd
 godot --headless --path . --script res://tests/item_test.gd
+godot --headless --path . --script res://tests/loot_test.gd
 ```
 
 To try two real games against each other, start one with `-- --host=7777` and another with
@@ -167,6 +173,6 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 4. ~~Time trial~~ (done: guns off and guns on). ~~Risk of Rain style menus~~ (done: characters,
    lobby, loading screen).
 5. Roguelite: ~~enemies~~ (9 types + F10 admin console), ~~stage 1 map~~ (Sunstone Valley),
-   ~~stacking items~~ (34, F10 give), spawn director, run over on death, gold + chests, teleporter/boss/next stage, more stages, character passives.
+   ~~stacking items~~ (34, F10 give), ~~gold + chests~~, spawn director, run over on death, teleporter/boss/next stage, more stages, character passives.
 6. ~~Multiplayer~~ (first version done: host/join, FFA, prediction, lag compensation). Later:
    teams, match rules, dedicated server.

@@ -271,6 +271,31 @@ func _init() -> void:
 		and game.map_id == Characters.FIRST_STAGE)
 	check("you play with your character's kit", game.combat.slots.primary.id == kit.primary
 		and game.combat.slots.secondary.id == kit.secondary and game.combat.ability.id == kit.ability)
+
+	# the run's loot: chests on the stage, gold on the HUD, E opens one, the item floats, walk in
+	check("the stage has its chests (%d)" % game.loot.chests.size(), game.loot.chests.size() == Loot.CHESTS_PER_RUN
+		and game.loot_view.get_child_count() >= Loot.CHESTS_PER_RUN)
+	await frames(2)
+	check("your gold shows ($0)", game.hud.items._gold.visible and game.hud.items._gold.text == "$0")
+	game.console.execute("chest")
+	await frames(2)
+	check("near a chest: the E prompt, red while you're broke", game.hud.items._prompt.visible
+		and game.hud.items._prompt.text.contains("OPEN CHEST") and game.hud.items._prompt.text.contains("$25"))
+	game.console.execute("gold 40")
+	key(KEY_E)
+	await frames(3)
+	var drops: Array = game.loot.drops
+	check("E opens it: $15 left, an item pops out", game.loot.gold == 15 and drops.size() == 1)
+	var vfx_on := false
+	if not drops.is_empty():
+		var dv: Dictionary = game.loot_view._drops.get(drops[0].id, {})
+		vfx_on = not dv.is_empty() and (dv.node as Node3D).get_child(0) is VFXLoot
+	check("...floating in the loot glow for its rarity", vfx_on)
+	var item: String = drops[0].item if not drops.is_empty() else ""
+	var had: int = game.combat.up.count(item) - 0 if item != "" else 0
+	await create_timer(1.5).timeout # it hops out toward you and lands at your feet
+	check("it lands by you and it's yours, with its banner", item != "" and game.loot.drops.is_empty()
+		and game.combat.up.count(item) == had + 1 and game.hud.items._banner.modulate.a > 0.5)
 	await create_timer(2.0).timeout
 	menu.to_main_menu.emit()
 	await frames()
