@@ -143,7 +143,7 @@ func _build_items() -> Control:
 	grid.add_theme_constant_override("h_separation", 4)
 	grid.add_theme_constant_override("v_separation", 4)
 	row.add_child(grid)
-	for rarity: String in ["common", "uncommon", "rare"]:
+	for rarity: String in ["common", "uncommon", "rare", "legendary"]:
 		for id: String in Upgrades.LIST:
 			var it: Dictionary = Upgrades.LIST[id]
 			if it.rarity != rarity:

@@ -326,6 +326,20 @@ static func projectile(kind: String) -> Node3D:
 			_part(spin, BoxMesh.new(), Vector3(0.03, 0.008, 0.2), Vector3(0, 0, -0.06), Color("d8dee9"), 0.0)
 			_part(spin, BoxMesh.new(), Vector3(0.035, 0.03, 0.1), Vector3(0, 0, 0.09), Color("2a1d14"), 0.0)
 			g.add_child(spin)
+		"missile": # Hydra: a stubby little rocket
+			var body := CylinderMesh.new()
+			body.top_radius = 0.05
+			body.bottom_radius = 0.05
+			body.height = 0.3
+			_part(g, body, Vector3.ZERO, Vector3.ZERO, Color("ff8a30"), 0.01).rotation.x = PI / 2
+			var flame := MeshInstance3D.new()
+			var fs := SphereMesh.new()
+			fs.radius = 0.07
+			fs.height = 0.14
+			flame.mesh = fs
+			flame.material_override = _glow(Color("ffd84a"), 0.9)
+			flame.position.z = 0.18
+			g.add_child(flame)
 		"wisp":
 			for layer: Array in [[0.1, Color("f4ffff"), 1.0], [0.24, Color("8fe8ff"), 0.4]]:
 				var mi := MeshInstance3D.new()

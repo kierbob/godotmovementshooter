@@ -181,7 +181,7 @@ func _rebuild(up: Upgrades) -> void:
 		c.queue_free()
 	# Rarest first, then in list order: the good stuff reads first.
 	var ids: Array = []
-	for rarity: String in ["rare", "uncommon", "common"]:
+	for rarity: String in ["legendary", "rare", "uncommon", "common"]:
 		for id: String in Upgrades.LIST:
 			if up.count(id) > 0 and Upgrades.LIST[id].rarity == rarity:
 				ids.append(id)

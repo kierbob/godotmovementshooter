@@ -752,13 +752,17 @@ func _play_combat_sounds(events: Array[Dictionary]) -> void:
 				elif e.get("src") == "item":
 					sound.play("hit", {"gap": 0.08, "vol": 0.5}) # burn/bleed ticks stay quiet
 			"impact": sound.play("impact", {"pos": e.pos, "gap": 0.03})
-			"explosion" when e.kind == "bigbang":
+			"explosion" when e.kind in ["bigbang", "orbital"]:
 				sound.play("impact", {"pos": e.pos, "gap": 0.05}) # goes off on every hit: keep it small
 			"explosion": sound.play("impulse" if e.kind == "impulse" else "explosion", {"pos": e.pos, "gap": 0.0})
 			"zap": sound.play("impulse", {"pos": e.to, "gap": 0.1, "vol": 0.45})
 			"freeze", "shatter": sound.play("dry" if e.type == "freeze" else "impact", {"pos": e.pos, "gap": 0.05})
 			"item_proc": sound.play("reload", {"gap": 0.1, "vol": 0.6})
 			"level_up": sound.play("finish")
+			"orbital": sound.play("sniper", {"pos": e.pos, "gap": 0.0})
+			"black_hole": sound.play("impulse", {"pos": e.pos, "gap": 0.1})
+			"hydra": sound.play("rocket", {"gap": 0.05, "vol": 0.6})
+			"revive": sound.play("teleport")
 			"throw": sound.play("knifeThrow" if e.ability == "knife" else "throw")
 			"dash":
 				sound.play("wallJump")
@@ -1371,7 +1375,7 @@ func admin(what: String, data: Dictionary) -> String:
 		"items":
 			if data.all:
 				var lines := PackedStringArray()
-				for rarity: String in ["common", "uncommon", "rare"]:
+				for rarity: String in ["common", "uncommon", "rare", "legendary"]:
 					var names := PackedStringArray()
 					for id: String in Upgrades.LIST:
 						if Upgrades.LIST[id].rarity == rarity:

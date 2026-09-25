@@ -7,7 +7,8 @@ extends Node3D
 
 const VFX_DIR := "res://assets/fx/GodotLootVFX/assets/BinbunVFX/loot_effects/effects/floating/"
 ## Our rarities -> the pack's effects (their mythic is red, like our rares).
-const VFX := {"common": "loot_vfx_common.tscn", "uncommon": "loot_vfx_uncommon.tscn", "rare": "loot_vfx_mythic.tscn"}
+const VFX := {"common": "loot_vfx_common.tscn", "uncommon": "loot_vfx_uncommon.tscn", "rare": "loot_vfx_mythic.tscn",
+	"legendary": "loot_vfx_legendary.tscn"}
 const OPEN_TIME := 0.35
 const VFX_SCALE := 1.6
 const VFX_EMISSION := 1.0 # the pack's default is 2 (bright enough to hide the item in it)

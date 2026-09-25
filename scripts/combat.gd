@@ -466,6 +466,8 @@ func _fire(p: PlayerSim, c: Cmd, w: Dictionary) -> void:
 		for i in dirs.size():
 			_spawn_projectile(w.id, w.projectile, o, dirs[i], false, p).copy = i > 0
 		fx.append({"type": "shot", "weapon": w.id, "origin": o, "ends": []})
+	if up.active:
+		up.on_fire(o, dirs[0])
 	if w.knockback > 0:
 		# From the 64-bit yaw/pitch directly, so the push matches the web game as closely as it can.
 		var cp := cos(c.pitch)
@@ -552,6 +554,11 @@ func _update_projectiles(p: PlayerSim, dt: float) -> void:
 				if hit.target:
 					damage_target(hit.target, def.damage, "body", hit.point, pr.src)
 				fx.append({"type": "impact", "pos": hit.point, "normal": hit.normal, "small": true})
+				pr.alive = false
+			"missile": # Hydra: a hit, then a small blast
+				if hit.target:
+					damage_target(hit.target, def.damage, "body", hit.point, pr.src)
+				item_explosion(hit.point - dir * 0.1, def.blast, def.damage * 0.5, "bigbang")
 				pr.alive = false
 			"stick":
 				if hit.target:
