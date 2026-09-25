@@ -79,6 +79,25 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
       a ruined keep, breaches and a gate.
     - **Around**: four floating sky isles (a pad up to each, a cannon from each to the crown),
       trees, boulders and sunstone shards.
+  - **Fantasy Village** (stage 2): a big medieval town (320 x 320 m, about 1.8x Sunstone Valley)
+    built from the Medieval Village MegaKit (Quaternius, CC0, `assets/VillageFBX`): about 80
+    timber-framed houses put together from the kit's walls, corners, windows (with glass and
+    shutters), doors, chimneys, gables and tiled roofs, 6,800 pieces in all. Every roof is two
+    steep ramps you can run up. The kit comes without its textures, so each of its materials gets
+    a toon color (terracotta tiles, cream plaster, brown timber, grey-blue stone).
+    - **Center, the market square**: cobbles, a clock tower (a pad at its foot up the wall onto
+      its top, a belfry and spire above), a well, wagons and crate stacks, houses all around.
+    - **North-east, the old town**: up on a 6 m stone plateau (a grand staircase from the square
+      side, a long ramp from the north road, a launcher): tight lanes between 2-3 story houses,
+      and the guildhall with a golden chest spot on its ridge.
+    - **West, the river**: a sunken channel with water, a stone bridge on the west road and two
+      wooden ones, ramps out of the water, and a hamlet on the far bank.
+    - **North-west, the castle**: terraces up to a keep with battlements (a pad up its wall) and
+      a watchtower.
+    - **East, the chapel**: a long chapel with a bell tower, a walled graveyard with a shrine.
+    - **South, the farms**: fields in rows, fences, hay, wagons and a big barn.
+    - Hills all the way around, trees, 40 chest spots (tower tops, the keep, rooftops, alleys).
+    `tools/make_village.gd` builds it (re-running it overwrites the scene).
   - **Bean Town**: a Nuketown-style FFA map. Two two-story houses face each other across a
     cul-de-sac, with a school bus, trucks and cars in the street. Built for speed: doors and windows
     3-5 m wide with knee-high sills you can sprint or slide straight through, stairs to the upstairs,
@@ -209,7 +228,8 @@ boss bar and results). Each stage:
    carry over; you arrive at full health.
 
 **Pathfinding** (`scripts/nav.gd`): when a stage loads, a grid of standing spots 1.5 m apart is
-built over it (the tops of boxes and ramps where a body fits, about 30,000 on Sunstone Valley, in
+built over it (the tops of boxes and ramps where a body fits, about 30,000 on Sunstone Valley and
+46,000 on the Fantasy Village, in
 under a second on a worker thread behind the loading screen), linked where you can walk, step,
 jump (up to 1 m), drop (up to 10 m) or ride a launch pad. A ground enemy that sees you with flat
 ground between you walks straight at you; otherwise it follows a path from Godot's AStar3D
@@ -217,8 +237,8 @@ around walls, up ramps, off ledges and over pads (a new one about every second; 
 fraction of a millisecond). Paths never cut corners over a drop. When you're somewhere it can't
 reach, it goes as close as it can get. Flyers fly straight at you as before.
 
-Stages are listed in `Characters.STAGES` (Sunstone Valley, then the Fantasy Village, which isn't
-built yet: until it is, stage 2 is Sunstone Valley again, harder).
+Stages are listed in `Characters.STAGES`: Sunstone Valley, then the Fantasy Village. After stage 2
+it loops back to Sunstone Valley for now (harder every stage) until there are more.
 
 ## Items
 
@@ -350,10 +370,16 @@ Open a map in `maps/` (`dev_map.tscn`, `sunstone-valley.tscn`, `bean-town.tscn`)
 
 - **MapBox**: a solid box. Move it and scale it with the normal gizmos (position = center, scale =
   size in meters). In the Inspector: `kind` (its color: floor, wall, grass, road, house_blue,
-  roof, bus...; the list is `WorldView.COLORS`; `barrier` is an invisible wall) and `ramp`
+  roof, bus...; the list is `WorldView.COLORS`; `barrier` is an invisible wall shots pass
+  through; `hidden` is solid for everything but not drawn: the collision under a model) and `ramp`
   (a sloped top rising toward x+, x-, z+ or z-). Don't rotate boxes: collision is axis-aligned
   (the editor shows a warning if you do). Ctrl+D duplicates a box to make a new one.
-- **MapPad**: jump pad (radius, launch speed, directional launchers).
+- **MapPad**: jump pad (radius, launch speed, directional launchers). A pad throws you at most
+  about 13 m up (the movement caps rising speed at 24 m/s), so anything higher needs a ledge on
+  the way. Put a pad against a wall to slide up it and over the top (the top must not overhang).
+- **MapModel**: a model placed in the map (`model`: a kit piece like
+  `res://assets/VillageFBX/Wall_Plaster_Straight.fbx`, `yaw`, `size`). Looks only: put `hidden`
+  boxes under it for collision. Every copy of a model is drawn in one batch in the game.
 - **MapSpawn**: where you start; turn it to set which way you face. The first one is used.
 - **MapTarget**: a bean dummy (optionally sliding back and forth).
 - **MapPortal**: the hub portals to the time trial (guns on / off).
@@ -420,5 +446,5 @@ The roguelite, in this order:
    barrels~~ (done). ~~Levels~~ (done). Next: chest prices that rise over the run, equipment
    (an active item on a key), more items.
 4. ~~Run structure~~ (done: 8 waves → the Colossus → stage cleared → the next stage). Next: the
-   Fantasy Village as stage 2 (from the owner's building assets), a boss per stage.
+   ~~Fantasy Village as stage 2~~ (done). Next: a boss per stage, stage 3.
 5. More stages, character passives, unlocks. Multiplayer becomes co-op.

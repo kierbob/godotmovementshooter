@@ -18,8 +18,22 @@ const COLORS := {
 	# Sunstone Valley (stage 1)
 	"sandstone": Color("e3a468"), "cliff": Color("b86f4a"), "sand": Color("f0d9a0"), "ruin": Color("ddd5c2"),
 	"ruin_dark": Color("aaa08c"), "sunstone": Color("ffcf2e"),
+	# Fantasy Village (stage 2); "hidden" is solid but not drawn (collision under kit models)
+	"cobble": Color("9ea3b8"), "stone": Color("a9b1c6"), "stone_dark": Color("7d86a0"), "dirt": Color("c9a26b"),
+	"field": Color("a9c95a"), "water": Color("5fb3e8"), "hill": Color("6aa85c"), "plank": Color("b8875a"),
+	"hay": Color("f0cf6a"), "hidden": Color("ff9f40"),
 }
-const NO_SHADOW_KINDS := ["floor", "trialfloor", "arenafloor", "grass", "road", "sidewalk", "wood"]
+const NO_SHADOW_KINDS := ["floor", "trialfloor", "arenafloor", "grass", "road", "sidewalk", "wood", "cobble", "dirt",
+	"field", "water"]
+## Toon colors for the village kit's materials (it comes without its textures): by material name.
+const KIT_COLORS := {
+	"MI_WoodTrim": Color("8a5a3c"), "MI_WoodTrim_Wear": Color("a0714a"), "MI_RockTrim": Color("a3abbf"),
+	"MI_WindowGlass": Color("bfe3ff"), "MI_MetalOrnaments": Color("3e4252"), "MI_Brick": Color("c8b8a0"),
+	"MI_RedBrick": Color("b8573f"), "MI_UnevenBrick": Color("9ea8bf"), "MI_Plaster": Color("f2e6c9"),
+	"MI_Vine": Color("5f9e3a"), "MI_RoundTiles": Color("cf5a3f"),
+}
+static var _kit_mats := {} # material name -> toon material (shared by every piece)
+static var _kit_meshes := {} # model path -> [[mesh with toon materials, local transform], ...]
 
 static var _grid: ImageTexture
 static var cloud_material: ShaderMaterial # lighting presets tint the clouds
@@ -74,8 +88,8 @@ static func with_outline(m: Material, thickness := 0.025) -> Material:
 static func build_world(map: MapData, parent: Node3D) -> void:
 	var by_kind := {}
 	for b in map.boxes:
-		if b.kind == "barrier":
-			continue # invisible wall (keeps players in the map; only the editor shows it)
+		if b.kind == "barrier" or b.kind == "hidden":
+			continue # invisible wall / collision under a model (only the editor shows them)
 		var st: SurfaceTool = by_kind.get(b.kind)
 		if st == null:
 			st = SurfaceTool.new()
@@ -93,6 +107,91 @@ static func build_world(map: MapData, parent: Node3D) -> void:
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if kind in NO_SHADOW_KINDS \
 			else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		parent.add_child(mi)
+
+
+## The map's models (MapModel): every copy of the same model in one MultiMesh per mesh, so a
+## town of thousands of kit pieces is a few hundred draw calls. Small pieces stop being drawn far
+## away (nobody sees a brick at 120 m).
+static func build_models(map: MapData, parent: Node3D) -> void:
+	var by_path := {}
+	for m: Dictionary in map.models:
+		var list: Array = by_path.get(m.path, [])
+		list.append(m.xf)
+		by_path[m.path] = list
+	for path: String in by_path:
+		var parts := kit_meshes(path)
+		var xfs: Array = by_path[path]
+		for part: Array in parts:
+			var mesh: Mesh = part[0]
+			var local: Transform3D = part[1]
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.mesh = mesh
+			mm.instance_count = xfs.size()
+			for i in xfs.size():
+				mm.set_instance_transform(i, (xfs[i] as Transform3D) * local)
+			var mmi := MultiMeshInstance3D.new()
+			mmi.name = "Kit_" + path.get_file().get_basename()
+			mmi.multimesh = mm
+			var big := (local * mesh.get_aabb()).get_longest_axis_size() # in meters (the kit's meshes are in cm, scaled up)
+			if big < 1.5:
+				mmi.visibility_range_end = 90.0 * maxf(1.0, map.view_scale)
+			if big < 0.6:
+				mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			parent.add_child(mmi)
+
+
+## A model's meshes with the kit's toon materials, and where each sits in the model (cached).
+static func kit_meshes(path: String) -> Array:
+	if _kit_meshes.has(path):
+		return _kit_meshes[path]
+	var out: Array = []
+	var ps := load(path) as PackedScene
+	if ps:
+		var root := ps.instantiate()
+		_gather_meshes(root, Transform3D.IDENTITY, out)
+		root.free()
+	_kit_meshes[path] = out
+	return out
+
+
+static func _gather_meshes(n: Node, xf: Transform3D, out: Array) -> void:
+	var t := xf
+	if n is Node3D:
+		t = xf * (n as Node3D).transform
+	if n is MeshInstance3D:
+		var mi := n as MeshInstance3D
+		var src := mi.mesh
+		if src:
+			var mesh := ArrayMesh.new()
+			for s in src.get_surface_count():
+				mesh.add_surface_from_arrays(src.surface_get_primitive_type(s), src.surface_get_arrays(s))
+				mesh.surface_set_material(s, kit_material(mi.get_active_material(s)))
+			out.append([mesh, t])
+	for c in n.get_children():
+		_gather_meshes(c, t, out)
+
+
+## The toon material for one of the kit's materials (by its name; anything unknown stays grey).
+static func kit_material(src: Material) -> Material:
+	var name := src.resource_name if src else ""
+	if _kit_mats.has(name):
+		return _kit_mats[name]
+	var col: Color = KIT_COLORS.get(name, Color("b0b0b8"))
+	var m := toon_material(col) # no outline shell: it grows in the model's own units, which the import scales up
+	_kit_mats[name] = m
+	return m
+
+
+## Give a model instance (the editor's preview of a MapModel) the kit's toon colors.
+static func recolor_kit(n: Node) -> void:
+	if n is MeshInstance3D:
+		var mi := n as MeshInstance3D
+		if mi.mesh:
+			for s in mi.mesh.get_surface_count():
+				mi.set_surface_override_material(s, kit_material(mi.get_active_material(s)))
+	for c in n.get_children():
+		recolor_kit(c)
 
 
 ## One face (3 or 4 corners). Godot draws clockwise triangles as front faces, so the corners are

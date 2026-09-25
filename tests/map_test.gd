@@ -172,6 +172,19 @@ func run() -> void:
 			if not p.grounded:
 				lost.append(Vector3(pd.x, pd.y, pd.z))
 		check("%s: all %d launch pads land you on something" % [id, launchers], lost.is_empty())
+		# every chest spot: a chest-sized body fits there, standing on something (not in a roof,
+		# not in the air)
+		var bad_chests := []
+		for c: Dictionary in m.chests:
+			var cp := PlayerSim.new(c.x, c.y, c.z)
+			var clear := not cp._blocked(m.nearby(c.x, c.y, c.z, 1.0))
+			cp.py -= 0.08
+			var on_ground := cp._blocked(m.nearby(c.x, c.y - 0.08, c.z, 1.0))
+			if not (clear and on_ground):
+				bad_chests.append(Vector3(c.x, c.y, c.z))
+		check("%s: all %d chest spots are clear and on the ground" % [id, m.chests.size()], bad_chests.is_empty())
+		if not bad_chests.is_empty():
+			print("      chests: ", bad_chests)
 		if not lost.is_empty():
 			print("      pads: ", lost)
 	var dev := MapData.load_map("dev_map")

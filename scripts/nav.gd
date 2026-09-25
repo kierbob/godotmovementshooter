@@ -258,12 +258,18 @@ func _build() -> void:
 					tops.append(MapData.solid_top(b, x - HW, x + HW, z - HW, z + HW))
 				e = _next[e]
 			tops.sort()
-			var mine := PackedInt32Array()
-			var last := -INF
+			# tops within 5 cm are one floor (cobbles laid on grass): keep the higher, the one
+			# you actually stand on (the lower one is inside the higher box)
+			var floors := PackedFloat32Array()
 			for y in tops:
-				if y - last < 0.05 or y < -29.0:
+				if y < -29.0:
 					continue
-				last = y
+				if not floors.is_empty() and y - floors[-1] < 0.05:
+					floors[-1] = y
+				else:
+					floors.append(y)
+			var mine := PackedInt32Array()
+			for y in floors:
 				if _clear(k, x, z, y):
 					var id := pos.size()
 					pos.append(Vector3(x, y, z))

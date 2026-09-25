@@ -111,6 +111,7 @@ func _ready() -> void:
 	map = MapData.load_map(map_id) # maps/<id>.tscn, edited in the Godot editor
 	await _step(0.2, "Building the world")
 	WorldView.build_world(map, self)
+	WorldView.build_models(map, self) # the village kit's houses, props... (MapModel)
 	WorldView.build_pads(map, self)
 	clouds = WorldView.build_clouds(self)
 	combat = Combat.new(map.boxes, map.targets)
