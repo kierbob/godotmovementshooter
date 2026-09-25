@@ -57,7 +57,7 @@ const LIST := {
 	"sticky_bomb": {"name": "Sticky Bomb", "rarity": "common", "tag": "status", "icon": "SB", "color": Color("8fe36b"),
 		"desc": "8% chance on hit to stick a bomb on them (explodes for 180%).", "stack": "+8% chance"},
 	"knockout_glove": {"name": "Knockout Glove", "rarity": "common", "tag": "status", "icon": "KG", "color": Color("ff4a4a"),
-		"desc": "Hits knock enemies back.", "stack": "harder knockback"},
+		"desc": "Hits knock enemies back (each one at most every 0.6 s; not bosses).", "stack": "harder knockback"},
 	# ---- uncommon ----
 	"frost_tip": {"name": "Frost Tip", "rarity": "uncommon", "tag": "status", "icon": "FT", "color": Color("8fd3ff"),
 		"desc": "Hits chill enemies (half speed). Keep hitting a chilled one to freeze it solid; frozen ones shatter below 25% health.",
@@ -301,11 +301,17 @@ func on_hit(t: Combat.Target, dmg: float, zone: String, point: Vector3) -> void:
 			from = to
 	if t.dead:
 		return # the rest sticks to them
-	if count("knockout_glove") > 0:
+	if count("knockout_glove") > 0 and _time - float(_shoved.get(t, -INF)) >= SHOVE_GAP and t.size < 2.0:
+		# once per SHOVE_GAP per enemy: a shotgun's ten pellets used to stack ten shoves into one
+		# launch across the map. Big ones (brutes) move half as far, bosses not at all.
+		_shoved[t] = _time
+		if _shoved.size() > 256:
+			_shoved.clear()
 		var away := t.pos - (Vector3(p.px, p.py, p.pz) if p else point)
 		away.y = 0
-		var push := away.normalized() * (4.0 + 2.0 * count("knockout_glove")) + Vector3(0, 3.0, 0)
-		_push(t, push)
+		var n := count("knockout_glove")
+		var push := away.normalized() * minf(7.0, 3.5 + 1.0 * (n - 1)) + Vector3(0, 1.5, 0)
+		_push(t, push * (0.5 if t.size > 1.2 else 1.0))
 	if count("match_head") > 0 and roll(minf(1.0, 0.1 * count("match_head"))):
 		var burn: Dictionary = t.status.get("burn", {"t": 0.0, "dps": 0.0, "acc": 0.0})
 		burn.t = BURN_TIME
@@ -634,6 +640,10 @@ func _stomp(p: PlayerSim, speed: float) -> void:
 
 
 ## Shove a target: ground enemies (and online players) through their body, flyers through knock.
+const SHOVE_GAP := 0.6 # Knockout Glove: seconds before the same enemy can be shoved again
+var _shoved := {} # target -> when Knockout Glove last shoved it
+
+
 func _push(t: Combat.Target, v: Vector3) -> void:
 	if t.body:
 		t.body.apply_impulse(v.x, v.y, v.z, "item")

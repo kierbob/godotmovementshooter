@@ -28,10 +28,19 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   `MapData.load_map(id)` reads a map scene; `MapConvert` / `tools/json_to_map.gd` make one from a
   map JSON. Maps: `dev_map` (web dev arena + time trial), `sunstone-valley` (stage 1, the
   first run stage: a 240 m valley, grouped by area; big maps set `MapRoot.view_scale` to push the
-  haze out) and `bean-town` (Nuketown-style FFA,
+  haze out), `fantasy-village` (stage 2: a 320 m medieval town built by `tools/make_village.gd`
+  from the Quaternius Medieval Village kit in `assets/VillageFBX` (CC0): MapModel nodes for the
+  looks, "hidden" boxes for collision, roofs as two ramps; re-running the tool overwrites the
+  scene) and `bean-town` (Nuketown-style FFA,
   grouped by place; the yellow half mirrors the blue half through the center). A box's `kind` is
   its color from `WorldView.COLORS` (add new kinds there and to MapBox's enum). Kind `barrier` is
-  an invisible wall: solid for players, not drawn, ignored by shots.
+  an invisible wall: solid for players, not drawn, ignored by shots. Kind `hidden` is solid for
+  everything but not drawn (collision under models). MapModel (`scripts/map/map_model.gd`)
+  places a model (looks only); `WorldView.build_models` draws every copy of a model as one
+  MultiMesh, with the kit's untextured materials recolored by name (`KIT_COLORS`; the kit's meshes
+  are in cm under a scaled node, so measure them through their transform). The loading screen
+  preloads a stage's models (`MapModel.paths_in`). Pads throw you at most ~13 m up
+  (MOVE_MAX_RISE_SPEED), so keep pad targets below that.
 - `scripts/main.gd`: game entry. Builds the map, runs the sim at a fixed 120 ticks/s, moves the
   camera between ticks, switches menu/playing/paused. Test flags: `--map=`, `--at=`, `--screen=`, `--shot=`,
   `--solo` (straight into a solo run), `--host`, `--join=`, `--ready`, `--name=`.
@@ -199,7 +208,7 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 5. Roguelite: ~~enemies~~ (9 types + F10 admin console), ~~stage 1 map~~ (Sunstone Valley),
    ~~stacking items~~ (40, F10 give), ~~gold + chests~~ (+ shops, shrines, barrels), ~~levels~~,
    ~~waves + boss + next stage~~ (the director, the Colossus; no teleporter, the owner's call),
-   ~~run over on death~~, the Fantasy Village (stage 2, from the owner's building assets), more
-   stages, character passives.
+   ~~run over on death~~, ~~the Fantasy Village~~ (stage 2), a boss per stage, more stages,
+   character passives.
 6. ~~Multiplayer~~ (first version done: host/join, FFA, prediction, lag compensation). Later:
    teams, match rules, dedicated server.

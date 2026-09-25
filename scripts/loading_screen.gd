@@ -133,6 +133,8 @@ func _start(stage_id: String, then: Callable) -> void:
 	var files: Array[String] = ["res://maps/%s.tscn" % stage_id]
 	for m: Dictionary in Items.MODELS.values():
 		files.append(Models.DIR + String(m.file))
+	for p in MapModel.paths_in("res://maps/%s.tscn" % stage_id): # the stage's kit pieces
+		files.append(p)
 	for f in files:
 		if ResourceLoader.exists(f) and ResourceLoader.load_threaded_request(f) == OK:
 			_requests.append(f)

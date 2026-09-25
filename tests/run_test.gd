@@ -252,5 +252,35 @@ func _init() -> void:
 	check("the stage list: stage 1 is %s, and a stage whose map isn't built yet is skipped (stage 2: %s)" % [Characters.stage_map(1), Characters.stage_map(2)],
 		Characters.stage_map(1) == Characters.FIRST_STAGE and MapData.list().has(Characters.stage_map(2)))
 
+	# stage 2: the Fantasy Village
+	map = MapData.load_map("fantasy-village")
+	t0 = Time.get_ticks_msec()
+	nav = Nav.build(map)
+	sp = nav.node_near(Vector3(map.spawn.x, map.spawn.y, map.spawn.z))
+	check("Fantasy Village: a big map (%d nav spots in %d ms, the spawn's area %d), %d chest spots, %d kit pieces" % [nav.size(), Time.get_ticks_msec() - t0, nav.comp_size.get(nav.comp[sp], 0) if sp >= 0 else 0, map.chests.size(), map.models.size()],
+		nav.size() > 30000 and sp >= 0 and nav.comp[sp] == nav.biggest and map.chests.size() >= Loot.CHESTS_PER_RUN + Loot.BARRELS_PER_RUN and map.models.size() > 3000)
+	spawned = 0
+	spawned_inside = 0
+	seen.clear()
+	setup(2)
+	run(Director.FIRST_BREAK + 8.0)
+	check("...its first wave (%d enemies) all appear where they fit (%d inside anything)" % [spawned, spawned_inside], spawned > 5 and spawned_inside == 0)
+	tried = 0
+	inside = 0
+	for i in 300:
+		var at := nav.pos[rng.randi() % nav.size()]
+		for type: String in Enemies.TYPES:
+			var s := enemies.safe_spot(at, 2.0, 30.0, type, -1, rng)
+			if s == Vector3.INF:
+				continue
+			tried += 1
+			if Enemies.TYPES[type].family == "flyer":
+				if enemies._push_out(s, 0.5 * Enemies.TYPES[type].size).distance_to(s) > 0.01:
+					inside += 1
+			elif not enemies._body_fits(s, Enemies.TYPES[type].size):
+				inside += 1
+	check("...and safe spots all over it, every type (%d spots, %d inside anything: houses, roofs, walls)" % [tried, inside], tried > 1500 and inside == 0)
+	check("the stage list: stage 2 is the Fantasy Village now", Characters.stage_map(2) == "fantasy-village")
+
 	print("\n%s" % ("all run checks passed" if fails == 0 else "%d run check(s) failed" % fails))
 	quit(1 if fails else 0)

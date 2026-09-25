@@ -46,6 +46,7 @@ var portals: Array = [] # hub portals to the time trial: { x, y, z, guns, label,
 var arena := {} # bot arena layout (for the future Bot Arena mode)
 var view_scale := 1.0 # big maps push the haze out (MapRoot.view_scale)
 var chests: Array = [] # chest spots {x, y, z, size, yaw} (MapChest); each run uses some
+var models: Array = [] # placed models {path, xf} (MapModel): looks only, WorldView draws them
 
 # nearby() looks boxes up in a grid of GRID_CELL m columns instead of scanning every box (big
 # stages have hundreds, and every enemy steps through here each tick).
@@ -137,6 +138,10 @@ static func _collect(n: Node, m: MapData) -> void:
 		elif c is MapChest:
 			var ch := c as MapChest
 			m.chests.append({"x": ch.at[0], "y": ch.at[1], "z": ch.at[2], "size": ch.size, "yaw": ch.yaw})
+		elif c is MapModel:
+			var mm := c as MapModel
+			if mm.model != "":
+				m.models.append({"path": mm.model, "xf": mm.xform()})
 		_collect(c, m)
 
 

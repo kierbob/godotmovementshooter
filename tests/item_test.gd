@@ -341,7 +341,20 @@ func _init() -> void:
 	var z0 := kb.target.pos.z
 	combat.damage_target(kb.target, 1.0, "body", kb.center())
 	run(0.4)
-	check("Knockout Glove: hits shove them back (%.1f m)" % (kb.target.pos.z - z0), kb.target.pos.z - z0 > 1.0)
+	var one := kb.target.pos.z - z0
+	check("Knockout Glove: hits shove them back (%.1f m)" % one, one > 0.4)
+	run(0.3) # past its shove cooldown
+	var z1 := kb.target.pos.z
+	for i in 10: # a shotgun blast: ten pellets at once
+		combat.damage_target(kb.target, 1.0, "body", kb.center())
+	run(0.4)
+	check("...but a blast of pellets shoves once, not ten times (%.1f m)" % (kb.target.pos.z - z1), kb.target.pos.z - z1 > 0.4 and kb.target.pos.z - z1 < one * 1.6)
+	var boss := enemies.spawn("colossus", Vector3(6, 0, 10))
+	run(0.3)
+	var bz := boss.target.pos
+	combat.damage_target(boss.target, 1.0, "body", boss.center())
+	run(0.4)
+	check("...and bosses don't budge", boss.target.pos.distance_to(bz) < 0.05)
 
 	# ---- legendaries ----
 	var legends: Array = Upgrades.LIST.keys().filter(func(k: String) -> bool: return Upgrades.LIST[k].rarity == "legendary")

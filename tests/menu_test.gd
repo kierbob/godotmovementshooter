@@ -305,6 +305,10 @@ func _init() -> void:
 		and (game.hud.run._wave.text.begins_with("WAVE") or game.hud.run._wave.text.begins_with("STAGE")))
 	check("...and its enemies know the ground (%d nav spots, built while it loaded)" % (game.enemies.nav.size() if game.enemies.nav else 0),
 		game.enemies.nav != null and game.enemies.nav.size() > 10000)
+	var drops_before: int = game.loot.drops.size()
+	game.director.events.append({"type": "wave_clear", "wave": 3})
+	await frames(2)
+	check("clearing a wave drops an item in front of you", game.loot.drops.size() == drops_before + 1)
 	game.enemies.god = true
 	game.console.execute("boss")
 	t0 = Time.get_ticks_msec()
@@ -329,8 +333,9 @@ func _init() -> void:
 	game.console.execute("nextstage")
 	game = await wait_playing(game)
 	menu = game.menu
-	check("on to STAGE 2, with your items, level and gold (%d items, level %d, $%d)" % [game.combat.up.total, game.combat.up.level, game.loot.gold],
-		game.director != null and game.director.stage == 2 and game.combat.up.total == carried_items
+	check("on to STAGE 2, the Fantasy Village (%d batches of kit models drawn), with your items, level and gold (%d items, level %d, $%d)" % [game.find_children("Kit_*", "MultiMeshInstance3D", false, false).size(), game.combat.up.total, game.combat.up.level, game.loot.gold],
+		game.director != null and game.director.stage == 2 and game.map_id == "fantasy-village"
+		and game.find_children("Kit_*", "MultiMeshInstance3D", false, false).size() > 20 and game.combat.up.total == carried_items
 		and game.combat.up.count("triple_tap") >= 2 and game.combat.up.level == carried_level and game.loot.gold == 77)
 	await create_timer(1.5).timeout
 	game.player.invuln = 0.0
