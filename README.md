@@ -8,6 +8,13 @@ you hosts, see "Playing online").
 - Double-click `play.bat` (uses `Downloads\Godot_v4.6.2-stable_win64.exe\...`), or
 - open this folder in Godot 4.6 and press **F5**.
 
+**Staying up to date without re-downloading:** get the game once as a git clone instead of a zip
+(GitHub Desktop: File → Clone repository → `kierbob/godotmovementshooter`, or
+`git clone https://github.com/kierbob/godotmovementshooter`). After that `play.bat` pulls the
+latest version by itself before it starts (or press **Fetch origin → Pull origin** in GitHub
+Desktop): only what changed comes down, and Godot keeps its imported assets instead of importing
+everything again.
+
 The game is heading toward a Risk of Rain style roguelite (runs over several stages, enemies,
 items that stack). The menus already work that way:
 
