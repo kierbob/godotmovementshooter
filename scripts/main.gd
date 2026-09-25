@@ -1539,6 +1539,17 @@ func admin(what: String, data: Dictionary) -> String:
 			for id: String in combat.up.stacks:
 				have.append("%s x%d" % [Upgrades.LIST[id].name, combat.up.count(id)])
 			return ", ".join(have)
+		"map":
+			var id: String = data.id
+			if online:
+				return "Not online"
+			if director:
+				# this stage on that map, with everything you have
+				var n := int(run_info.get("stage_n", 1))
+				_load_into("STAGE %d" % n, id, {"mode": "solo", "stage_n": n, "carry": _carry_out()})
+				return "Loading %s (stage %d, your items kept)" % [id, n]
+			_load_into("PRACTICE", id, {"mode": "practice"})
+			return "Loading %s" % id
 		"wave", "boss", "nextstage":
 			if director == null:
 				return "Not in a run (Singleplayer)"

@@ -13,6 +13,8 @@ extends CanvasLayer
 ##                         (small, large, golden, damage, utility, healing, shop, shrine, barrel)
 ##   levelup [n]           gain levels (1 if no number)
 ##   wave <n> / boss / nextstage   in a run: jump to a wave, to the boss, or on to the next stage
+##   map <name>            load a map now (map village, map sunstone): in a run it's this stage on
+##                         that map, your items kept; outside one, practice there. map = the list
 ##   help
 ## Up / Down walk through what you typed before. Next to the text bar there are buttons for all
 ## of it (every enemy, a count, god / freeze / heal / kill all), and under it a button per item
@@ -24,7 +26,7 @@ const HELP := [
 	"killall · god [on/off] · heal · freeze / unfreeze · list · help",
 	"give <item> [count] (give random 5) · take <item> · items · clearitems",
 	"gold [amount] · chest [small/large/golden/damage/utility/healing/shop/shrine/barrel] · levelup [n]",
-	"wave <n> · boss · nextstage (in a run)",
+	"wave <n> · boss · nextstage (in a run) · map <name> (map village, map sunstone; map = the list)",
 ]
 const VARIANT_WORDS := {"projectile": "flyer_projectile", "beam": "flyer_beam", "healer": "flyer_healer",
 	"charger": "charger", "brute": "brute", "swarmer": "swarmer", "gunner": "gunner", "lobber": "lobber", "sniper": "sniper"}
@@ -127,9 +129,23 @@ func _build_buttons() -> Control:
 	tools.add_child(_freeze_btn)
 	tools.add_child(_btn("HEAL", func() -> void: _press("heal")))
 	tools.add_child(_btn("KILL ALL", func() -> void: _press("killall")))
-	tools.add_child(_btn("+100 GOLD", func() -> void: _press("gold 100")))
-	tools.add_child(_btn("CHEST", func() -> void: _press("chest")))
 	grid.add_child(tools)
+	var run := HBoxContainer.new()
+	run.add_theme_constant_override("separation", 6)
+	run.add_child(_tag("RUN"))
+	run.add_child(_btn("NEXT STAGE", func() -> void: _press("nextstage")))
+	run.add_child(_btn("+100 GOLD", func() -> void: _press("gold 100")))
+	run.add_child(_btn("CHEST", func() -> void: _press("chest")))
+	grid.add_child(run)
+	# force a map change: straight onto any map (in a run: this stage there, items kept)
+	var maps := HBoxContainer.new()
+	maps.add_theme_constant_override("separation", 6)
+	maps.add_child(_tag("MAPS"))
+	for id in MapData.list():
+		var b := _btn(map_label(id), func() -> void: _press("map " + id))
+		b.tooltip_text = id
+		maps.add_child(b)
+	grid.add_child(maps)
 	_refresh_buttons()
 	return grid
 
@@ -293,6 +309,14 @@ func execute(text: String) -> String:
 			return _call("boss", {})
 		"nextstage", "next":
 			return _call("nextstage", {})
+		"map", "changemap":
+			var maps := MapData.list()
+			if words.size() < 2:
+				return "Maps: " + ", ".join(maps) + " (map <name>)"
+			var id := find_map(" ".join(words.slice(1)), maps)
+			if id == "":
+				return "No map like that. Maps: " + ", ".join(maps)
+			return _call("map", {"id": id})
 		"levelup", "level":
 			return _call("levelup", {"n": clampi(int(words[1]), 1, 50) if words.size() > 1 and words[1].is_valid_int() else 1})
 		"chest":
@@ -311,6 +335,31 @@ func execute(text: String) -> String:
 				out.append("%s: %s" % [fam, ", ".join(names)])
 			return "\n".join(out)
 	return "Unknown command '%s' (help)" % cmd
+
+
+## A short button name for a map: its id's words, or just the last one if that's long
+## ("fantasy-village" -> VILLAGE, "bean-town" -> BEAN TOWN).
+static func map_label(id: String) -> String:
+	var words := id.replace("_", "-").split("-", false)
+	var label := " ".join(words)
+	return (words[-1] if label.length() > 10 else label).to_upper()
+
+
+## The map a name means: its id, or the first whose id has every word in it ("village",
+## "sunstone valley", "dev"); "" if none.
+static func find_map(name: String, maps: Array[String]) -> String:
+	var q := name.strip_edges().to_lower().replace(" ", "-").replace("_", "-")
+	for id in maps:
+		if id == q or id.replace("_", "-") == q:
+			return id
+	for id in maps:
+		var ok := true
+		for w in q.split("-", false):
+			if not id.replace("_", "-").contains(w):
+				ok = false
+		if ok:
+			return id
+	return ""
 
 
 func _call(what: String, data: Dictionary) -> String:

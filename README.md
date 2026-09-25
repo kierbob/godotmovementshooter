@@ -198,7 +198,10 @@ FREEZE / HEAL / KILL ALL, next to a text bar that takes the same as commands: `s
 `heal`, `freeze [on/off]` / `unfreeze`, `list`, `help`. Up/Down recalls what you typed. Enemies
 spawn 12 m in front of you, facing you (or the nearest spot they fit, if that's inside something). The console gives items too (see "Items"). In a run:
 `wave <n>` (skip to wave n), `boss` (straight to the boss), `nextstage` (clear the stage now),
-`levelup [n]`, `chest <kind>`.
+`levelup [n]`, `chest <kind>`. `map <name>` (`map village`, `map sunstone`; `map` lists them)
+loads a map right away: in a run it's the same stage on that map with everything you carry,
+outside one it's practice there. The panel has these as buttons too (RUN: NEXT STAGE, +100 GOLD,
+CHEST; MAPS: a button per map).
 
 ## A run
 

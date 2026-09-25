@@ -330,13 +330,23 @@ func _init() -> void:
 	game.loot.gold = 77
 	var carried_items: int = game.combat.up.total
 	var carried_level: int = game.combat.up.level
-	game.console.execute("nextstage")
-	game = await wait_playing(game)
+	game.director.t = 0.2 # the countdown after the boss runs out: the next stage loads by itself
+	game = await wait_playing(game, 20.0)
 	menu = game.menu
 	check("on to STAGE 2, the Fantasy Village (%d batches of kit models drawn), with your items, level and gold (%d items, level %d, $%d)" % [game.find_children("Kit_*", "MultiMeshInstance3D", false, false).size(), game.combat.up.total, game.combat.up.level, game.loot.gold],
 		game.director != null and game.director.stage == 2 and game.map_id == "fantasy-village"
 		and game.find_children("Kit_*", "MultiMeshInstance3D", false, false).size() > 20 and game.combat.up.total == carried_items
 		and game.combat.up.count("triple_tap") >= 2 and game.combat.up.level == carried_level and game.loot.gold == 77)
+	# the admin panel's map buttons: this stage on another map, everything kept
+	check("F10 has NEXT STAGE and a button per map (map village -> %s)" % AdminConsole.find_map("village", MapData.list()),
+		button(game.console._panel, "NEXT STAGE") != null and button(game.console._panel, "VALLEY") != null
+		and button(game.console._panel, "VILLAGE") != null and AdminConsole.find_map("village", MapData.list()) == "fantasy-village"
+		and AdminConsole.find_map("sunstone", MapData.list()) == "sunstone-valley" and AdminConsole.find_map("nowhere", MapData.list()) == "")
+	button(game.console._panel, "VALLEY").pressed.emit()
+	game = await wait_playing(game, 20.0)
+	menu = game.menu
+	check("...pressing VALLEY loads Sunstone Valley as stage 2, items kept (%s, stage %d, %d items)" % [game.map_id, game.director.stage if game.director else 0, game.combat.up.total],
+		game.map_id == "sunstone-valley" and game.director != null and game.director.stage == 2 and game.combat.up.total == carried_items)
 	await create_timer(1.5).timeout
 	game.player.invuln = 0.0
 	game.enemies.god = false

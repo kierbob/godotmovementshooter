@@ -113,7 +113,7 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   main.gd: `_update_run` handles the events, `_next_stage` reloads via `_load_into` with
   `_carry_out()` (items, level, XP, gold, kills, time) in `pending_run.carry`; dying in a run shows
   the results instead of respawning. `Characters.STAGES` lists stage maps (ones not built yet are
-  skipped). F10: wave/boss/nextstage. `tests/run_test.gd` checks the director.
+  skipped). F10: wave/boss/nextstage/map <name> (`AdminConsole.find_map`; a MAPS button row). `tests/run_test.gd` checks the director.
   `scripts/nav.gd` (Nav: the walkable grid, spots CELL m apart on box tops where a body fits,
   links for walk/step/jump/drop and launch pads, AStar3D paths, `comp` walk-both-ways groups and
   `can_reach` between them; built on a worker thread in main's `_ready` for runs and practice,
