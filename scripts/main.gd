@@ -290,6 +290,7 @@ func _start_play() -> void:
 	eye = Cfg.PLAYER_EYE_HEIGHT
 	prev_pos = _player_pos()
 	combat.set_loadout(Settings.loadout())
+	combat.up.passive = "" if online else Settings.character # passives are solo-only for now
 	_last_move_t = -1.0 # a new PlayerSim starts its clock at 0
 	combat.reset_targets()
 	enemies.clear()
@@ -804,6 +805,7 @@ func _play_combat_sounds(events: Array[Dictionary]) -> void:
 			"zap": sound.play("impulse", {"pos": e.to, "gap": 0.1, "vol": 0.45})
 			"freeze", "shatter": sound.play("dry" if e.type == "freeze" else "impact", {"pos": e.pos, "gap": 0.05})
 			"item_proc": sound.play("reload", {"gap": 0.1, "vol": 0.6})
+			"passive": sound.play("pickup" if e.passive == "scrapper" else "reload", {"gap": 0.15, "vol": 0.5})
 			"level_up": sound.play("finish")
 			"orbital": sound.play("sniper", {"pos": e.pos, "gap": 0.0})
 			"black_hole": sound.play("impulse", {"pos": e.pos, "gap": 0.1})

@@ -124,7 +124,14 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   Bomber (Rocket Launcher, Sidearm, Impact Grenade), Sharpshooter (Long Shot, Buzz SMG, Throwing
   Knife), Commando (Pulse Rifle, Deagle, Combat Dash: 22 m/s wherever you look plus a hop, on the
   ground or in the air, every 3.5 s). Picked in the lobby, shown on a 3D stage in their color;
-  saved with your settings.
+  saved with your settings. Each has a **passive** (solo play; shown in the lobby):
+  - **Brawler, Scrapper**: kills within 8 m heal you 12; gun hits while you're in the air deal +15%.
+  - **Bomber, Demolition**: your blasts are 20% bigger, and every enemy one catches takes 0.4 s off
+    the Frag's cooldown.
+  - **Sharpshooter, Deadeye**: hits from 20 m or more deal +25%; a headshot kill gives your knife
+    straight back.
+  - **Commando, Run and Gun**: dashing reloads both guns, and for 2 s after a dash your shots
+    deal +20%.
 - **Levels**: kills give XP (the same as their gold); each level is +10% damage, +12 max health and
   a full heal ("LEVEL UP!", a gold ring). Your level and XP bar sit over your health.
 - **Lobby and loading screen**: Risk of Rain style. Everyone ready → (online: a 3 s countdown) →
@@ -455,4 +462,4 @@ The roguelite, in this order:
    (an active item on a key), more items.
 4. ~~Run structure~~ (done: 8 waves → the Colossus → stage cleared → the next stage). Next: the
    ~~Fantasy Village as stage 2~~ (done). Next: a boss per stage, stage 3.
-5. More stages, character passives, unlocks. Multiplayer becomes co-op.
+5. ~~Character passives~~ (done). More stages, a village boss (planned), unlocks. Multiplayer becomes co-op.

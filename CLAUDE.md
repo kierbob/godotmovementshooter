@@ -106,7 +106,10 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   `scripts/map/map_chest.gd` (chest spots in the editor). E ("interact") opens one. Levels live in
   Upgrades (`add_xp`, `level`: +10% damage, +12 health each). `tests/loot_test.gd` checks loot.
   Characters: Brawler, Bomber, Sharpshooter, Commando (Combat Dash: an ability with `dash` instead of
-  a projectile, see `Combat._dash`). Enemies push apart from each other (`Enemies._separate`).
+  a projectile, see `Combat._dash`). Each has a passive (`Characters.LIST[id].passive` in words,
+  `Upgrades.PASSIVE` numbers; `combat.up.passive` = the character id, set by main for solo play
+  only; the hooks: modify_damage, on_kill/_kill_effects, Combat._explode, Combat._dash; checked
+  in item_test). Enemies push apart from each other (`Enemies._separate`).
 - The run: `scripts/director.gd` (Director: a stage's 8 waves with a budget spent by `COST` on the
   types `UNLOCK`ed so far, spawned in groups 16-34 m out; health/damage/money scale by wave and
   stage; then the boss ("colossus" in Enemies, family "boss": slam / volley / summon); events
@@ -210,7 +213,7 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 5. Roguelite: ~~enemies~~ (9 types + F10 admin console), ~~stage 1 map~~ (Sunstone Valley),
    ~~stacking items~~ (40, F10 give), ~~gold + chests~~ (+ shops, shrines, barrels), ~~levels~~,
    ~~waves + boss + next stage~~ (the director, the Colossus; no teleporter, the owner's call),
-   ~~run over on death~~, ~~the Fantasy Village~~ (stage 2), a boss per stage, more stages,
-   character passives.
+   ~~run over on death~~, ~~the Fantasy Village~~ (stage 2), ~~character passives~~, a boss per
+   stage, more stages.
 6. ~~Multiplayer~~ (first version done: host/join, FFA, prediction, lag compensation). Later:
    teams, match rules, dedicated server.

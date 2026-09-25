@@ -261,6 +261,8 @@ func _init() -> void:
 	(lobby._char_list.get_child(2) as Button).pressed.emit() # sharpshooter
 	await frames()
 	check("clicking a character picks it", Settings.character == "sharpshooter")
+	var shows_passive := lobby._info.find_children("*", "Label", true, false).any(func(l: Label) -> bool: return l.text == "DEADEYE")
+	check("...and the lobby shows its passive (DEADEYE)", shows_passive)
 	cf = ConfigFile.new()
 	check("your character is saved", cf.load(Settings.path) == OK and cf.get_value("game", "character", "") == "sharpshooter")
 	lobby._ready_btn.pressed.emit()
@@ -301,6 +303,8 @@ func _init() -> void:
 		and game.combat.up.count(item) == had + 1 and game.hud.items._banner.modulate.a > 0.5)
 
 	# the run: waves, the boss, the next stage (your stuff comes along), and the end
+	check("your character's passive is on (%s: %s)" % [Settings.character, Characters.get_info(Settings.character).passive.name],
+		game.combat.up.passive == Settings.character and game.combat.up.active)
 	check("a run has its waves (%s)" % game.hud.run._wave.text, game.director != null and game.hud.run._wave.visible
 		and (game.hud.run._wave.text.begins_with("WAVE") or game.hud.run._wave.text.begins_with("STAGE")))
 	check("...and its enemies know the ground (%d nav spots, built while it loaded)" % (game.enemies.nav.size() if game.enemies.nav else 0),

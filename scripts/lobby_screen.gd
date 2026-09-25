@@ -72,7 +72,7 @@ func _ready() -> void:
 	_info.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	_info.offset_left = 8
 	_info.offset_right = 520
-	_info.offset_top = -330
+	_info.offset_top = -460 # tall enough for the kit and the passive
 	_info.offset_bottom = -8
 	_info.alignment = BoxContainer.ALIGNMENT_END
 	_info.add_theme_constant_override("separation", 2)
@@ -187,7 +187,7 @@ func _refresh_characters() -> void:
 	for c in _info.get_children():
 		c.queue_free()
 	_info.add_child(UiStyle.label(String(ch.role).to_upper(), 20, UiStyle.YELLOW))
-	_info.add_child(UiStyle.label(String(ch.name).to_upper(), 72, UiStyle.TEXT, true))
+	_info.add_child(UiStyle.label(String(ch.name).to_upper(), 60, UiStyle.TEXT, true))
 	var desc := UiStyle.note(ch.desc, 15, Color("c9d1f5"))
 	desc.custom_minimum_size.x = 420
 	_info.add_child(desc)
@@ -202,6 +202,20 @@ func _refresh_characters() -> void:
 		r.add_child(k)
 		r.add_child(UiStyle.label(String(it.name).to_upper(), 28))
 		_info.add_child(r)
+	# the passive: its name, and what it does (solo play)
+	var pas: Dictionary = ch.get("passive", {})
+	if not pas.is_empty():
+		var r := HBoxContainer.new()
+		r.add_theme_constant_override("separation", 12)
+		var k := UiStyle.label("PASSIVE", 17, UiStyle.MUTED)
+		k.custom_minimum_size.x = 110
+		k.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		r.add_child(k)
+		r.add_child(UiStyle.label(String(pas.name).to_upper(), 28, UiStyle.YELLOW))
+		_info.add_child(r)
+		var pd := UiStyle.note(pas.desc, 15, Color("c9d1f5"))
+		pd.custom_minimum_size.x = 420
+		_info.add_child(pd)
 
 
 func _char_button(id: String) -> Button:
