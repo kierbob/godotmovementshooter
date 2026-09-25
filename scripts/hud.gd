@@ -448,11 +448,11 @@ func update_combat(dt: float, combat: Combat, camera: Camera3D) -> void:
 	var w := combat.weapon()
 	var st := combat.weapon_state()
 	_ammo.text = str(st.ammo)
-	_ammo.add_theme_color_override("font_color", Color("ff6a5a") if st.ammo <= ceili(w.mag * 0.25) else UiStyle.TEXT)
-	_mag.text = "/ %d" % w.mag
+	_ammo.add_theme_color_override("font_color", Color("ff6a5a") if st.ammo <= ceili(combat.mag_size() * 0.25) else UiStyle.TEXT)
+	_mag.text = "/ %d" % combat.mag_size()
 	var reloading: bool = st.reload_t > 0
 	_reload_bg.modulate.a = 1.0 if reloading else 0.0
-	_reload_fill.anchor_right = 1.0 - st.reload_t / w.reload if reloading else 0.0
+	_reload_fill.anchor_right = 1.0 - st.reload_t / st.reload_len if reloading else 0.0
 
 	# Crosshair: the ring is the shotgun's real spread cone projected onto the screen.
 	_bloom = maxf(0.0, _bloom - dt * 4)

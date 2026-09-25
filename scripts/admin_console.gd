@@ -7,6 +7,8 @@ extends CanvasLayer
 ##   heal                  full health
 ##   freeze [on|off]       enemies stand still (no word: toggle); unfreeze = off
 ##   list                  every enemy type
+##   give <item> [count]   an item (give triple tap 3, give random 5); take <item> [count]
+##   items                 what you're carrying; clearitems drops the lot
 ##   help
 ## Up / Down walk through what you typed before. Next to the text bar there are buttons for all
 ## of it (every enemy, a count, god / freeze / heal / kill all), which just run the same commands.
@@ -15,6 +17,7 @@ extends CanvasLayer
 const HELP := [
 	"spawn <enemy> [variant] [count]   e.g. spawn flyer beam, spawn swarmer 5, spawn runner",
 	"killall · god [on/off] · heal · freeze / unfreeze · list · help",
+	"give <item> [count] (give random 5) · take <item> · items · clearitems",
 ]
 const VARIANT_WORDS := {"projectile": "flyer_projectile", "beam": "flyer_beam", "healer": "flyer_healer",
 	"charger": "charger", "brute": "brute", "swarmer": "swarmer", "gunner": "gunner", "lobber": "lobber", "sniper": "sniper"}
@@ -218,6 +221,17 @@ func execute(text: String) -> String:
 			return _call("freeze", {"on": words[1] if words.size() > 1 else "toggle"})
 		"unfreeze":
 			return _call("freeze", {"on": "off"})
+		"give", "g", "take":
+			var r := parse_give(words.slice(1))
+			if r.is_empty():
+				return "Don't know that item. Try: items all"
+			if cmd == "take":
+				r.count = -r.count
+			return _call("give", r)
+		"items":
+			return _call("items", {"all": words.size() > 1})
+		"clearitems":
+			return _call("clearitems", {})
 		"list":
 			var out := PackedStringArray()
 			for fam: String in Enemies.FAMILIES:
@@ -233,6 +247,22 @@ func _call(what: String, data: Dictionary) -> String:
 	if game and game.has_method("admin"):
 		return game.admin(what, data)
 	return "(no game to run it in)"
+
+
+## The words after "give": {id, count} ("random" for a random one), or {} if it isn't an item.
+static func parse_give(words: Array) -> Dictionary:
+	var count := 1
+	var name := PackedStringArray()
+	for w: String in words:
+		if w.is_valid_int():
+			count = clampi(int(w), 1, 100)
+		else:
+			name.append(w)
+	var joined := " ".join(name)
+	if joined == "random" or joined == "any":
+		return {"id": "random", "count": count}
+	var id := Upgrades.find(joined)
+	return {} if id == "" else {"id": id, "count": count}
 
 
 ## The words after "spawn" -> {type, count}, or {} if it isn't an enemy. Order doesn't matter:

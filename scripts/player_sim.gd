@@ -40,6 +40,12 @@ var state := "air"
 var time := 0.0
 var events: Array = [] # recent movement events for the debug panel: { t, name, detail }
 var quiet := false # don't log events (replays)
+# Items (Upgrades sets these every tick). The defaults change nothing, so movement without items
+# stays identical to the web game.
+var speed_mult := 1.0 # Running Shoes, Adrenaline: walk/sprint speed
+var extra_wall_jumps := 0 # Wall Grips
+var air_jumps := 0 # Spring Heels: jumps in mid-air
+var air_jumps_used := 0
 # Online: knockback this tick is recorded so a prediction correction can replay it.
 var log_impulses := false
 var impulse_log: Array = [] # [[x, y, z], ...]
@@ -598,7 +604,7 @@ func step(c: Cmd, m: MapData, dt: float) -> void:
 		else:
 			# Sprint only counts when moving forward-ish (not backpedaling or pure strafing).
 			var spr := c.sprint and c.forward > 0 and not crouching
-			var wish_speed := Cfg.PLAYER_CROUCH_SPEED if crouching else (Cfg.MOVE_SPRINT_SPEED if spr else Cfg.MOVE_WALK_SPEED)
+			var wish_speed := Cfg.PLAYER_CROUCH_SPEED if crouching else (Cfg.MOVE_SPRINT_SPEED if spr else Cfg.MOVE_WALK_SPEED) * speed_mult
 			var speed := horizontal_speed()
 			var along := (vx * wx + vz * wz) / speed if wl > 0 and speed > 0.01 else -1.0
 			if friction_grace > 0:
@@ -639,11 +645,17 @@ func step(c: Cmd, m: MapData, dt: float) -> void:
 		var jump_name := "slide jump" if sliding else ("jump" if was_grounded else "coyote jump")
 		sliding = false
 		_log(jump_name, "%.1f m/s" % horizontal_speed())
-	elif jump_buffer > 0 and not grounded and wall_coyote > 0 and wall_jumps < Cfg.WALL_MAX_JUMPS:
+	elif jump_buffer > 0 and not grounded and wall_coyote > 0 and wall_jumps < Cfg.WALL_MAX_JUMPS + extra_wall_jumps:
 		var n := wall_n
 		var same_wall := has_last_wall_n and last_wall_n == n
 		if not same_wall or time - last_wall_jump_t >= Cfg.WALL_SAME_WALL_DELAY:
 			_wall_jump(n, wl > 0, wx, wz)
+	elif jump_buffer > 0 and not grounded and air_jumps_used < air_jumps:
+		vy = Cfg.MOVE_JUMP_VELOCITY + 1.0
+		air_jumps_used += 1
+		jump_buffer = 0.0
+		sliding = false
+		_log("air jump", "#%d %.1f m/s" % [air_jumps_used, horizontal_speed()])
 
 	vy = minf(maxf(vy - Cfg.MOVE_GRAVITY * dt, -Cfg.MOVE_MAX_FALL_SPEED), Cfg.MOVE_MAX_RISE_SPEED)
 
@@ -689,6 +701,7 @@ func step(c: Cmd, m: MapData, dt: float) -> void:
 	air_time = 0.0 if grounded else air_time + dt
 	if grounded:
 		wall_jumps = 0
+		air_jumps_used = 0
 		wall_coyote = 0.0
 		has_last_wall_n = false
 	if not grounded and sliding and vy < 0:

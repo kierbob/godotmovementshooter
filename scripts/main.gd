@@ -819,7 +819,7 @@ func _update_debug(dt: float, speed: float) -> void:
 	lines.append("yaw/pitch  %.1f°  %.1f°" % [rad_to_deg(yaw), rad_to_deg(pitch)])
 	lines.append("wall jumps %d   slide cd %.2f" % [player.wall_jumps, player.slide_cooldown])
 	var st := combat.weapon_state()
-	lines.append("weapon     %s  %d/%d%s   ability %.1f" % [combat.weapon().name, st.ammo, combat.weapon().mag,
+	lines.append("weapon     %s  %d/%d%s   ability %.1f" % [combat.weapon().name, st.ammo, combat.mag_size(),
 		"  reloading" if st.reload_t > 0 else "", combat.ability_cd])
 	lines.append("")
 	for e: Dictionary in player.events.slice(-6):
