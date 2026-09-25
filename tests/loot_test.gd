@@ -103,16 +103,26 @@ func _init() -> void:
 
 	# ---- odds ----
 	loot.rng.seed = 1
-	var got := {"common": 0, "uncommon": 0, "rare": 0}
+	var got := {"common": 0, "uncommon": 0, "rare": 0, "legendary": 0}
 	for i in 20000:
 		got[Upgrades.LIST[loot.roll_item("small")].rarity] += 1
-	check("small chests: %.1f%% common, %.1f%% uncommon, %.1f%% rare (79 / 20 / 1)" % [got.common / 200.0, got.uncommon / 200.0, got.rare / 200.0],
-		absf(got.common / 200.0 - 79.0) < 1.5 and absf(got.uncommon / 200.0 - 20.0) < 1.5 and absf(got.rare / 200.0 - 1.0) < 0.5)
-	got = {"common": 0, "uncommon": 0, "rare": 0}
+	var so: Dictionary = Loot.SMALL_ODDS
+	check("small chests: %.1f%% common, %.1f%% uncommon, %.1f%% rare (%.0f / %.0f / %.0f)" % [got.common / 200.0, got.uncommon / 200.0, got.rare / 200.0, so.common, so.uncommon, so.rare],
+		absf(got.common / 200.0 - so.common) < 1.5 and absf(got.uncommon / 200.0 - so.uncommon) < 1.5 and absf(got.rare / 200.0 - so.rare) < 0.8)
+	got = {"common": 0, "uncommon": 0, "rare": 0, "legendary": 0}
 	for i in 20000:
 		got[Upgrades.LIST[loot.roll_item("large")].rarity] += 1
-	check("large chests: never common, %.1f%% uncommon, %.1f%% rare (80 / 20)" % [got.uncommon / 200.0, got.rare / 200.0],
-		got.common == 0 and absf(got.uncommon / 200.0 - 80.0) < 1.5)
+	var lo: Dictionary = Loot.CHESTS.large.odds
+	check("large chests: never common, %.1f%% uncommon, %.1f%% rare, %.1f%% legendary (%.0f / %.0f / %.0f)" % [got.uncommon / 200.0, got.rare / 200.0, got.legendary / 200.0, lo.uncommon, lo.rare, lo.legendary],
+		got.common == 0 and absf(got.uncommon / 200.0 - lo.uncommon) < 1.5 and got.legendary > 0)
+	# a cleared wave's item: better the later the wave
+	var early := {"common": 0, "uncommon": 0, "rare": 0, "legendary": 0}
+	var late := early.duplicate()
+	for i in 4000:
+		early[Upgrades.LIST[loot.roll_wave_item(1)].rarity] += 1
+		late[Upgrades.LIST[loot.roll_wave_item(7)].rarity] += 1
+	check("wave items: wave 1 mostly uncommon, no legendaries (%s); wave 7 no commons, mostly rare (%s)" % [str(early), str(late)],
+		early.legendary == 0 and early.uncommon > early.common and late.common == 0 and late.rare > late.uncommon and late.legendary > 0)
 
 	# ---- every kind ----
 	var buyer := PlayerSim.new(0, 0, 46)

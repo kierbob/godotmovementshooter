@@ -1335,7 +1335,11 @@ func _update_run(dt: float) -> void:
 				sound.play("go")
 			"wave_clear":
 				if e.wave < Director.WAVES:
-					hud.run.banner("WAVE %d CLEARED" % e.wave, "", UiStyle.YELLOW, 1.8)
+					hud.run.banner("WAVE %d CLEARED" % e.wave, "here's something for it", UiStyle.YELLOW, 1.8)
+				# every cleared wave pays an item, better the later the wave (Loot.WAVE_ODDS); it
+				# pops out a few meters in front of you
+				var fwd := Vector3(-sin(yaw), 0, -cos(yaw))
+				loot.drop_item(_player_pos() + fwd * 3.0, loot.roll_wave_item(e.wave), player)
 			"boss_warn":
 				hud.run.banner("BOSS INCOMING", "", Color("ff6a5a"), 3.5)
 				sound.play("teleport")

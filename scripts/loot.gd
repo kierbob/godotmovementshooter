@@ -5,7 +5,8 @@ extends RefCounted
 ## it from `chests`, `drops` and the `events` queue.
 ##
 ## What you can find (CHESTS; `size` on a Chest is which one it is):
-##   small / large       a random item: 79/20/1 common/uncommon/rare, or 80/20 uncommon/rare
+##   small / large       a random item: 60/33/7 common/uncommon/rare, or 60/37/3 uncommon/rare/
+##                       legendary
 ##   golden              expensive, rare to find: always a legendary
 ##   damage / utility /  themed chests: only that kind of item (guns and damage, movement and kills,
 ##   healing             or staying alive), at a small chest's odds
@@ -13,6 +14,8 @@ extends RefCounted
 ##   shrine              pay to pray: sometimes an item, sometimes nothing; pricier every try, and
 ##                       it runs dry after two gifts
 ##   barrel              free: smash it for a little gold
+## Clearing a wave drops an item too (WAVE_ODDS: better the later the wave), so every run turns
+## up something good even if you walk past chests.
 ## Chest spots are MapChest nodes in the map. Each run fills CHESTS_PER_RUN of them (what goes
 ## where: see KIND_WEIGHTS; a spot can also ask for a kind) and puts barrels on some of the rest.
 
@@ -21,21 +24,27 @@ const GOLD := {
 	"swarmer": 3, "charger": 7, "gunner": 7, "lobber": 8, "sniper": 9, "brute": 18,
 	"flyer_projectile": 8, "flyer_beam": 9, "flyer_healer": 10, "colossus": 150,
 }
-const SMALL_ODDS := {"common": 79.0, "uncommon": 20.0, "rare": 1.0}
+const SMALL_ODDS := {"common": 60.0, "uncommon": 33.0, "rare": 7.0}
 const CHESTS := {
 	"small": {"name": "Chest", "cost": 25, "odds": SMALL_ODDS},
-	"large": {"name": "Large Chest", "cost": 50, "odds": {"uncommon": 80.0, "rare": 20.0}},
+	"large": {"name": "Large Chest", "cost": 50, "odds": {"uncommon": 60.0, "rare": 37.0, "legendary": 3.0}},
 	"golden": {"name": "Golden Chest", "cost": 150, "odds": {"legendary": 100.0}},
 	"damage": {"name": "Damage Chest", "cost": 30, "odds": SMALL_ODDS, "tags": ["damage", "gun", "status"]},
 	"utility": {"name": "Utility Chest", "cost": 30, "odds": SMALL_ODDS, "tags": ["move", "kill", "luck"]},
 	"healing": {"name": "Healing Chest", "cost": 30, "odds": SMALL_ODDS, "tags": ["defense"]},
-	"shop": {"name": "Terminal", "cost": 35, "odds": {"common": 70.0, "uncommon": 27.0, "rare": 3.0}},
-	"shrine": {"name": "Shrine of Chance", "cost": 20, "odds": {"common": 70.0, "uncommon": 25.0, "rare": 5.0}},
+	"shop": {"name": "Terminal", "cost": 35, "odds": {"common": 50.0, "uncommon": 40.0, "rare": 10.0}},
+	"shrine": {"name": "Shrine of Chance", "cost": 20, "odds": {"common": 55.0, "uncommon": 35.0, "rare": 10.0}},
 	"barrel": {"name": "Barrel", "cost": 0, "odds": {}},
 }
 ## What an "any" spot becomes (weights). Spots can also ask for one kind ("large", "golden"...).
-const KIND_WEIGHTS := {"small": 44, "large": 14, "damage": 9, "utility": 9, "healing": 7, "shrine": 8, "shop": 6, "golden": 3}
-const CHESTS_PER_RUN := 14
+const KIND_WEIGHTS := {"small": 40, "large": 16, "damage": 9, "utility": 9, "healing": 6, "shrine": 8, "shop": 7, "golden": 5}
+const CHESTS_PER_RUN := 18
+## A cleared wave's item, by wave: [up to this wave, odds].
+const WAVE_ODDS := [
+	[2, {"common": 30.0, "uncommon": 60.0, "rare": 10.0}],
+	[5, {"uncommon": 55.0, "rare": 40.0, "legendary": 5.0}],
+	[99, {"uncommon": 30.0, "rare": 60.0, "legendary": 10.0}],
+]
 const BARRELS_PER_RUN := 8
 const SHRINE := {"chance": 0.45, "gifts": 2, "cost_up": 1.5}
 const SHOP_GAP := 1.7 # meters between a shop's terminals
@@ -257,7 +266,19 @@ func _drop(c: Chest, item: String, p: PlayerSim) -> void:
 ## chest that rolls a rarity it has nothing in gives one of its own tags at any rarity instead.
 func roll_item(kind: String) -> String:
 	var info: Dictionary = CHESTS[kind]
-	var odds: Dictionary = info.odds
+	return roll_odds(info.odds, info.get("tags", []))
+
+
+## The item for clearing wave n (see WAVE_ODDS).
+func roll_wave_item(n: int) -> String:
+	for row: Array in WAVE_ODDS:
+		if n <= int(row[0]):
+			return roll_odds(row[1])
+	return roll_odds(WAVE_ODDS[-1][1])
+
+
+## A rarity by `odds` (percent), then an item of it (of these tags, if any).
+func roll_odds(odds: Dictionary, tags: Array = []) -> String:
 	var roll := rng.randf() * 100.0
 	var rarity: String = odds.keys()[0]
 	for r: String in odds:
@@ -265,7 +286,6 @@ func roll_item(kind: String) -> String:
 			rarity = r
 			break
 		roll -= odds[r]
-	var tags: Array = info.get("tags", [])
 	var ids: Array = Upgrades.LIST.keys().filter(func(k: String) -> bool:
 		return Upgrades.LIST[k].rarity == rarity and (tags.is_empty() or Upgrades.LIST[k].tag in tags))
 	if ids.is_empty():

@@ -151,7 +151,7 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 | Runner | **Swarmer** | small, 30 HP, nips at you in packs (6 m/s: slower than you walk) |
 | Shooter | **Gunner** | keeps its distance, 3-shot bursts of slow shots |
 | Shooter | **Lobber** | arcing grenades that land where you stood (a red ring marks the spot) |
-| Shooter | **Sniper** | a red laser tracks you, turns white when it locks, then fires: move after the lock |
+| Shooter | **Sniper** | a faint red laser tracks you, turns bright white when it locks, then fires: move after the lock (only the 3 nearest tracking lasers are drawn, so a crowd of snipers doesn't fill the screen with lines) |
 | Flyer | **Projectile** | circles you and fires dodgeable orbs |
 | Flyer | **Beam** | Moira-style lock-on beam up close; breaks if you get out of range or behind cover |
 | Flyer | **Healer** | never hurts you; heals the most hurt enemy with a green beam (never another healer), runs from you |
@@ -227,15 +227,17 @@ built yet: until it is, stage 2 is Sunstone Valley again, harder).
 rarities plus 6 legendaries, every one stacks.
 
 **Getting them** (`scripts/loot.gd`, `scripts/loot_view.gd`): every kill pays gold (a swarmer $3,
-most enemies $7-10, a brute $18; shown top right). Each run fills 14 of the stage's chest spots,
+most enemies $7-10, a brute $18; shown top right). Each run fills 18 of the stage's chest spots,
 some out in the open, some as rewards up high (the crown, the Sunstone, the mesa tops, the sky
 isles, the fort towers) or tucked away (the cave chamber, the canyon grotto), and puts barrels on
-8 of the rest. Walk up to one and press **E**:
+8 of the rest. **Every cleared wave drops an item** in front of you too, better the later the
+wave (waves 1-2: mostly uncommon; 3-5: uncommon or rare, sometimes legendary; 6-8: mostly rare,
+10% legendary). Walk up to a chest and press **E**:
 
 | What | Cost | Inside |
 | --- | --- | --- |
-| Chest (wood) | $25 | 79% common, 20% uncommon, 1% rare |
-| Large Chest (purple) | $50 | 80% uncommon, 20% rare |
+| Chest (wood) | $25 | 60% common, 33% uncommon, 7% rare |
+| Large Chest (purple) | $50 | 60% uncommon, 37% rare, 3% legendary |
 | Golden Chest (in a pillar of gold light) | $150 | always a **legendary** |
 | Damage / Utility / Healing Chest (red / blue / green) | $30 | only that kind of item: guns and damage, movement and kills, or staying alive |
 | Terminals (three in a row, each showing its item) | $35 | buy the one you want; the other two shut |
@@ -265,7 +267,7 @@ it. Chest spots are MapChest nodes (under `Chests` in the map): move them, add m
 | Common | Bubble Wrap | 12% chance to block a hit | more (never 100%) |
 | Common | Adrenaline | kills: 30% faster for 2 s | +1 s |
 | Common | Sticky Bomb | 8% chance to stick a bomb on them (180%) | +8% |
-| Common | Knockout Glove | hits knock enemies back | harder |
+| Common | Knockout Glove | hits knock enemies back (each one at most every 0.6 s, so a shotgun blast shoves once; brutes half as far, bosses not at all) | harder |
 | Uncommon | Frost Tip | hits chill (half speed); keep hitting to freeze; frozen ones shatter below 25% | freezes sooner |
 | Uncommon | Static Coil | 20% chance: lightning to 3 nearby enemies for 60% | +2 targets |
 | Uncommon | Party Popper | enemies explode when they die | bigger, harder |

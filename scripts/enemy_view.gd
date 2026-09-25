@@ -6,10 +6,16 @@ extends Node3D
 ## red "!" plus a glow during every windup. Also their attacks: the sniper's laser (red while it
 ## tracks, white once it locks), beams (magenta damage, green heal), the lobber's landing ring, the
 ## brute's shockwave ring, and their glowing shots.
+##
+## Lines are kept calm in a crowd: a tracking laser is faint and stops just past you (not 80 m on
+## across the map), only the MAX_TRACKING nearest are drawn (a locked one, the cue to move, always
+## is), and healers' beams are thin and dim (they never hurt you).
 
 const BAR_Y := 2.25
 const DETAIL_RANGE := 45.0 # past this, eyes / brows / gear aren't drawn (a few pixels anyway)
 const BAR_RANGE := 60.0
+const MAX_TRACKING := 3 # tracking sniper lasers drawn at once (the nearest)
+const HEAL_BEAM_RANGE := 45.0
 
 var _views := {} # enemy id -> {node, body, mats, fill, bang, laser, beam, spin, flash}
 var _proj := {} # projectile id -> mesh (not the Dictionary itself: its hash changes as it moves)
@@ -17,11 +23,15 @@ var _markers: Array = [] # [{node, life}] lobber landing rings
 var _waves: Array = [] # [{node, id}] brute shockwaves
 var _time := 0.0
 var _glow_cache := {}
+var _tracking := {} # sniper ids whose tracking laser is drawn this frame
+var _cam := Vector3.ZERO
 var particles: Particles # the world's particles (main hands CombatView's over), for status effects
 
 
 func update(en: Enemies, camera: Camera3D, dt: float) -> void:
 	_time += dt
+	_cam = camera.global_position if camera else Vector3.ZERO
+	_pick_tracking(en)
 	var seen := {}
 	for e in en.list:
 		seen[e.id] = true
@@ -318,6 +328,20 @@ func _glow_mat(color: Color) -> StandardMaterial3D:
 
 # ---------- attacks ----------
 
+## The MAX_TRACKING snipers nearest the camera that are tracking you: theirs are the lasers drawn.
+func _pick_tracking(en: Enemies) -> void:
+	_tracking.clear()
+	var aiming: Array = []
+	for e in en.list:
+		if e.type == "sniper" and e.state == "aim":
+			aiming.append(e)
+	if aiming.size() > MAX_TRACKING:
+		aiming.sort_custom(func(a: Enemies.Enemy, b: Enemies.Enemy) -> bool:
+			return a.center().distance_squared_to(_cam) < b.center().distance_squared_to(_cam))
+	for i in mini(MAX_TRACKING, aiming.size()):
+		_tracking[aiming[i].id] = true
+
+
 ## A thin cylinder from a to b (lasers and beams).
 func _stretch(mi: MeshInstance3D, a: Vector3, b: Vector3) -> void:
 	var d := b - a
@@ -356,14 +380,19 @@ func _update_laser(e: Enemies.Enemy, v: Dictionary, en: Enemies) -> void:
 	if not on:
 		laser.visible = false
 		return
+	var locked: bool = e.state == "lock"
+	if not locked and not _tracking.has(e.id):
+		laser.visible = false # too many at once: the nearest few are enough
+		return
 	var from := en._eye(e)
 	var to: Vector3 = e.aim
 	var d := (to - from).normalized()
-	var wall := en._ray_walls(from, d, 80.0)
-	_stretch(laser, from, from + d * (wall if wall >= 0 else 80.0))
-	# red while it tracks you, bright white once it's locked (that's your cue to move)
-	laser.material_override = _glow_mat(Color(1, 1, 1, 0.95) if e.state == "lock" else Color(1, 0.2, 0.2, 0.85))
-	(laser.mesh as CylinderMesh).top_radius = 0.035 if e.state == "lock" else 0.02
+	var reach := from.distance_to(to) + 3.0 # a little past you, not across the whole map
+	var wall := en._ray_walls(from, d, reach)
+	_stretch(laser, from, from + d * (wall if wall >= 0 else reach))
+	# faint red while it tracks you, bright white once it's locked (that's your cue to move)
+	laser.material_override = _glow_mat(Color(1, 1, 1, 0.95) if locked else Color(1, 0.25, 0.25, 0.45))
+	(laser.mesh as CylinderMesh).top_radius = 0.03 if locked else 0.012
 	(laser.mesh as CylinderMesh).bottom_radius = (laser.mesh as CylinderMesh).top_radius
 
 
@@ -371,7 +400,7 @@ func _update_beam(e: Enemies.Enemy, v: Dictionary, en: Enemies) -> void:
 	if e.type != "flyer_beam" and e.type != "flyer_healer":
 		return
 	if v.beam == null:
-		v.beam = _line(0.07, Color(1, 0.4, 1, 0.7) if e.type == "flyer_beam" else Color(0.4, 1, 0.6, 0.7))
+		v.beam = _line(0.05, Color(1, 0.4, 1, 0.65) if e.type == "flyer_beam" else Color(0.4, 1, 0.6, 0.3))
 	var beam: MeshInstance3D = v.beam
 	var to := Vector3.ZERO
 	var on := false
@@ -379,7 +408,7 @@ func _update_beam(e: Enemies.Enemy, v: Dictionary, en: Enemies) -> void:
 		on = true
 		# ends just short of you: right up to your chest it would fill the bottom of the screen
 		to = en.player_center + (e.pos - en.player_center).normalized() * 0.9
-	elif e.type == "flyer_healer" and e.heal_target and e.heal_target.alive:
+	elif e.type == "flyer_healer" and e.heal_target and e.heal_target.alive and e.pos.distance_to(_cam) < HEAL_BEAM_RANGE:
 		on = true
 		to = e.heal_target.center()
 	if not on:
@@ -387,7 +416,7 @@ func _update_beam(e: Enemies.Enemy, v: Dictionary, en: Enemies) -> void:
 		return
 	var from := e.pos + Vector3(0, -0.1, 0)
 	_stretch(beam, from, to)
-	var w := 0.06 + 0.02 * sin(_time * 40.0)
+	var w := (0.045 + 0.015 * sin(_time * 40.0)) if e.type == "flyer_beam" else 0.025
 	(beam.mesh as CylinderMesh).top_radius = w
 	(beam.mesh as CylinderMesh).bottom_radius = w
 

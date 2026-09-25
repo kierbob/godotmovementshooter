@@ -305,6 +305,10 @@ func _init() -> void:
 		and (game.hud.run._wave.text.begins_with("WAVE") or game.hud.run._wave.text.begins_with("STAGE")))
 	check("...and its enemies know the ground (%d nav spots, built while it loaded)" % (game.enemies.nav.size() if game.enemies.nav else 0),
 		game.enemies.nav != null and game.enemies.nav.size() > 10000)
+	var drops_before: int = game.loot.drops.size()
+	game.director.events.append({"type": "wave_clear", "wave": 3})
+	await frames(2)
+	check("clearing a wave drops an item in front of you", game.loot.drops.size() == drops_before + 1)
 	game.enemies.god = true
 	game.console.execute("boss")
 	t0 = Time.get_ticks_msec()
