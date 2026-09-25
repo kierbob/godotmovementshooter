@@ -341,9 +341,9 @@ func tick(p: PlayerSim, dt: float) -> void:
 	for t in combat.targets:
 		if not t.status.is_empty():
 			_tick_status(t, dt)
+	_apply_stats(p) # also puts everything back after the items are dropped
 	if total == 0:
 		return
-	_apply_stats(p)
 	adrenaline_t = maxf(0.0, adrenaline_t - dt)
 	if count("slide_spikes") > 0:
 		_slide_spikes(p, dt)

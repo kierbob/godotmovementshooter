@@ -114,6 +114,7 @@ func _ready() -> void:
 	remote_view = RemoteView.new()
 	add_child(remote_view)
 	enemy_view = EnemyView.new()
+	enemy_view.particles = combat_view.particles # burning, bleeding, snow on chilled ones
 	add_child(enemy_view)
 	_build_beans()
 	_setup_environment()
@@ -468,7 +469,8 @@ func _build_beans() -> void:
 		hp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		bar.add_child(hp)
 		node.add_child(bar)
-		beans.append({"node": node, "mats": mats, "fill": bar.get_child(1), "hp_label": hp, "flash": 0.0, "shown_hp": -1})
+		beans.append({"node": node, "mats": mats, "fill": bar.get_child(1), "hp_label": hp, "flash": 0.0, "shown_hp": -1,
+			"fx": StatusFx.new(node, mats, 1.0)})
 
 
 # ---------- input ----------
@@ -725,9 +727,20 @@ func _play_combat_sounds(events: Array[Dictionary]) -> void:
 	for e in events:
 		match e.type:
 			"shot": sound.play(e.weapon, {"gap": 0.0})
-			"hit": sound.play("kill" if e.kill else "headshot" if e.zone == "head" else "hit", {"gap": 0.03})
+			"hit":
+				if e.kill:
+					sound.play("kill", {"gap": 0.03})
+				elif e.get("src", "gun") == "gun":
+					sound.play("headshot" if e.zone == "head" else "hit", {"gap": 0.03})
+				elif e.get("src") == "item":
+					sound.play("hit", {"gap": 0.08, "vol": 0.5}) # burn/bleed ticks stay quiet
 			"impact": sound.play("impact", {"pos": e.pos, "gap": 0.03})
+			"explosion" when e.kind == "bigbang":
+				sound.play("impact", {"pos": e.pos, "gap": 0.05}) # goes off on every hit: keep it small
 			"explosion": sound.play("impulse" if e.kind == "impulse" else "explosion", {"pos": e.pos, "gap": 0.0})
+			"zap": sound.play("impulse", {"pos": e.to, "gap": 0.1, "vol": 0.45})
+			"freeze", "shatter": sound.play("dry" if e.type == "freeze" else "impact", {"pos": e.pos, "gap": 0.05})
+			"item_proc": sound.play("reload", {"gap": 0.1, "vol": 0.6})
 			"throw": sound.play("knifeThrow" if e.ability == "knife" else "throw")
 			"switch": sound.play("switch")
 			# (reload sounds come from the gun toss animation: throw, then catch)
@@ -780,6 +793,7 @@ func _update_beans(look_at_pos: Vector3, dt: float) -> void:
 		var t := combat.targets[i]
 		node.position = t.pos
 		node.visible = not t.dead
+		(b.fx as StatusFx).update(t.status, dt, combat_view.particles, t.pos)
 		node.rotation.y = atan2(look_at_pos.x - t.pos.x, look_at_pos.z - t.pos.z) # dummies turn to face you
 		var frac := t.hp / t.max_hp
 		var fill: MeshInstance3D = b.fill
@@ -1204,6 +1218,9 @@ func _handle_enemy_events(evs: Array[Dictionary]) -> void:
 			"player_died":
 				_killer = str(e.by)
 				sound.play("death")
+			"blocked":
+				hud.word("BLOCKED!", null, Vector2(0.5, 0.62), "small")
+				sound.play("switch", {"gap": 0.05})
 			"windup":
 				sound.play("dry", {"pos": e.pos, "gap": 0.05}) # the click you learn to listen for
 			"enemy_shot":
@@ -1282,4 +1299,41 @@ func admin(what: String, data: Dictionary) -> String:
 			var f: String = data.get("on", "toggle")
 			enemies.frozen = (not enemies.frozen) if f == "toggle" else f in ["on", "1", "true"]
 			return "Enemies %s" % ("frozen" if enemies.frozen else "moving again")
+		"give":
+			var n: int = data.count
+			var id: String = data.id
+			if id == "random":
+				var got := PackedStringArray()
+				for i in n:
+					var r := combat.up.random_id()
+					combat.up.add(r)
+					got.append(Upgrades.LIST[r].name)
+					hud.items.pickup(r, combat.up.count(r))
+				return "Got " + ", ".join(got)
+			combat.up.add(id, n)
+			var it: Dictionary = Upgrades.LIST[id]
+			if n > 0:
+				hud.items.pickup(id, combat.up.count(id))
+				return "Got %d %s (now %d)" % [n, it.name, combat.up.count(id)]
+			return "Dropped %s (now %d)" % [it.name, combat.up.count(id)]
+		"items":
+			if data.all:
+				var lines := PackedStringArray()
+				for rarity: String in ["common", "uncommon", "rare"]:
+					var names := PackedStringArray()
+					for id: String in Upgrades.LIST:
+						if Upgrades.LIST[id].rarity == rarity:
+							names.append(String(Upgrades.LIST[id].name).to_lower())
+					lines.append("%s: %s" % [rarity, ", ".join(names)])
+				return "\n".join(lines)
+			if combat.up.total == 0:
+				return "No items yet (give <item>, give random 5, items all)"
+			var have := PackedStringArray()
+			for id: String in combat.up.stacks:
+				have.append("%s x%d" % [Upgrades.LIST[id].name, combat.up.count(id)])
+			return ", ".join(have)
+		"clearitems":
+			var had := combat.up.total
+			combat.up.clear()
+			return "Dropped %d item%s" % [had, "" if had == 1 else "s"]
 	return "?"

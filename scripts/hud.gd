@@ -43,6 +43,7 @@ var _trial_mode: Label
 var _trial_time: Label
 var _trial_best: Label
 var online: OnlineHud # health, kill feed, scoreboard... (multiplayer only)
+var items: ItemHud # the items you carry + the pickup banner
 var _online := false
 
 
@@ -111,6 +112,10 @@ func _ready() -> void:
 	online.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(online)
 	move_child(online, 0) # under the crosshair and words
+	items = ItemHud.new()
+	items.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(items)
+	move_child(items, 1)
 	_plain_dot = PlainDot.new()
 	_plain_dot.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_plain_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -265,6 +270,7 @@ func _build_ability() -> void:
 func set_in_game(on: bool) -> void:
 	_in_game = on
 	online.visible = on and _online
+	items.visible = on
 	_speed.visible = on
 	_speed_sub.visible = on
 	_panel.visible = on and debug_mode > 0
@@ -318,7 +324,8 @@ func on_events(events: Array[Dictionary]) -> void:
 		if e.type == "shot":
 			_bloom = minf(1.0, _bloom + float(Items.WEAPONS[e.weapon].kick) * 0.8)
 		elif e.type == "hit":
-			_hitmarker.hit("kill" if e.kill else "head" if e.zone == "head" else "body")
+			if e.get("src", "gun") == "gun" or e.kill: # burn ticks and lightning don't flash the crosshair
+				_hitmarker.hit("kill" if e.kill else "head" if e.zone == "head" else "body")
 			_add_number(e)
 
 
@@ -372,10 +379,21 @@ func _place_word(w: Dictionary) -> void:
 	l.modulate.a = 1.0 if t < 0.7 else 1.0 - (t - 0.7) / 0.3
 
 
-## Damage number that pops at the hit and floats up (white body, yellow head, red kill).
+## Damage number that pops at the hit and floats up: white body, yellow head, red kill, big
+## orange "!" crit; items' damage smaller, burn orange, bleed dark red, lightning and blasts blue.
 func _add_number(e: Dictionary) -> void:
-	var l := UiStyle.label(str(roundi(e.dmg)), 34 if e.kill else 32 if e.zone == "head" else 26,
-		Color("ff4a4a") if e.kill else Color("ffd84a") if e.zone == "head" else Color.WHITE)
+	var src: String = e.get("src", "gun")
+	var crit: bool = e.get("crit", false)
+	var text := str(roundi(e.dmg)) + ("!" if crit else "")
+	var size := 34 if e.kill else 36 if crit else 32 if e.zone == "head" else 26
+	var col := Color("ff4a4a") if e.kill else Color("ff9a2a") if crit else Color("ffd84a") if e.zone == "head" else Color.WHITE
+	if src == "dot":
+		size = 20
+		col = Color("ff8a30") if e.dot == "burn" else Color("d0302a")
+	elif src == "item" and not e.kill:
+		size = 22
+		col = Color("9fe3ff")
+	var l := UiStyle.label(text, size, col)
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
 	l.add_theme_constant_override("outline_size", 5)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -432,6 +450,7 @@ func update_combat(dt: float, combat: Combat, camera: Camera3D) -> void:
 	var fov_deg := camera.fov
 	_hitmarker.tick(dt)
 	_update_floaters(dt)
+	items.update(dt, combat.up)
 
 	# Weapon slots (rebuilt only when something changes)
 	var keys := [Settings.bind_label(Settings.binds.primary), Settings.bind_label(Settings.binds.secondary)]

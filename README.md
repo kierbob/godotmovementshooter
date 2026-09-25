@@ -95,6 +95,10 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   loads and, online, until everyone has loaded.
 - **Enemies** (see "Enemies" below): 9 types in 3 families, with solo health, regen and
   respawning.
+- **Items** (see "Items" below): 34 stacking items in three rarities: status effects (burn, bleed,
+  chill/freeze, marks, sticky bombs), chain lightning, kill explosions, Triple Tap's V of shots,
+  movement items (speed, wall jumps, air jumps, Slide Spikes, Stomp Boots), an item bar and pickup
+  banner on the HUD.
 - **Bean dummies** stop shots, take damage (headshots count), flash white when hit, show a health
   bar with their HP (e.g. "105 / 150"), go down at 0 HP and pop back 2.5 s later.
 - **Cartoon effects** (the web game's `fx.js`): muzzle flash, POW star and action lines, smoke puffs
@@ -140,7 +144,63 @@ protection). No automatic spawning yet: that's the director, next.
 FREEZE / HEAL / KILL ALL, next to a text bar that takes the same as commands: `spawn flyer beam`,
 `spawn beam`, `spawn swarmer 5`, `spawn runner` (a random runner), `killall`, `god [on/off]`,
 `heal`, `freeze [on/off]` / `unfreeze`, `list`, `help`. Up/Down recalls what you typed. Enemies
-spawn 12 m in front of you, facing you.
+spawn 12 m in front of you, facing you. The console gives items too (see "Items").
+
+## Items
+
+`scripts/upgrades.gd` (the list and what they do), `scripts/status_fx.gd` (statuses on beans),
+`scripts/item_hud.gd` (the item bar and pickup banner). Risk of Rain style: 34 items in three
+rarities, every one stacks. For now you get them from the F10 console; gold and chests are next.
+
+| Rarity | Item | One of them | More of them |
+| --- | --- | --- | --- |
+| Common | Running Shoes | run 10% faster | +10% |
+| Common | Wall Grips | +1 wall jump before you land | +1 |
+| Common | Extended Mag | +25% magazine | +25% |
+| Common | Quick Hands | reload 15% faster | +15% |
+| Common | Hair Trigger | fire 12% faster | +12% |
+| Common | Lucky Penny | 10% crit chance (double damage) | +10% |
+| Common | Point Blank | +25% damage within 7 m | +25% |
+| Common | Opening Act | +50% damage to enemies above 90% health | +50% |
+| Common | Match Head | 10% chance to set them on fire (3 s) | +10% |
+| Common | Rusty Nail | 10% chance to make them bleed (bleeds stack) | +10% |
+| Common | Vampire Fangs | heal 2 per hit | +2 |
+| Common | Tough Skin | +25 max health | +25 |
+| Common | Bubble Wrap | 12% chance to block a hit | more (never 100%) |
+| Common | Adrenaline | kills: 30% faster for 2 s | +1 s |
+| Common | Sticky Bomb | 8% chance to stick a bomb on them (180%) | +8% |
+| Common | Knockout Glove | hits knock enemies back | harder |
+| Uncommon | Frost Tip | hits chill (half speed); keep hitting to freeze; frozen ones shatter below 25% | freezes sooner |
+| Uncommon | Static Coil | 20% chance: lightning to 3 nearby enemies for 60% | +2 targets |
+| Uncommon | Party Popper | enemies explode when they die | bigger, harder |
+| Uncommon | Speed Loader | kills refill your gun | 2+: both guns |
+| Uncommon | Recharger | kills take 1 s off your ability | +1 s |
+| Uncommon | Sky Striker | +30% damage in the air | +30% |
+| Uncommon | Momentum Engine | +3% damage per m/s over a run | +3% |
+| Uncommon | Headhunter | headshots +40% | +40% |
+| Uncommon | Spring Heels | +1 jump in mid-air | +1 |
+| Uncommon | Slide Spikes | slide into enemies: 40 damage, launches them | +30 |
+| Uncommon | Razor Wire | getting hurt lashes 3 enemies nearby for 25 | +2 targets, +15 |
+| Uncommon | Ricochet | 25% chance a bullet off a wall bounces into the nearest enemy | +25% |
+| Uncommon | Tracker Dart | hits mark for 4 s: +20% damage from everything | +20% |
+| Rare | Triple Tap | every shot and throw fires 2 extra copies in a V (a rocket V!) | +2 copies |
+| Rare | Big Bang | every hit explodes for 60% | +1 m radius |
+| Rare | Stomp Boots | landing from a big fall slams the ground (faster = harder) | +50%, +1 m |
+| Rare | Wisp Jar | kills release 2 wisps that hunt enemies for 40 each | +1 wisp |
+| Rare | Four Leaf | every chance rolls twice | +1 reroll |
+
+How they work together: only your guns' own hits (bullets, rockets, knives, Slide Spikes) roll
+the "on hit" items; burn/bleed ticks, lightning, item explosions and wisps don't, so chains can't
+run forever (kill effects still chain: a Party Popper kill can pop the next one). Triple Tap's
+copies do damage but don't push you (a rocket jump is the same height with or without it).
+Statuses show on the bean: burning (orange, flames), bleeding (drips), chilled (blue, snow),
+frozen (an ice block, "FROZEN!"), marked (a red ring over its head, seen through walls), a
+blinking sticky bomb. Damage numbers tell the sources apart: big orange "!" crits, small orange
+burn, dark red bleed, light blue item damage. They work on the practice dummies too.
+
+**Console:** `give triple tap 3`, `give random 5`, `take <item>`, `items` (what you carry),
+`items all` (every item), `clearitems`; or the item buttons under the text bar (hover for the
+name; the x1 / x3 / x5 count applies).
 
 ## Playing online
 
@@ -250,7 +310,8 @@ The roguelite, in this order:
 1. ~~Enemies~~ (done: 9 types, admin console). Next: the spawn director (enemies arrive over
    time, harder as the clock runs), tuning from playtests.
 2. "Run over" when you die in a run (solo health and dying are in).
-3. Gold, chests and stacking items (movement-themed: speed, extra wall jumps, slide damage...).
+3. ~~Stacking items~~ (done: 34, see "Items"). Next: gold from kills, chests to spend it on, item
+   drops, more items.
 4. Run structure: teleporter + boss wave (the altar in the middle of the Sunstone Ruins is the
    spot), then the next stage (the loading screen is ready for it), a difficulty clock.
 5. More stages, character passives, unlocks. Multiplayer becomes co-op.

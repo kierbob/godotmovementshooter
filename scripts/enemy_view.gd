@@ -15,6 +15,7 @@ var _markers: Array = [] # [{node, life}] lobber landing rings
 var _waves: Array = [] # [{node, id}] brute shockwaves
 var _time := 0.0
 var _glow_cache := {}
+var particles: Particles # the world's particles (main hands CombatView's over), for status effects
 
 
 func update(en: Enemies, camera: Camera3D, dt: float) -> void:
@@ -48,8 +49,9 @@ func update(en: Enemies, camera: Camera3D, dt: float) -> void:
 		var glow := 2.5 if v.flash > 0 else (0.6 + 0.6 * sin(_time * 30.0) if winding else 0.0)
 		for m: ShaderMaterial in v.mats:
 			m.set_shader_parameter("emission_boost", glow)
-		if v.spin:
-			(v.spin as Node3D).rotation.y += dt * 30.0
+		(v.fx as StatusFx).update(e.target.status, dt, particles, e.target.pos)
+		if v.spin and Upgrades.time_scale(e.target) > 0:
+			(v.spin as Node3D).rotation.y += dt * 30.0 * Upgrades.time_scale(e.target)
 		if e.def.family == "flyer":
 			(v.body as Node3D).position.y = sin(_time * 3.0 + e.id) * 0.08
 		_update_laser(e, v, en)
@@ -238,7 +240,7 @@ func _make(e: Enemies.Enemy) -> Dictionary:
 	bang.visible = false
 	node.add_child(bang)
 	return {"node": node, "body": body, "mats": mats, "bar": bar, "fill": bar.get_child(1), "bang": bang,
-		"spin": spin, "flash": 0.0, "laser": null, "beam": null}
+		"spin": spin, "flash": 0.0, "laser": null, "beam": null, "fx": StatusFx.new(node, mats, e.target.size)}
 
 
 func _part(mesh: PrimitiveMesh, color: Color, parent: Node3D) -> MeshInstance3D:
