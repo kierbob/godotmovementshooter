@@ -92,6 +92,7 @@ var _run_over := false
 var loot: Loot # gold, chests and dropped items (solo)
 var loot_view: LootView
 var interact_pressed := false
+var _nav_built: Nav # the worker thread's result (see _ready)
 var _respawn_t := -1.0 # solo: seconds until you're back after getting splatted (-1 = alive)
 const SOLO_RESPAWN := 2.5
 const SOLO_PROTECTION := 1.5
@@ -121,6 +122,14 @@ func _ready() -> void:
 		director = Director.new(enemies, map, int(run_info.get("stage_n", 1)))
 		loot.money = director.money_mult() # later stages: bigger payouts, pricier chests
 	loot.place_chests() # a random pick of the map's chest spots (none on maps without any)
+	# Where enemies can walk (their paths, and safe spawn spots): about a second on a big stage,
+	# so it's built on a worker thread while the rest loads. The map is only read from there on
+	# (its box grid is built first, here).
+	var nav_task := -1
+	var nav_mode: String = pending_run.get("mode", "")
+	if nav_mode == "solo" or (nav_mode == "practice" and pending_run.get("trial", "") == ""):
+		map.nearby(0, 0, 0, 1)
+		nav_task = WorkerThreadPool.add_task(func() -> void: _nav_built = Nav.build(map), false, "nav")
 	await _step(0.5, "Loading guns and effects")
 	combat_view = CombatView.new()
 	add_child(combat_view)
@@ -144,6 +153,12 @@ func _ready() -> void:
 	add_child(sound)
 	viewmodel.set_msaa(Settings.QUALITY[Settings.quality].msaa)
 	await _step(0.85, "Almost there")
+	if nav_task >= 0:
+		while not WorkerThreadPool.is_task_completed(nav_task):
+			await get_tree().process_frame
+		WorkerThreadPool.wait_for_task_completion(nav_task)
+		enemies.nav = _nav_built
+		_nav_built = null
 
 	camera = Camera3D.new()
 	camera.fov = Settings.fov
@@ -1307,6 +1322,10 @@ func _handle_enemy_events(evs: Array[Dictionary]) -> void:
 ## The waves: the HUD, banners and sounds for what the director did, and off to the next stage.
 func _update_run(dt: float) -> void:
 	hud.run.update(dt, director if state != "menu" else null, enemies)
+	var marked: Array[Enemies.Enemy] = []
+	if director and state == "playing":
+		marked = director.marked()
+	hud.run.markers.update(dt, camera, marked, director.boss if director else null)
 	if director == null:
 		return
 	for e in director.events:
@@ -1452,11 +1471,18 @@ func admin(what: String, data: Dictionary) -> String:
 			for i in n:
 				var off := side * (i - (n - 1) / 2.0) * 1.6
 				var at := Vector3(player.px, player.py, player.pz) + fwd * 12.0 + off
+				var g := enemies._ground_under(at + Vector3(0, 3, 0)) # the ground about your level
+				at.y = g if g > -30 else player.py
+				var fits := enemies._body_fits(at, def.size)
 				if def.family == "flyer":
-					at.y = maxf(at.y, enemies._ground_under(at + Vector3(0, 20, 0))) + 4.0
-				else:
-					var g := enemies._ground_under(at + Vector3(0, 20, 0)) # drop onto whatever's there
-					at.y = g if g > -30 else player.py
+					at.y += 4.0
+					fits = enemies._push_out(at, 0.5 * def.size).distance_to(at) < 0.01
+				if not fits: # in a wall, a rock, a tree: the nearest spot it fits instead
+					at = enemies.safe_spot(at - Vector3(0, 4.0 if def.family == "flyer" else 0.0, 0), 0.0, 4.0, type)
+					if at == Vector3.INF:
+						at = enemies.safe_spot(Vector3(player.px, player.py, player.pz), 3.0, 14.0, type)
+					if at == Vector3.INF:
+						continue
 				var e := enemies.spawn(type, at)
 				e.yaw = yaw + PI # facing you
 			return "Spawned %d %s%s" % [n, def.name, "s" if n > 1 else ""]

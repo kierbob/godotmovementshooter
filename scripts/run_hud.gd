@@ -2,7 +2,8 @@ class_name RunHud
 extends Control
 ## The run's HUD: the wave counter under your gold ("WAVE 3 / 8", "12 LEFT", "NEXT WAVE IN 5"),
 ## big banners ("WAVE 3", "BOSS INCOMING", "STAGE CLEARED"), the boss's health bar across the top,
-## and the results screen when a run ends (with buttons to go again or back to the menu).
+## markers on the enemies left to find (EnemyMarkers), and the results screen when a run ends (with
+## buttons to go again or back to the menu).
 
 signal again
 signal main_menu
@@ -20,11 +21,14 @@ var _results: PanelContainer
 var _stats: VBoxContainer
 var _res_title: Label
 var _comic: Font
+var markers: EnemyMarkers
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_comic = Models.font("res://assets/fonts/Bangers-Regular.ttf")
+	markers = EnemyMarkers.new()
+	add_child(markers) # first, so everything else draws over it
 	_wave = _text(28, Color.WHITE)
 	_wave.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	_wave.offset_left = -300

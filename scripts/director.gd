@@ -6,9 +6,11 @@ extends RefCounted
 ##
 ## Each wave has a budget (more every wave, more every stage) spent on enemies by COST, from the
 ## types unlocked so far (UNLOCK: wave 1 is swarmers, chargers and gunners; brutes and healers
-## join later). They arrive in small groups over the first seconds of the wave, 16-34 m from you
-## on open ground, and get tougher and hit harder as the waves and stages go by. A wave is over
-## when all of it is dead; a short break, then the next.
+## join later). They arrive in small groups over the first seconds of the wave, 16-34 m from you,
+## each on a spot it fits that can walk to you (Enemies.safe_spot), and get tougher and hit harder
+## as the waves and stages go by. A wave is over when all of it is dead; a short break, then the
+## next. The last few are marked on screen (marked()), and one that hasn't seen you for a while
+## is brought back around you.
 
 const WAVES := 8
 const FIRST_BREAK := 5.0 # before wave 1 (a moment to look around)
@@ -19,6 +21,8 @@ const SPAWN_EVERY := 0.9 # a group arrives this often while a wave is coming in
 const SPAWN_MIN := 16.0
 const SPAWN_MAX := 34.0
 const MAX_ALIVE := 36 # the rest of a wave waits for room (a frame rate to keep)
+const LOST_TIME := 25.0 # a wave enemy that hasn't seen you this long gets brought back around you
+const MARK_LEFT := 5 # this few left in a wave: they're marked on screen
 const COST := {"swarmer": 2, "charger": 4, "gunner": 4, "lobber": 5, "flyer_projectile": 5, "sniper": 6,
 	"flyer_beam": 6, "flyer_healer": 7, "brute": 10}
 const UNLOCK := {"swarmer": 1, "charger": 1, "gunner": 1, "lobber": 2, "flyer_projectile": 2, "sniper": 3,
@@ -34,7 +38,7 @@ var t := 0.0 # time left in this phase (start, break, boss_warn, cleared)
 var time := 0.0 # the whole stage so far
 var kills := 0
 var boss: Enemies.Enemy
-var events: Array[Dictionary] = [] # wave_start, wave_clear, boss_warn, boss, stage_clear, next_stage
+var events: Array[Dictionary] = [] # wave_start, wave_clear, boss_warn, boss, stage_clear, next_stage, fetched
 var rng := RandomNumberGenerator.new()
 var _queue: Array[String] = [] # this wave's enemies still to come
 var _wave_ids := {} # this wave's enemies still alive
@@ -95,6 +99,7 @@ func tick(p: PlayerSim, dt: float) -> void:
 			if _spawn_t <= 0 and not _queue.is_empty() and enemies.list.size() < MAX_ALIVE:
 				_spawn_t = SPAWN_EVERY
 				_spawn_group(p)
+			_fetch_lost(p)
 			if _queue.is_empty() and _wave_ids.is_empty():
 				events.append({"type": "wave_clear", "wave": wave})
 				if wave >= WAVES:
@@ -159,41 +164,60 @@ func _start_wave() -> void:
 	events.append({"type": "wave_start", "wave": wave, "of": WAVES, "count": _queue.size()})
 
 
-## A few of the queue arrive together, somewhere around you.
+## A few of the queue arrive together, somewhere around you: each on a spot of its own that it
+## fits (never inside a wall, a tree or a rock), on ground that can walk to you.
 func _spawn_group(p: PlayerSim) -> void:
 	var n := mini(_queue.size(), 1 + rng.randi() % 3)
-	var at := _spawn_point(p)
+	var you := Vector3(p.px, p.py, p.pz)
+	var group := enemies.nav.spawn_group(you) if enemies.nav else -1
+	var at := enemies.safe_spot(you, SPAWN_MIN, SPAWN_MAX, _queue[0], group, rng)
 	if at == Vector3.INF:
 		return # nowhere good this time: try again next group
+	var feet := at
+	if Enemies.TYPES[_queue[0]].family == "flyer":
+		feet = Vector3(at.x, enemies._ground_under(at), at.z)
 	for i in n:
-		var type: String = _queue.pop_front()
-		var off := Vector3(rng.randf_range(-2, 2), 0, rng.randf_range(-2, 2))
-		var pos := at + off
-		if Enemies.TYPES[type].family == "flyer":
-			pos.y += 4.0
+		var type: String = _queue[0]
+		var pos := at if i == 0 else enemies.safe_spot(feet, 0.8, 3.0, type, group, rng)
+		if pos == Vector3.INF:
+			break # the rest come with the next group
+		_queue.pop_front()
 		var e := enemies.spawn(type, pos, hp_mult())
 		_wave_ids[e.id] = true
 
 
-## Open ground 16-34 m from you, not too far above or below, not inside anything; INF if a few
-## tries find nothing.
-func _spawn_point(p: PlayerSim) -> Vector3:
-	for tries in 12:
-		var a := rng.randf() * TAU
-		var r := rng.randf_range(SPAWN_MIN, SPAWN_MAX)
-		var at := Vector3(p.px + cos(a) * r, p.py, p.pz + sin(a) * r)
-		var g := enemies._ground_under(at + Vector3(0, 12, 0))
-		if g < -29 or absf(g - p.py) > 12.0:
+## A wave enemy that hasn't seen you for LOST_TIME (stuck somewhere, or wandered off) comes back
+## around you, one at a time, so a wave never hangs on one you can't find.
+func _fetch_lost(p: PlayerSim) -> void:
+	var you := Vector3(p.px, p.py, p.pz)
+	for e in enemies.list:
+		if not _wave_ids.has(e.id) or e.seen_t < LOST_TIME:
 			continue
-		at.y = g
-		if PlayerSim.new(at.x, at.y, at.z)._blocked(map.nearby(at.x, at.y, at.z, 1.5)):
+		var at := enemies.safe_spot(you, SPAWN_MIN, SPAWN_MAX, e.type, enemies.nav.spawn_group(you) if enemies.nav else -1, rng)
+		if at == Vector3.INF:
 			continue
-		return at
-	return Vector3.INF
+		enemies.move_to(e, at)
+		events.append({"type": "fetched", "id": e.id})
+		return # one a tick
+
+
+## The ones to point out on screen: the last few of a wave (once it has all arrived), and the boss.
+func marked() -> Array[Enemies.Enemy]:
+	var out: Array[Enemies.Enemy] = []
+	if phase == "boss" and boss and boss.alive and not boss.target.dead:
+		out.append(boss)
+	elif phase == "wave" and _queue.is_empty() and _wave_ids.size() <= MARK_LEFT:
+		for e in enemies.list:
+			if _wave_ids.has(e.id) and e.alive and not e.target.dead:
+				out.append(e)
+	return out
 
 
 func _spawn_boss(p: PlayerSim) -> void:
-	var at := _spawn_point(p)
+	var you := Vector3(p.px, p.py, p.pz)
+	var at := enemies.safe_spot(you, SPAWN_MIN, SPAWN_MAX, BOSS, enemies.nav.spawn_group(you) if enemies.nav else -1, rng)
+	if at == Vector3.INF: # somewhere cramped: anywhere it fits, then the map's spawn point
+		at = enemies.safe_spot(you, 4.0, 60.0, BOSS, -1, rng)
 	if at == Vector3.INF:
 		at = Vector3(map.spawn.x, map.spawn.y, map.spawn.z)
 	boss = enemies.spawn(BOSS, at, 1.0 + 0.6 * (stage - 1))

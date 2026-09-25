@@ -2,7 +2,9 @@ extends SceneTree
 ## Checks a run's stage (Director), headless on Sunstone Valley: waves arrive on their own around
 ## you, get bigger and tougher, unlock new enemies, a wave ends when it's all dead, the boss comes
 ## after the last one, killing it clears the stage and calls the next; later stages are harder and
-## pay more.
+## pay more. With the stage's nav grid: nothing ever spawns inside anything, ground enemies find
+## their way to you around walls and up to ledges, lost ones are brought back, and the last few of
+## a wave (and the boss) are marked.
 ##   godot --headless --path . --script res://tests/run_test.gd
 
 var fails := 0
@@ -11,6 +13,7 @@ var player: PlayerSim
 var combat: Combat
 var enemies: Enemies
 var director: Director
+var nav: Nav
 
 
 func check(name: String, ok: bool) -> void:
@@ -24,6 +27,7 @@ func setup(stage := 1) -> void:
 	combat = Combat.new(map.boxes, [])
 	combat.grid = map
 	enemies = Enemies.new(map, combat)
+	enemies.nav = nav
 	enemies.god = true
 	director = Director.new(enemies, map, stage)
 	director.rng.seed = 4
@@ -31,11 +35,22 @@ func setup(stage := 1) -> void:
 		step()
 
 
+var seen := {} # every enemy id so far
+var spawned_inside := 0
+var spawned := 0
+
+
 func step() -> void:
 	combat.tick(player, Cmd.new(), Cfg.TICK_DT)
 	player.step(Cmd.new(), map, Cfg.TICK_DT)
 	enemies.tick(player, Cfg.TICK_DT)
 	director.tick(player, Cfg.TICK_DT)
+	for e in enemies.list:
+		if not seen.has(e.id):
+			seen[e.id] = true
+			spawned += 1
+			if not fits(e):
+				spawned_inside += 1
 
 
 func run(secs: float) -> Array[Dictionary]:
@@ -66,8 +81,20 @@ func clear_wave() -> Array[Dictionary]:
 	return evs
 
 
+## Is an enemy where it fits: a ground one's whole body clear of every box, a flyer's ball too?
+func fits(e: Enemies.Enemy) -> bool:
+	if e.body:
+		return enemies._body_fits(Vector3(e.body.px, e.body.py, e.body.pz), e.def.size)
+	return enemies._push_out(e.pos, 0.5 * e.def.size).distance_to(e.pos) < 0.01
+
+
 func _init() -> void:
 	map = MapData.load_map("sunstone-valley")
+	var t0 := Time.get_ticks_msec()
+	nav = Nav.build(map)
+	var sp := nav.node_near(Vector3(map.spawn.x, map.spawn.y, map.spawn.z))
+	check("the nav grid: %d spots in %d ms, the spawn is in the main area (%d spots), %d launch pads linked" % [nav.size(), Time.get_ticks_msec() - t0, nav.comp_size.get(nav.comp[sp], 0) if sp >= 0 else 0, nav.pad_edges.size()],
+		nav.size() > 10000 and sp >= 0 and nav.comp[sp] == nav.biggest and nav.pad_edges.size() > 0)
 	setup()
 	var evs := run(Director.FIRST_BREAK + 0.2)
 	var start: Array = evs.filter(func(e: Dictionary) -> bool: return e.type == "wave_start")
@@ -86,6 +113,8 @@ func _init() -> void:
 	check("they arrive around you, 16-34 m out (%d so far, %.0f-%.0f m)" % [dists.size(), dists.min() if not dists.is_empty() else 0.0, dists.max() if not dists.is_empty() else 0.0],
 		dists.size() > 3 and far_ok)
 	var wave1: Array = enemies.list.map(func(e: Enemies.Enemy) -> String: return e.type)
+	var bad := enemies.list.filter(func(e: Enemies.Enemy) -> bool: return not fits(e))
+	check("...each where it fits, never inside anything (%d inside)" % bad.size(), bad.is_empty() and not enemies.list.is_empty())
 	check("wave 1 is swarmers, chargers and gunners only (%s)" % str(wave1.duplicate()), wave1.all(func(t: String) -> bool: return Director.UNLOCK[t] <= 1))
 	var hp1: float = enemies.list[0].target.max_hp / Enemies.TYPES[enemies.list[0].type].hp
 	evs = clear_wave()
@@ -117,6 +146,104 @@ func _init() -> void:
 	evs = run(Director.CLEARED_TIME + 0.5)
 	check("...then it calls the next stage", evs.any(func(e: Dictionary) -> bool: return e.type == "next_stage" and e.stage == 2))
 	check("the run counted every kill (%d)" % director.kills, director.kills > 30)
+	check("all %d enemies of the stage (the boss's swarmers too) appeared where they fit (%d inside anything)" % [spawned, spawned_inside],
+		spawned > 100 and spawned_inside == 0)
+
+	# safe spots for every type, all over the map
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var tried := 0
+	var inside := 0
+	for i in 400:
+		var at := nav.pos[rng.randi() % nav.size()]
+		for type: String in Enemies.TYPES:
+			var s := enemies.safe_spot(at, 2.0, 30.0, type, -1, rng)
+			if s == Vector3.INF:
+				continue
+			tried += 1
+			if Enemies.TYPES[type].family == "flyer":
+				if enemies._push_out(s, 0.5 * Enemies.TYPES[type].size).distance_to(s) > 0.01:
+					inside += 1
+			elif not enemies._body_fits(s, Enemies.TYPES[type].size):
+				inside += 1
+	check("safe spots all over the map, every type, sized to fit (%d spots, %d inside anything)" % [tried, inside], tried > 2000 and inside == 0)
+
+	# paths: an enemy with no straight way to you gets there anyway
+	setup()
+	director.phase = "cleared" # no waves: just these
+	director.t = 1e9
+	enemies.clear()
+	var got := 0
+	var pairs := 0
+	var straight := 0
+	var tries := 0
+	while pairs < 10 and tries < 20000:
+		tries += 1
+		var a := rng.randi() % nav.size()
+		var b := rng.randi() % nav.size()
+		var pa := nav.pos[a]
+		var pb := nav.pos[b]
+		var d := Vector2(pa.x - pb.x, pa.z - pb.z).length()
+		if nav.comp[a] != nav.biggest or nav.comp[b] != nav.biggest or d < 15 or d > 35:
+			continue
+		if enemies._can_see(pa + Vector3(0, 1.6, 0), pb + Vector3(0, 1.0, 0)):
+			continue # it has to go around something...
+		var route := nav.path(a, b)
+		var plen := 0.0
+		for r in range(1, route.size()):
+			plen += nav.pos[route[r]].distance_to(nav.pos[route[r - 1]])
+		if plen < d * 1.5 and absf(pa.y - pb.y) < 3.0:
+			continue # ...a long way round, or up or down a level
+		pairs += 1
+		for with_nav in [true, false]:
+			enemies.clear()
+			enemies.nav = nav if with_nav else null
+			player = PlayerSim.new(pb.x, pb.y, pb.z)
+			var sw := enemies.spawn("swarmer", pa)
+			sw.cd = 1e9 # just walking
+			var arrived := false
+			for t in int(40.0 * Cfg.TICK_RATE):
+				player.step(Cmd.new(), map, Cfg.TICK_DT)
+				enemies.tick(player, Cfg.TICK_DT)
+				if Vector3(sw.body.px, sw.body.py, sw.body.pz).distance_to(Vector3(player.px, player.py, player.pz)) < 3.0:
+					arrived = true
+					break
+			if with_nav and arrived:
+				got += 1
+			elif with_nav:
+				print("      didn't make it: %s -> %s (stuck at %s)" % [pa, pb, Vector3(sw.body.px, sw.body.py, sw.body.pz)])
+			elif not with_nav and arrived:
+				straight += 1
+	enemies.nav = nav
+	check("around walls, up ramps, off ledges, over pads: %d / %d swarmers with a long way round reach you in 40 s (walking straight at you: %d)" % [got, pairs, straight],
+		pairs == 10 and got >= 9 and straight < got)
+
+	# the last few are marked; a lost one comes back
+	setup()
+	run(Director.FIRST_BREAK + 8.0)
+	var tries2 := 0
+	while director.left() > 3 and tries2 < 40:
+		tries2 += 1
+		var some: Array = enemies.list.filter(func(e: Enemies.Enemy) -> bool: return e.alive)
+		if some.size() > 3:
+			some[0].target.hp = 0.0
+			some[0].target.dead = true
+		run(0.3)
+	var marks := director.marked()
+	check("the last %d of the wave are marked (and only them)" % director.left(), director.left() <= Director.MARK_LEFT and marks.size() == director.left() and director.left() > 0)
+	var lost: Enemies.Enemy = marks[0] if not marks.is_empty() else null
+	if lost:
+		var far := nav.random_spot(rng, Vector3(player.px, player.py, player.pz), 80.0, 110.0, nav.biggest, 1.0, 40.0, 200)
+		enemies.move_to(lost, nav.pos[far] + (Vector3(0, 4, 0) if lost.body == null else Vector3.ZERO))
+		lost.los_t = 1e9 # can't see you (as if behind a hill)
+		lost.los = false
+		evs = run(Director.LOST_TIME + 1.0)
+		var back := lost.center().distance_to(Vector3(player.px, player.py, player.pz))
+		check("one that's lost for %.0f s comes back around you (%.0f m away)" % [Director.LOST_TIME, back],
+			evs.any(func(e: Dictionary) -> bool: return e.type == "fetched" and e.id == lost.id) and back < Director.SPAWN_MAX + 6.0 and fits(lost))
+	director.skip_to_boss()
+	run(1.5)
+	check("the boss is marked", director.marked().size() == 1 and director.marked()[0] == director.boss)
 
 	# later stages
 	setup(2)
