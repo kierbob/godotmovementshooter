@@ -56,6 +56,8 @@ func _init() -> void:
 	enemies.tick(player, Cfg.TICK_DT)
 	loot.tick(player, enemies.deaths, Cfg.TICK_DT)
 	check("...once each", loot.gold == Loot.GOLD.gunner + Loot.GOLD.brute)
+	check("kills give XP too (%.0f toward level 2, or level %d)" % [combat.up.xp, combat.up.level],
+		combat.up.level == 2 and absf(combat.up.xp - (Loot.GOLD.gunner + Loot.GOLD.brute - Upgrades.xp_to_next(1))) < 0.001)
 
 	# ---- a chest ----
 	loot.gold = 10

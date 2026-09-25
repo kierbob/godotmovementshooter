@@ -169,6 +169,13 @@ func on_events(events: Array[Dictionary], muzzle: Vector3, player: PlayerSim) ->
 				_item_blast(e.pos, e.radius, e.kind, player)
 			"zap":
 				_add_zap(e.from, e.to, e.color, e.get("tracer", false))
+			"level_up":
+				var feet := Vector3(player.px, player.py, player.pz)
+				_add_ring(feet, Color("ffd84a"), 0.3, 4.0, 0.5, 0.9)
+				for i in 16:
+					var a := TAU * i / 16.0
+					particles.spawn({"cube": true, "pos": feet + Vector3(cos(a), 0.2, sin(a)) * 0.8, "vel": Vector3(cos(a) * 1.5, 5.0, sin(a) * 1.5),
+						"gravity": 6.0, "spin": 8.0, "life": 0.9, "size": [0.1, 0.05], "color": Color("ffe066"), "opacity": [1.0, 0.0]})
 			"freeze":
 				add_star(e.pos, 0.9, 0.2, Color("bfe6ff"))
 				word.emit("FROZEN!", e.pos, null, "blue")

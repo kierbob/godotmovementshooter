@@ -412,7 +412,7 @@ func damage_target(t: Target, dmg: float, zone: String, point: Vector3, src := "
 		fx.append({"type": "impact", "pos": point, "normal": Vector3.UP, "on_player": true})
 		return
 	var crit := false
-	if up.total > 0:
+	if up.active:
 		var m := up.modify_damage(t, dmg, zone, point, src)
 		dmg = m[0]
 		crit = m[1]
@@ -426,7 +426,7 @@ func damage_target(t: Target, dmg: float, zone: String, point: Vector3, src := "
 		last_hit = {"dmg": dmg, "zone": zone, "kill": kill, "time": time}
 	fx.append({"type": "hit", "target": t.id, "pos": point, "dmg": dmg, "zone": zone, "kill": kill,
 		"src": src, "crit": crit, "dot": dot})
-	if up.total > 0:
+	if up.active:
 		if src == "gun":
 			up.on_hit(t, dmg, zone, point)
 		if kill:

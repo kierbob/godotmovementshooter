@@ -343,6 +343,22 @@ func _init() -> void:
 	run(0.4)
 	check("Knockout Glove: hits shove them back (%.1f m)" % (kb.target.pos.z - z0), kb.target.pos.z - z0 > 1.0)
 
+	# ---- levels ----
+	setup([Vector3(0, 0, -30)])
+	player.hp = 40.0
+	combat.up.add_xp(Upgrades.xp_to_next(1) - 1.0, player)
+	check("not quite enough XP: still level 1", combat.up.level == 1 and player.hp == 40.0)
+	combat.up.add_xp(1.0, player)
+	check("level 2: +%.0f max health and a full heal (%.0f / %.0f)" % [Upgrades.LEVEL_HEALTH, player.hp, player.max_hp],
+		combat.up.level == 2 and player.max_hp == 100.0 + Upgrades.LEVEL_HEALTH and player.hp == player.max_hp
+		and combat.fx.any(func(e: Dictionary) -> bool: return e.type == "level_up"))
+	shoot(0, 10.0)
+	check("...and +10%% damage (%.1f)" % hits()[0].dmg, absf(hits()[0].dmg - 11.0) < 0.001)
+	combat.up.add_xp(Upgrades.xp_to_next(2) + Upgrades.xp_to_next(3) + 0.5, player)
+	check("a big XP gain can go up several levels (level %d)" % combat.up.level, combat.up.level == 4)
+	check("each level needs more XP (%.0f, %.0f, %.0f)" % [Upgrades.xp_to_next(1), Upgrades.xp_to_next(2), Upgrades.xp_to_next(5)],
+		Upgrades.xp_to_next(2) > Upgrades.xp_to_next(1) and Upgrades.xp_to_next(5) > 2.0 * Upgrades.xp_to_next(1))
+
 	print("\n%s" % ("all item checks passed" if fails == 0 else "%d item check(s) failed" % fails))
 	quit(1 if fails else 0)
 

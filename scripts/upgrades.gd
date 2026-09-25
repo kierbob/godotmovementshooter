@@ -110,13 +110,22 @@ const DOT_EVERY := 0.5 # damage over time lands in chunks (one number, not 120 a
 const WISP := {"speed": 16.0, "up": 0.0, "gravity": 0.0, "radius": 0.25, "impact": "wisp", "damage": 40.0,
 	"head_mult": 1.0, "hit_pad": 0.35, "homing": 5.0, "life": 5.0, "inherit": false}
 const COPY_ANGLE := 7.0 # degrees between Triple Tap copies
+## Levels (Risk of Rain style): kills give XP; each level is +LEVEL_DAMAGE damage and
+## +LEVEL_HEALTH max health, and a full heal. Level n -> n+1 takes XP_BASE * XP_GROWTH^(n-1).
+const LEVEL_DAMAGE := 0.1
+const LEVEL_HEALTH := 12.0
+const XP_BASE := 20.0
+const XP_GROWTH := 1.45
 
 var combat: Combat: # weak: Combat owns us, and a reference loop would never be freed
 	get:
 		return _combat.get_ref()
 var _combat: WeakRef
 var stacks := {} # id -> how many
-var total := 0 # items held (0 = every hook is a no-op)
+var total := 0 # items held
+var level := 1
+var xp := 0.0 # toward the next level
+var active := false # anything to do at all (items or levels): false = every hook is a no-op
 var rng := RandomNumberGenerator.new()
 var adrenaline_t := 0.0
 var _kills: Array[Combat.Target] = [] # waiting for their kill effects (next tick)
@@ -142,11 +151,32 @@ func add(id: String, n := 1) -> void:
 	total = 0
 	for k: String in stacks:
 		total += stacks[k]
+	active = total > 0 or level > 1
 
 
 func clear() -> void:
 	stacks.clear()
 	total = 0
+	active = level > 1
+
+
+## XP needed to go from `lvl` to the next.
+static func xp_to_next(lvl: int) -> float:
+	return XP_BASE * pow(XP_GROWTH, lvl - 1)
+
+
+## Kills pay XP (Loot calls this). Levelling up: stronger, tougher, and topped up.
+func add_xp(amount: float, p: PlayerSim) -> void:
+	xp += amount
+	while xp >= xp_to_next(level):
+		xp -= xp_to_next(level)
+		level += 1
+		active = true
+		if p:
+			_apply_stats(p)
+			if not p.dead:
+				p.hp = p.max_hp
+		combat.fx.append({"type": "level_up", "level": level})
 
 
 ## A random item id, weighted by rarity (common 70%, uncommon 25%, rare 5%).
@@ -212,7 +242,8 @@ func modify_damage(t: Combat.Target, dmg: float, zone: String, point: Vector3, s
 	var mark: Dictionary = t.status.get("mark", {})
 	if not mark.is_empty():
 		mult += float(mark.mult)
-	return [dmg * mult * (2.0 if crit else 1.0), crit]
+	var lvl := 1.0 + LEVEL_DAMAGE * (level - 1) # everything you deal grows with your level
+	return [dmg * mult * lvl * (2.0 if crit else 1.0), crit]
 
 
 ## A "gun" hit landed (after the damage): roll every proc.
@@ -359,7 +390,7 @@ func _apply_stats(p: PlayerSim) -> void:
 	p.speed_mult = 1.0 + 0.1 * count("running_shoes") + (0.3 if adrenaline_t > 0 else 0.0)
 	p.extra_wall_jumps = count("wall_grips")
 	p.air_jumps = count("spring_heels")
-	var bonus := 25.0 * count("tough_skin")
+	var bonus := 25.0 * count("tough_skin") + LEVEL_HEALTH * (level - 1)
 	if bonus != _max_bonus:
 		p.max_hp += bonus - _max_bonus
 		if not p.dead:

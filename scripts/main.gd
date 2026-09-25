@@ -758,6 +758,7 @@ func _play_combat_sounds(events: Array[Dictionary]) -> void:
 			"zap": sound.play("impulse", {"pos": e.to, "gap": 0.1, "vol": 0.45})
 			"freeze", "shatter": sound.play("dry" if e.type == "freeze" else "impact", {"pos": e.pos, "gap": 0.05})
 			"item_proc": sound.play("reload", {"gap": 0.1, "vol": 0.6})
+			"level_up": sound.play("finish")
 			"throw": sound.play("knifeThrow" if e.ability == "knife" else "throw")
 			"dash":
 				sound.play("wallJump")
@@ -1287,6 +1288,8 @@ func _update_loot(dt: float) -> void:
 	loot.events.clear()
 	var in_run := state != "menu" and not (trial and trial.active)
 	hud.items.set_gold(loot.gold if in_run and (not map.chests.is_empty() or loot.gold > 0) else -1)
+	var up := combat.up
+	hud.items.set_level(up.level if in_run else 0, up.xp / Upgrades.xp_to_next(up.level))
 	var chest := loot.chest_in_reach(player) if in_run and not player.dead else null
 	if chest:
 		var key := Settings.bind_label(Settings.binds.get("interact", ""))
@@ -1381,6 +1384,10 @@ func admin(what: String, data: Dictionary) -> String:
 			for id: String in combat.up.stacks:
 				have.append("%s x%d" % [Upgrades.LIST[id].name, combat.up.count(id)])
 			return ", ".join(have)
+		"levelup":
+			for i in int(data.n):
+				combat.up.add_xp(Upgrades.xp_to_next(combat.up.level) - combat.up.xp, player)
+			return "Level %d" % combat.up.level
 		"gold":
 			loot.gold = maxi(0, loot.gold + int(data.amount))
 			return "Gold: $%d" % loot.gold

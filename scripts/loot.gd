@@ -149,6 +149,7 @@ func tick(p: PlayerSim, deaths: Array[Dictionary], dt: float) -> void:
 		var amount: int = GOLD.get(dth.type, 5)
 		gold += amount
 		events.append({"type": "gold", "amount": amount, "pos": dth.pos})
+		up.add_xp(amount, p) # XP: the same as the gold (tougher kills, more of both)
 	for d in drops:
 		d.age += dt
 		if not d.landed:
