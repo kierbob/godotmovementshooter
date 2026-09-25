@@ -132,13 +132,19 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 | Shooter | **Sniper** | a red laser tracks you, turns white when it locks, then fires: move after the lock |
 | Flyer | **Projectile** | circles you and fires dodgeable orbs |
 | Flyer | **Beam** | Moira-style lock-on beam up close; breaks if you get out of range or behind cover |
-| Flyer | **Healer** | never hurts you; heals the most hurt enemy with a green beam, runs from you |
+| Flyer | **Healer** | never hurts you; heals the most hurt enemy with a green beam (never another healer), runs from you |
 
 Fair-play rules every attack follows (tests/enemy_test.gd checks them): a visible windup (red
 "!", glow, a click) of at least 0.25 s before anything can hurt you, no attack without line of
 sight, shots aimed where you are (never led) and slow enough to dodge. You have 100 HP,
 regenerate 3 s after the last hit, and get back up 2.5 s after being splatted (1.5 s of spawn
 protection). No automatic spawning yet: that's the director, next.
+
+Flyers hover 2.5-8 m over the ground (or over you, if you're up high). Big crowds stay cheap:
+enemies think and move 60 times a second (30 once they're 40 m away) instead of every 120 Hz
+tick, rays (line of sight, the ground under a flyer, bullets) only test the map boxes along their
+path, and far enemies drop their small details and particles. 80 enemies cost about 2 ms of sim
+per tick.
 
 **Admin console (F10):** buttons for every enemy (x1 / x3 / x5, or ANY of a family) and GOD /
 FREEZE / HEAL / KILL ALL, next to a text bar that takes the same as commands: `spawn flyer beam`,

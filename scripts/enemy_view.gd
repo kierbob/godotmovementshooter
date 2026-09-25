@@ -8,6 +8,8 @@ extends Node3D
 ## brute's shockwave ring, and their glowing shots.
 
 const BAR_Y := 2.25
+const DETAIL_RANGE := 45.0 # past this, eyes / brows / gear aren't drawn (a few pixels anyway)
+const BAR_RANGE := 60.0
 
 var _views := {} # enemy id -> {node, body, mats, fill, bang, laser, beam, spin, flash}
 var _proj := {} # projectile id -> mesh (not the Dictionary itself: its hash changes as it moves)
@@ -30,26 +32,37 @@ func update(en: Enemies, camera: Camera3D, dt: float) -> void:
 		var node: Node3D = v.node
 		node.position = e.target.pos
 		node.rotation.y = e.yaw + PI # the bean faces +Z; yaw 0 looks down -Z
-		# health bar faces the camera
-		var bar: Node3D = v.bar
-		if camera:
-			bar.global_rotation = Vector3(0, camera.global_rotation.y, 0)
-			# right in your face (a swarmer at your feet) the bar would cover the screen
-			bar.visible = camera.global_position.distance_to(bar.global_position) > 2.5
+		var dist := camera.global_position.distance_to(node.position) if camera else 10.0
+		var near := dist < DETAIL_RANGE
+		if near != v.near:
+			v.near = near
+			for d: Node3D in v.detail:
+				d.visible = near
+		# health bar: only once it's hurt (Risk of Rain style), facing the camera; not right in your
+		# face (a swarmer at your feet would cover the screen) or far away
 		var frac: float = e.target.hp / e.target.max_hp
-		var fill: MeshInstance3D = v.fill
-		fill.scale.x = maxf(0.001, frac)
-		fill.position.x = -0.4 * (1 - frac)
-		(fill.material_override as StandardMaterial3D).albedo_color = \
-			Color("5ee06a") if frac > 0.5 else Color("f2c14e") if frac > 0.25 else Color("e5534b")
+		var bar: Node3D = v.bar
+		bar.visible = frac < 0.999 and dist > 2.5 and dist < BAR_RANGE
+		if bar.visible:
+			if camera:
+				bar.global_rotation = Vector3(0, camera.global_rotation.y, 0)
+			if frac != v.frac:
+				v.frac = frac
+				var fill: MeshInstance3D = v.fill
+				fill.scale.x = maxf(0.001, frac)
+				fill.position.x = -0.4 * (1 - frac)
+				(fill.material_override as StandardMaterial3D).albedo_color = \
+					Color("5ee06a") if frac > 0.5 else Color("f2c14e") if frac > 0.25 else Color("e5534b")
 		# windup: "!" and a pulsing glow
 		var winding: bool = e.state in ["windup", "aim", "lock"]
 		(v.bang as Label3D).visible = winding
 		v.flash = maxf(0.0, v.flash - dt)
 		var glow := 2.5 if v.flash > 0 else (0.6 + 0.6 * sin(_time * 30.0) if winding else 0.0)
-		for m: ShaderMaterial in v.mats:
-			m.set_shader_parameter("emission_boost", glow)
-		(v.fx as StatusFx).update(e.target.status, dt, particles, e.target.pos)
+		if glow != v.glow:
+			v.glow = glow
+			for m: ShaderMaterial in v.mats:
+				m.set_shader_parameter("emission_boost", glow)
+		(v.fx as StatusFx).update(e.target.status, dt, particles if near else null, e.target.pos)
 		if v.spin and Upgrades.time_scale(e.target) > 0:
 			(v.spin as Node3D).rotation.y += dt * 30.0 * Upgrades.time_scale(e.target)
 		if e.def.family == "flyer":
@@ -239,8 +252,22 @@ func _make(e: Enemies.Enemy) -> Dictionary:
 	bang.position.y = BAR_Y * e.target.size + 0.45
 	bang.visible = false
 	node.add_child(bang)
+	# Cheap to draw: only the body and head cast shadows (every shadowed mesh is drawn again per
+	# shadow split), and the small stuff is a list to hide at a distance.
+	var bean_body := bean.get_child(0)
+	var bean_head := bean.get_child(1)
+	var detail: Array[Node3D] = []
+	for mi: MeshInstance3D in body.find_children("*", "MeshInstance3D", true, false):
+		if mi != bean_body and mi != bean_head:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for c in bean.get_children().slice(2): # eyes
+		detail.append(c)
+	for c in body.get_children():
+		if c != bean and c != spin:
+			detail.append(c)
 	return {"node": node, "body": body, "mats": mats, "bar": bar, "fill": bar.get_child(1), "bang": bang,
-		"spin": spin, "flash": 0.0, "laser": null, "beam": null, "fx": StatusFx.new(node, mats, e.target.size)}
+		"spin": spin, "flash": 0.0, "laser": null, "beam": null, "fx": StatusFx.new(node, mats, e.target.size),
+		"detail": detail, "near": true, "glow": -1.0, "frac": -1.0}
 
 
 func _part(mesh: PrimitiveMesh, color: Color, parent: Node3D) -> MeshInstance3D:

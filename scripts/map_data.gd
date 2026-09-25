@@ -239,8 +239,7 @@ func nearby(x: float, y: float, z: float, r: float) -> Array[Box]:
 				continue
 			out.append(b)
 		return out
-	if not is_same(_grid_of, boxes) or _grid_count != boxes.size():
-		_build_grid()
+	_ensure_grid()
 	# Candidates from the grid cells the query touches, then back into map order so the result
 	# (and so the movement) is exactly what the full scan gives.
 	var ids := PackedInt32Array()
@@ -258,6 +257,51 @@ func nearby(x: float, y: float, z: float, r: float) -> Array[Box]:
 			continue
 		out.append(b)
 	return out
+
+
+## Boxes a ray from o along d (normalized) could hit within max_t, in map order: everything in
+## the grid columns it passes over (walked cell by cell), so a ray tests a handful of boxes
+## instead of every box on the map. Hits come out the same as testing every box.
+func ray_boxes(o: Vector3, d: Vector3, max_t: float) -> Array[Box]:
+	_ensure_grid()
+	var ids := PackedInt32Array()
+	var cx := floori(o.x / GRID_CELL)
+	var cz := floori(o.z / GRID_CELL)
+	var sx := 1 if d.x > 0 else -1
+	var sz := 1 if d.z > 0 else -1
+	var tx := INF
+	var tz := INF
+	var dx := INF
+	var dz := INF
+	if absf(d.x) > 1e-9:
+		tx = ((cx + (1 if d.x > 0 else 0)) * GRID_CELL - o.x) / d.x
+		dx = GRID_CELL / absf(d.x)
+	if absf(d.z) > 1e-9:
+		tz = ((cz + (1 if d.z > 0 else 0)) * GRID_CELL - o.z) / d.z
+		dz = GRID_CELL / absf(d.z)
+	for guard in 4096:
+		ids.append_array(_grid.get(Vector2i(cx, cz), PackedInt32Array()))
+		if minf(tx, tz) > max_t:
+			break
+		if tx < tz:
+			cx += sx
+			tx += dx
+		else:
+			cz += sz
+			tz += dz
+	ids.sort()
+	var out: Array[Box] = []
+	var last := -1
+	for i in ids:
+		if i != last:
+			out.append(boxes[i])
+			last = i
+	return out
+
+
+func _ensure_grid() -> void:
+	if not is_same(_grid_of, boxes) or _grid_count != boxes.size():
+		_build_grid()
 
 
 ## Bucket every box into the GRID_CELL-sized columns it covers (built on first use, and again if

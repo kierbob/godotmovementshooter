@@ -35,6 +35,7 @@ var _next_decal := 0
 var _stars: Array = [] # [{node, age, life, size}]
 var _next_star := 0
 var _rings: Array = [] # [{node, life, max, from, to, opacity}]
+var _spare_rings: Array[MeshInstance3D] = [] # finished rings, hidden, reused (items make lots)
 var _ring_mesh: ArrayMesh
 var _lights: Array = [] # [{light, life}]
 var _next_light := 0
@@ -250,15 +251,19 @@ func add_star(pos: Vector3, size: float, life: float, color := Color.WHITE) -> v
 
 
 func _add_ring(pos: Vector3, color: Color, from: float, to: float, life: float, opacity: float) -> void:
-	var mi := MeshInstance3D.new()
-	mi.mesh = _ring_mesh
-	var m := _flat(color, opacity)
-	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mi.material_override = m
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var mi: MeshInstance3D = _spare_rings.pop_back() if not _spare_rings.is_empty() else null
+	if mi == null:
+		mi = MeshInstance3D.new()
+		mi.mesh = _ring_mesh
+		var m := _flat(color, opacity)
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mi.material_override = m
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mi)
+	(mi.material_override as StandardMaterial3D).albedo_color = Color(color, opacity)
+	mi.visible = true
 	mi.position = pos + Vector3(0, 0.05, 0)
 	mi.scale = Vector3.ONE * from
-	add_child(mi)
 	_rings.append({"node": mi, "life": life, "max": life, "from": from, "to": to, "opacity": opacity})
 
 
@@ -559,7 +564,8 @@ func update(dt: float, combat: Combat, extra: Array = []) -> void:
 		if r.life > 0:
 			rings_left.append(r)
 		else:
-			node.queue_free()
+			node.visible = false
+			_spare_rings.append(node)
 	_rings = rings_left
 	particles.update(dt)
 	_update_tossed(dt)

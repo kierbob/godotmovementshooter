@@ -237,6 +237,37 @@ func _init() -> void:
 	check("the healer heals a hurt enemy (30 -> %.0f hp)" % hurt_one.target.hp, hurt_one.target.hp > 60.0
 		and evs.any(func(e: Dictionary) -> bool: return e.type == "heal_on"))
 
+	# healers never heal each other (they can't hurt you: that would only drag the fight out), and
+	# never float off (two used to climb forever, hovering over each other)
+	setup()
+	var h1 := enemies.spawn("flyer_healer", Vector3(0, 4, -30))
+	var h2 := enemies.spawn("flyer_healer", Vector3(4, 4, -30))
+	h1.target.hp = 40.0
+	h2.target.hp = 40.0
+	var highest := 0.0
+	for i in 8:
+		run(1.0)
+		highest = maxf(highest, maxf(h1.pos.y, h2.pos.y))
+	check("two hurt healers don't heal each other (still %.0f and %.0f hp)" % [h1.target.hp, h2.target.hp],
+		h1.target.hp == 40.0 and h2.target.hp == 40.0)
+	check("...and stay low (highest %.1f m, cap %.0f m over the ground)" % [highest, Enemies.FLY_MAX], highest <= Enemies.FLY_MAX + 0.5)
+	setup()
+	for i in 6:
+		enemies.spawn("flyer_projectile" if i % 2 else "flyer_beam", Vector3(i * 3 - 8, 4, -14))
+	highest = 0.0
+	for i in 6:
+		run(1.0)
+		for e in enemies.list:
+			highest = maxf(highest, e.pos.y)
+	check("attacking flyers hover within reach too (highest %.1f m)" % highest, highest <= Enemies.FLY_MAX + 0.5 and highest >= Enemies.FLY_MIN)
+
+	# a crowd far away thinks less often, but still gets where it's going
+	setup()
+	var far_one := enemies.spawn("charger", Vector3(0, 0, -60))
+	run(2.0)
+	check("a far enemy (updated 30x a second) still walks at you (%.1f m closer)" % (far_one.target.pos.z + 60.0),
+		far_one.target.pos.z > -60.0 + 8.0)
+
 	# your guns kill them
 	setup()
 	combat.set_loadout({"primary": "sniper", "secondary": "pistol", "ability": "frag"})

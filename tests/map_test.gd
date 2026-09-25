@@ -137,6 +137,21 @@ func run() -> void:
 			if got != want:
 				mismatch += 1
 		check("%s: the collision grid finds the same boxes as a full scan" % id, mismatch == 0)
+		# rays walked through the grid hit exactly what testing every box hits
+		var slow := Combat.new(m.boxes, [])
+		var fast := Combat.new(m.boxes, [])
+		fast.grid = m
+		var ray_miss := 0
+		for i in 2000:
+			var o := Vector3(rng.randf_range(lo.x, hi.x), rng.randf_range(maxf(lo.y, -20.0), minf(hi.y, 50.0)), rng.randf_range(lo.z, hi.z))
+			var d := Vector3(rng.randf_range(-1, 1), rng.randf_range(-1, 1), rng.randf_range(-1, 1)).normalized()
+			if i % 5 == 0:
+				d = Vector3.DOWN # straight down: one grid column (flyers ask for the ground under them)
+			var a := slow.raycast(o, d, 120.0, 0.0, false)
+			var b := fast.raycast(o, d, 120.0, 0.0, false)
+			if (a == null) != (b == null) or (a and (absf(a.t - b.t) > 1e-9 or a.normal != b.normal)):
+				ray_miss += 1
+		check("%s: rays through the grid hit the same as testing every box" % id, ray_miss == 0)
 		# every launcher (directional pad) throws you onto something, not out of the map: stand on
 		# it holding forward along its arrow until you land. (Plain pads are trampolines: you land
 		# back on them.)

@@ -61,6 +61,7 @@ class Hit:
 
 
 var boxes: Array[MapData.Box] = []
+var grid: MapData # when set, rays only test the boxes in the grid cells they cross (much faster)
 var targets: Array[Target] = []
 var projectiles: Array[Projectile] = []
 var fx: Array[Dictionary] = [] # events for the HUD / visuals: shot, impact, hit, explosion, ...
@@ -345,7 +346,7 @@ static func ray_capsule(o: Vector3, d: Vector3, a: Vector3, b: Vector3, r: float
 ## with_targets false = walls only.
 func raycast(o: Vector3, d: Vector3, max_t: float, pad := 0.0, with_targets := true) -> Hit:
 	var best: Hit = null
-	for b in boxes:
+	for b in (grid.ray_boxes(o, d, max_t) if grid else boxes):
 		if b.kind == "barrier":
 			continue # invisible walls only stop players
 		var h := ray_box(o, d, b, best.t if best else max_t)

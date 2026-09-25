@@ -69,7 +69,8 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   its impulse log exist for this. Anything that changes the player's state on the host but not
   on their screen (like resetting their guns) makes the two drift: keep them in step.
 - Enemies: `scripts/enemies.gd` (Enemies: logic for the 9 types in `TYPES` / `FAMILIES`,
-  attacks, enemy projectiles, hurting the player; ground types move with PlayerSim, flyers steer
+  attacks, enemy projectiles, hurting the player; they update at 60 Hz, 30 past `LOD_FAR`, staggered,
+  to keep crowds cheap (timings are in seconds); ground types move with PlayerSim, flyers steer
   and get pushed out of walls; each enemy is a Combat target of kind "enemy" so the guns hit it),
   `scripts/enemy_view.gd` (models, health bars, "!" windups, lasers/beams/rings/shots),
   `scripts/admin_console.gd` (F10: spawn/killall/god/heal/freeze/list; `parse_spawn`). main.gd
@@ -86,7 +87,9 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   With no items every hook is a no-op. F10: give/take/items/clearitems + item buttons.
   `tests/item_test.gd` checks every item.
 - `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
-  `nearby()` looks boxes up in an 8 m grid but returns exactly what a full scan would, in map order.
+  `nearby()` looks boxes up in an 8 m grid but returns exactly what a full scan would, in map order;
+  `ray_boxes()` walks a ray through that grid (Combat.raycast uses it when `combat.grid` is set,
+  Enemies always). `max_physics_steps_per_frame` is 5 so a slow frame can't snowball.
 - `scripts/world_view.gd`: map meshes, jump pads, bean dummies, clouds.
 - `scripts/menu.gd`, `ui_style.gd`, `hud.gd`, `settings.gd`: menus, styling, HUD, saved settings
   and keybinds. The main screen is a Risk of Rain style column (singleplayer, multiplayer,

@@ -107,6 +107,7 @@ func _ready() -> void:
 	WorldView.build_pads(map, self)
 	clouds = WorldView.build_clouds(self)
 	combat = Combat.new(map.boxes, map.targets)
+	combat.grid = map
 	enemies = Enemies.new(map, combat)
 	await _step(0.5, "Loading guns and effects")
 	combat_view = CombatView.new()
@@ -989,6 +990,7 @@ func _start_online(w: Dictionary) -> void:
 	online = true
 	menu.online = true
 	combat = Combat.new(map.boxes, []) # no dummies online: other players are the targets
+	combat.grid = map
 	for b: Dictionary in beans:
 		(b.node as Node3D).visible = false
 	_start_play()

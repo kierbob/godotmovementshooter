@@ -16,6 +16,7 @@ var _bomb_mat: StandardMaterial3D
 var _puff_t := 0.0
 var _time := 0.0
 var _tinted := false
+var _active := false # something is showing (so an empty status still has to tidy up once)
 
 
 func _init(n: Node3D, m: Array, s: float) -> void:
@@ -26,7 +27,11 @@ func _init(n: Node3D, m: Array, s: float) -> void:
 		bases.append(mat.get_shader_parameter("albedo"))
 
 
+## particles: null = don't spawn any (far away: nobody sees them, and they cost frame time).
 func update(st: Dictionary, dt: float, particles: Particles, pos: Vector3) -> void:
+	if st.is_empty() and not _active:
+		return # the usual case: nothing on it, nothing to do
+	_active = not st.is_empty()
 	_time += dt
 	var tint := Color.WHITE
 	var amt := 0.0
@@ -53,7 +58,7 @@ func update(st: Dictionary, dt: float, particles: Particles, pos: Vector3) -> vo
 	_puff_t -= dt
 	if _puff_t > 0:
 		return
-	_puff_t = 0.06
+	_puff_t = 0.09
 	var center := pos + Vector3(0, 1.0 * size, 0)
 	if st.has("burn"):
 		for i in 3:
