@@ -86,6 +86,9 @@ var _built := false # the scene finished building (it yields frames while a load
 var enemies: Enemies
 var enemy_view: EnemyView
 var console: AdminConsole # F10
+var loot: Loot # gold, chests and dropped items (solo)
+var loot_view: LootView
+var interact_pressed := false
 var _respawn_t := -1.0 # solo: seconds until you're back after getting splatted (-1 = alive)
 const SOLO_RESPAWN := 2.5
 const SOLO_PROTECTION := 1.5
@@ -109,6 +112,8 @@ func _ready() -> void:
 	combat = Combat.new(map.boxes, map.targets)
 	combat.grid = map
 	enemies = Enemies.new(map, combat)
+	loot = Loot.new(map, combat.up)
+	loot.place_chests() # a random pick of the map's chest spots (none on maps without any)
 	await _step(0.5, "Loading guns and effects")
 	combat_view = CombatView.new()
 	add_child(combat_view)
@@ -117,6 +122,8 @@ func _ready() -> void:
 	enemy_view = EnemyView.new()
 	enemy_view.particles = combat_view.particles # burning, bleeding, snow on chilled ones
 	add_child(enemy_view)
+	loot_view = LootView.new()
+	add_child(loot_view)
 	_build_beans()
 	_setup_environment()
 	_apply_lighting()
@@ -520,6 +527,8 @@ func _input(event: InputEvent) -> void:
 		reload_pressed = true
 	if event.is_action_pressed("ability"):
 		ability_pressed = true
+	if event.is_action_pressed("interact"):
+		interact_pressed = true
 	if event.is_action_pressed("primary"):
 		slot_pressed = "primary"
 	if event.is_action_pressed("secondary"):
@@ -596,6 +605,12 @@ func _physics_process(_delta: float) -> void:
 	if not (trial and trial.active):
 		enemies.tick(player, Cfg.TICK_DT)
 		_tick_health(Cfg.TICK_DT)
+		if interact_pressed and not player.dead and not console.is_open:
+			var chest := loot.chest_in_reach(player)
+			if chest:
+				loot.open(chest, player)
+		loot.tick(player, enemies.deaths, Cfg.TICK_DT)
+	interact_pressed = false
 	if trial:
 		trial.tick(player, Cfg.TICK_DT)
 	if trial and not trial.events.is_empty():
@@ -677,6 +692,7 @@ func _process(delta: float) -> void:
 		enemy_view.update(enemies, camera, dt)
 		_handle_enemy_events(enemies.events)
 		enemies.events.clear()
+		_update_loot(dt)
 		if state != "menu":
 			hud.online.update(dt, player, yaw, maxf(0.0, _respawn_t), _killer, "")
 			if player.dead:
@@ -1249,6 +1265,33 @@ func _handle_enemy_events(evs: Array[Dictionary]) -> void:
 				sound.play("impulse", {"pos": _enemy_pos(e.id)})
 
 
+## Chests, dropped items, gold and the "open chest" prompt.
+func _update_loot(dt: float) -> void:
+	loot_view.update(loot, camera, dt)
+	for e in loot.events:
+		match e.type:
+			"gold":
+				hud.items.gold_added(e.amount)
+				sound.play("coin", {"gap": 0.05, "vol": 0.6})
+			"chest_open":
+				sound.play("chest", {"pos": e.pos})
+			"pickup":
+				hud.items.pickup(e.item, e.count)
+				sound.play("pickup")
+			"deny":
+				sound.play("deny", {"gap": 0.2})
+	loot.events.clear()
+	var in_run := state != "menu" and not (trial and trial.active)
+	hud.items.set_gold(loot.gold if in_run and (not map.chests.is_empty() or loot.gold > 0) else -1)
+	var chest := loot.chest_in_reach(player) if in_run and not player.dead else null
+	if chest:
+		var key := Settings.bind_label(Settings.binds.get("interact", ""))
+		hud.items.set_prompt("%s   OPEN %s   $%d" % [key, String(Loot.CHESTS[chest.size].name).to_upper(), Loot.cost(chest)],
+			loot.gold >= Loot.cost(chest))
+	else:
+		hud.items.set_prompt("")
+
+
 func _enemy_pos(id: int) -> Vector3:
 	for e in enemies.list:
 		if e.id == id:
@@ -1334,6 +1377,16 @@ func admin(what: String, data: Dictionary) -> String:
 			for id: String in combat.up.stacks:
 				have.append("%s x%d" % [Upgrades.LIST[id].name, combat.up.count(id)])
 			return ", ".join(have)
+		"gold":
+			loot.gold = maxi(0, loot.gold + int(data.amount))
+			return "Gold: $%d" % loot.gold
+		"chest":
+			var fwd := Vector3(-sin(yaw), 0, -cos(yaw))
+			var at := Vector3(player.px, player.py, player.pz) + fwd * 2.2 # right in reach
+			var g := enemies._ground_under(at + Vector3(0, 3, 0))
+			at.y = g if g > -30 else player.py
+			loot.add_chest(at, data.size, yaw + PI) # front facing you
+			return "A %s appeared ($%d)" % [String(Loot.CHESTS[data.size].name).to_lower(), Loot.CHESTS[data.size].cost]
 		"clearitems":
 			var had := combat.up.total
 			combat.up.clear()

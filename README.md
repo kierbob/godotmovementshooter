@@ -33,6 +33,7 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 | R | reload |
 | 1 / 2 / mouse wheel | primary / secondary weapon |
 | Q | ability (grenade / knife / impulse charge) |
+| E | open a chest |
 | K | respawn (on the time trial: restart the run; not online) |
 | Tab | scoreboard (online, hold) |
 | Esc | pause menu |
@@ -95,6 +96,9 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
   loads and, online, until everyone has loaded.
 - **Enemies** (see "Enemies" below): 9 types in 3 families, with solo health, regen and
   respawning.
+- **Gold and chests** (see "Items" below): kills pay gold, chests around the stage cost gold, and
+  an opened chest throws out an item that floats in a glow of its rarity's color until you walk
+  into it.
 - **Items** (see "Items" below): 34 stacking items in three rarities: status effects (burn, bleed,
   chill/freeze, marks, sticky bombs), chain lightning, kill explosions, Triple Tap's V of shots,
   movement items (speed, wall jumps, air jumps, Slide Spikes, Stomp Boots), an item bar and pickup
@@ -156,7 +160,17 @@ spawn 12 m in front of you, facing you. The console gives items too (see "Items"
 
 `scripts/upgrades.gd` (the list and what they do), `scripts/status_fx.gd` (statuses on beans),
 `scripts/item_hud.gd` (the item bar and pickup banner). Risk of Rain style: 34 items in three
-rarities, every one stacks. For now you get them from the F10 console; gold and chests are next.
+rarities, every one stacks.
+
+**Getting them** (`scripts/loot.gd`, `scripts/loot_view.gd`): every kill pays gold (a swarmer $3,
+most enemies $7-10, a brute $18; shown top right). Each run puts 14 chests on a random pick of the
+stage's chest spots, some out in the open, some as rewards up high (the crown, the Sunstone, the
+mesa tops, the sky isles, the fort towers) or tucked away (the cave chamber, the canyon grotto).
+Walk up to one and press **E**: a chest costs $25 (79% common, 20% uncommon, 1% rare), a large
+chest $50 (80% uncommon, 20% rare). The item hops out toward you and floats in the loot glow for
+its rarity (white, green, red: the BinbunVFX loot pack in `assets/fx/GodotLootVFX`); walk into it
+to take it. Chest spots are MapChest nodes (under `Chests` in the map): move them, add more, set
+`size` to any / small / large.
 
 | Rarity | Item | One of them | More of them |
 | --- | --- | --- | --- |
@@ -206,7 +220,8 @@ burn, dark red bleed, light blue item damage. They work on the practice dummies 
 
 **Console:** `give triple tap 3`, `give random 5`, `take <item>`, `items` (what you carry),
 `items all` (every item), `clearitems`; or the item buttons under the text bar (hover for the
-name; the x1 / x3 / x5 count applies).
+name; the x1 / x3 / x5 count applies). `gold [amount]` (+100 GOLD button), `chest [small|large]`
+(CHEST button) puts one right in front of you.
 
 ## Playing online
 
@@ -316,8 +331,8 @@ The roguelite, in this order:
 1. ~~Enemies~~ (done: 9 types, admin console). Next: the spawn director (enemies arrive over
    time, harder as the clock runs), tuning from playtests.
 2. "Run over" when you die in a run (solo health and dying are in).
-3. ~~Stacking items~~ (done: 34, see "Items"). Next: gold from kills, chests to spend it on, item
-   drops, more items.
+3. ~~Stacking items~~ (done: 34, see "Items"). ~~Gold and chests~~ (done). Next: chest prices
+   that rise over the run, more chest kinds (equipment, a shrine), more items.
 4. Run structure: teleporter + boss wave (the altar in the middle of the Sunstone Ruins is the
    spot), then the next stage (the loading screen is ready for it), a difficulty clock.
 5. More stages, character passives, unlocks. Multiplayer becomes co-op.

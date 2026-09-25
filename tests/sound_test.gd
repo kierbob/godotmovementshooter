@@ -24,7 +24,8 @@ func run() -> void:
 	root.add_child(sound)
 	var needed: Array = Items.WEAPONS.keys()
 	needed.append_array(["reload", "switch", "throw", "knifeThrow", "explosion", "impulse", "impact", "hit",
-		"headshot", "kill", "jump", "land", "slide", "wallJump", "pad", "teleport", "go", "finish", "ui"])
+		"headshot", "kill", "jump", "land", "slide", "wallJump", "pad", "teleport", "go", "finish", "ui",
+		"coin", "chest", "pickup", "deny"])
 	var missing := needed.filter(func(n: String) -> bool: return not sound.has(n))
 	check("every sound the game plays is there (%d)" % needed.size(), missing.is_empty())
 	if not missing.is_empty():
