@@ -21,7 +21,9 @@ extends RefCounted
 ##   - the sniper's aim locks before it fires, so moving after the lock dodges it
 ##
 ## Ground enemies move with PlayerSim (the same collision, ramps and jump pads as you); flyers
-## steer freely and get pushed out of walls.
+## steer freely and get pushed out of walls. With a `nav` (the stage's walkable grid), a ground
+## enemy that can't just walk at you (no line of sight, or you're above or below it) follows a
+## path around walls, up ramps, off ledges and over launch pads instead.
 
 ## Enemies think and move 60 times a second (every other tick, half of them on each), or 30 once
 ## they're LOD_FAR from you: the sim runs at 120 and moving a ground enemy costs as much as moving
@@ -33,6 +35,7 @@ const SEP_CELL := 2.0
 const SEP_MAX_STEP := 0.12 # most a push moves one in a tick
 const REGEN_DELAY := 3.0 # the player heals this long after the last hit (same as online)
 const REGEN_RATE := 30.0
+const REPATH := 0.9 # seconds between path requests (spread out by the enemy's id)
 
 ## Every type. family groups them for the console ("spawn flyer"); hp, size (hitbox scale),
 ## color; move = how ground types walk ("walk" | "sprint" | "crouch"), max_speed = a cap on their
@@ -107,6 +110,11 @@ class Enemy:
 	var ground_y := 0.0 # flyers: the ground under where they're heading (refreshed every GROUND_EVERY)
 	var ground_t := 0.0
 	var heal_los_t := 0.0 # healers: time until the next line-of-sight check on their patient
+	var path := PackedInt64Array() # nav spots to you (ground types without a straight way)
+	var path_i := 0
+	var path_t := 0.0 # time until it asks again
+	var launches := 0 # its body's pad launches when it last looked at its path
+	var seen_t := 0.0 # time since it last saw you (the director moves the ones that stay lost)
 
 	func center() -> Vector3:
 		return target.pos + Vector3(0, 1.0 * target.size, 0)
@@ -118,6 +126,7 @@ var list: Array[Enemy] = []
 var projectiles: Array[Dictionary] = [] # {id, pos, vel, radius, damage, kind, gravity, splash, owner, alive}
 var events: Array[Dictionary] = [] # for the view and sounds; main clears it every frame
 var deaths: Array[Dictionary] = [] # this tick's kills {type, pos} (Loot pays gold for them)
+var nav: Nav # the walkable grid (null: walk straight at the player, as in the tests)
 var god := false # admin: the player can't be hurt
 var damage_mult := 1.0 # everything hurts this much more (the wave director turns it up)
 var frozen := false # admin: enemies stand still and don't attack
@@ -169,6 +178,73 @@ func spawn(type: String, pos: Vector3, hp_mult := 1.0) -> Enemy:
 	return e
 
 
+## Somewhere r_min..r_max m (flat) from `near` for a new `type` to appear, with room for all of
+## it: on the nav grid when there is one (clear of every box, in `group`: the spots that can walk
+## to `near`), else the ground under a random point, if the body fits there. Feet for ground
+## types, the body's center for flyers (a few meters up, under any ceiling). INF if there's no room.
+func safe_spot(near: Vector3, r_min: float, r_max: float, type: String, group := -1, rng: RandomNumberGenerator = null) -> Vector3:
+	if rng == null:
+		rng = _rng
+	var size: float = TYPES[type].size
+	var at := Vector3.INF
+	if nav:
+		if group < 0:
+			group = nav.spawn_group(near)
+		var id := nav.random_spot(rng, near, r_min, r_max, group, size)
+		if id >= 0:
+			at = nav.pos[id]
+	else:
+		for t in 16:
+			var a := rng.randf() * TAU
+			var r := rng.randf_range(r_min, r_max)
+			var p := near + Vector3(cos(a) * r, 0, sin(a) * r)
+			var g := _ground_under(p + Vector3(0, 3, 0))
+			if g < -29 or absf(g - near.y) > 12.0:
+				continue
+			p.y = g
+			if _body_fits(p, size):
+				at = p
+				break
+	if at == Vector3.INF or TYPES[type].family != "flyer":
+		return at
+	# flyers: up to 4 m over the spot, staying under anything overhead
+	var up := _ray_walls(at + Vector3(0, 0.3, 0), Vector3.UP, 4.8)
+	var rise := 4.0 if up < 0 else maxf(0.9, up - 0.5)
+	return _push_out(at + Vector3(0, rise, 0), 0.5 * size)
+
+
+## Put an enemy somewhere else (the director fetching a lost one): pos as for spawn().
+func move_to(e: Enemy, pos: Vector3) -> void:
+	if e.body:
+		e.body.px = pos.x
+		e.body.py = pos.y
+		e.body.pz = pos.z
+		e.body.vx = 0.0
+		e.body.vy = 0.0
+		e.body.vz = 0.0
+		e.target.pos = pos
+	else:
+		e.pos = pos
+		e.vel = Vector3.ZERO
+		e.target.pos = pos - Vector3(0, 1.0 * e.target.size, 0)
+	_enter(e, "move")
+	e.path = PackedInt64Array()
+	e.path_t = 0.0
+	e.seen_t = 0.0
+	e.cd = maxf(e.cd, 1.0) # a moment before it can attack, as when it spawned
+
+
+## Does a body `size` times a player's fit standing at feet (nothing solid from them to its head)?
+func _body_fits(feet: Vector3, size: float) -> bool:
+	var hw := Cfg.PLAYER_HALF_WIDTH * maxf(1.0, size)
+	var h := Cfg.PLAYER_HEIGHT * maxf(1.0, size)
+	for b in map.nearby(feet.x, feet.y, feet.z, hw + 0.5):
+		var top := MapData.solid_top(b, feet.x - hw, feet.x + hw, feet.z - hw, feet.z + hw)
+		if MapData.overlaps_top(feet.x - hw, feet.y + 0.02, feet.z - hw, feet.x + hw, feet.y + h, feet.z + hw, b, top):
+			return false
+	return true
+
+
 func clear() -> void:
 	for e in list:
 		combat.targets.erase(e.target)
@@ -213,6 +289,7 @@ func tick(p: PlayerSim, dt: float) -> void:
 		if e.los_t <= 0:
 			e.los_t = 0.2
 			e.los = _can_see(_eye(e), _player_center(p))
+		e.seen_t = 0.0 if e.los else e.seen_t + edt
 		if e.def.family == "flyer":
 			_tick_flyer(e, p, edt)
 		else:
@@ -311,7 +388,7 @@ func _tick_ground(e: Enemy, p: PlayerSim, dt: float) -> void:
 	match e.type:
 		"charger":
 			move = _charger(e, p, dist, dt)
-			if move and dist < 5.0 and e.cd > 0:
+			if move and dist < 5.0 and e.cd > 0 and absf(to.y) < 2.0:
 				# Waiting on its cooldown: circle at a distance instead of walking into you, so
 				# the next charge always comes from far enough away to side-step.
 				c.right = e.strafe_dir
@@ -319,11 +396,12 @@ func _tick_ground(e: Enemy, p: PlayerSim, dt: float) -> void:
 				move = false
 				_apply_stuck(e, c, dt)
 		"swarmer":
-			move = _swarmer(e, p, dist) and dist > 1.0 # stop at your feet instead of running through you
+			# stop at your feet instead of running through you (not when you're above or below it)
+			move = _swarmer(e, p, dist) and (dist > 1.0 or absf(to.y) > 1.5)
 		"brute":
 			move = _brute(e, p, dist)
 		"colossus":
-			move = _colossus(e, p, dist) and dist > 4.0 # lumbers at you, but not into you
+			move = _colossus(e, p, dist) and (dist > 4.0 or absf(to.y) > 1.5) # lumbers at you, but not into you
 		_:
 			move = _shooter(e, p, dist, dt)
 			# Keep their distance: back off when you're close, strafe when in range.
@@ -340,6 +418,16 @@ func _tick_ground(e: Enemy, p: PlayerSim, dt: float) -> void:
 	if move and not p.dead:
 		c.forward = 1.0
 		_apply_stuck(e, c, dt)
+	if nav and e.state == "move" and c.forward > 0 and c.right == 0 and not p.dead:
+		var w := _waypoint(e, p, dt)
+		if w != Vector3.INF:
+			face = atan2(-(w.x - me.x), -(w.z - me.z))
+			c.forward = 1.0
+			if w.y - me.y > Cfg.PLAYER_STEP_HEIGHT and Vector2(w.x - me.x, w.z - me.z).length() < 1.1 and e.body.grounded:
+				c.jump = true # up a ledge on the path
+				c.jump_held = true
+	else:
+		e.path_t = 0.0 # ask again next time it needs one
 	if e.state == "move":
 		e.yaw = face
 	c.yaw = e.yaw if e.state != "move" else face
@@ -360,6 +448,45 @@ func _tick_ground(e: Enemy, p: PlayerSim, dt: float) -> void:
 	if cap > 0 and e.body.grounded and e.body.friction_grace <= 0 and e.body.horizontal_speed() > cap:
 		e.body._set_horizontal_speed(cap)
 	e.target.pos = Vector3(e.body.px, e.body.py, e.body.pz)
+
+
+## The next spot on its path to you (it thinks again every REPATH s, never in the air, so a
+## launch pad's flight keeps its heading), or INF to walk straight at you: when it sees you and
+## the ground between you is all walkable, when it's there, or when there's no way.
+func _waypoint(e: Enemy, p: PlayerSim, dt: float) -> Vector3:
+	var me := Vector3(e.body.px, e.body.py, e.body.pz)
+	var you := Vector3(p.px, p.py, p.pz)
+	e.path_t -= dt
+	if e.path_t <= 0 and e.body.grounded:
+		e.path_t = REPATH + (e.id % 5) * 0.05
+		e.path = PackedInt64Array()
+		e.path_i = 0
+		if e.los and absf(you.y - me.y) < 1.5 and nav.walkable_line(me, you):
+			return Vector3.INF
+		var from := nav.node_near(me, 1.0)
+		if from >= 0:
+			var goal := nav.reachable_near(from, you)
+			if goal >= 0 and goal != from:
+				e.path = nav.path(from, goal)
+				e.path_i = 1
+	while e.path_i < e.path.size():
+		var w := nav.pos[e.path[e.path_i]]
+		if e.path_i + 1 < e.path.size():
+			var pad := nav.step_to(e.path[e.path_i], e.path[e.path_i + 1])
+			if pad != nav.pos[e.path[e.path_i + 1]]:
+				# onto the pad itself: it launches it along the next link, so that step is done
+				# the moment it's launched (steering back to the pad mid-flight would undo it)
+				w = pad
+				if e.body.pad_launches != e.launches:
+					e.path_i += 1
+					continue
+		if Vector2(w.x - me.x, w.z - me.z).length() < 0.7 and absf(w.y - me.y) < 1.2:
+			e.path_i += 1
+		else:
+			e.launches = e.body.pad_launches
+			return w
+	e.launches = e.body.pad_launches
+	return Vector3.INF
 
 
 ## Walking into a wall: jump, and if that doesn't help, sidestep for a bit.
@@ -486,10 +613,11 @@ func _colossus(e: Enemy, p: PlayerSim, dist: float) -> bool:
 							var a: float = (float(i) / (n - 1) - 0.5) * COLOSSUS.spread
 							_fire(e, from, from + d.rotated(Vector3.UP, a), COLOSSUS.orb_speed, COLOSSUS.orb_damage, 0.35, "orb")
 					"summon":
+						var feet := Vector3(e.body.px, e.body.py, e.body.pz)
 						for i in COLOSSUS.summon:
-							var a := TAU * i / float(COLOSSUS.summon)
-							var at := Vector3(e.body.px + cos(a) * 3.0, e.body.py + 0.5, e.body.pz + sin(a) * 3.0)
-							spawn("swarmer", at, e.hp_mult).cd = 1.0
+							var at := safe_spot(feet, 2.5, 5.0, "swarmer") # never inside a wall
+							if at != Vector3.INF:
+								spawn("swarmer", at, e.hp_mult).cd = 1.0
 						events.append({"type": "summon", "id": e.id, "pos": e.center()})
 				e.cd = COLOSSUS.cooldown
 				_enter(e, "recover")

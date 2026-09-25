@@ -105,6 +105,14 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   `_carry_out()` (items, level, XP, gold, kills, time) in `pending_run.carry`; dying in a run shows
   the results instead of respawning. `Characters.STAGES` lists stage maps (ones not built yet are
   skipped). F10: wave/boss/nextstage. `tests/run_test.gd` checks the director.
+  `scripts/nav.gd` (Nav: the walkable grid, spots CELL m apart on box tops where a body fits,
+  links for walk/step/jump/drop and launch pads, AStar3D paths, `comp` walk-both-ways groups and
+  `can_reach` between them; built on a worker thread in main's `_ready` for runs and practice,
+  then `enemies.nav`). Ground enemies follow `Enemies._waypoint` when they can't walk straight at
+  you; with no nav (most tests) they walk straight as before. Every spawn goes through
+  `Enemies.safe_spot` (a nav spot the type fits, in the player's group). `Director.marked()` and
+  `scripts/enemy_markers.gd` point out the last few of a wave and the boss; `_fetch_lost` brings
+  back wave enemies that haven't seen you for LOST_TIME.
 - `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
   `nearby()` looks boxes up in an 8 m grid but returns exactly what a full scan would, in map order;
   `ray_boxes()` walks a ray through that grid (Combat.raycast uses it when `combat.grid` is set,

@@ -303,14 +303,16 @@ func _init() -> void:
 	# the run: waves, the boss, the next stage (your stuff comes along), and the end
 	check("a run has its waves (%s)" % game.hud.run._wave.text, game.director != null and game.hud.run._wave.visible
 		and (game.hud.run._wave.text.begins_with("WAVE") or game.hud.run._wave.text.begins_with("STAGE")))
+	check("...and its enemies know the ground (%d nav spots, built while it loaded)" % (game.enemies.nav.size() if game.enemies.nav else 0),
+		game.enemies.nav != null and game.enemies.nav.size() > 10000)
 	game.enemies.god = true
 	game.console.execute("boss")
 	t0 = Time.get_ticks_msec()
 	while game.director.phase != "boss" and Time.get_ticks_msec() - t0 < 8000:
 		await process_frame
 	await frames(3)
-	check("'boss': the boss lands, with its health bar", game.director.boss != null and game.hud.run._boss.visible
-		and game.hud.run._boss_name.text == "COLOSSUS")
+	check("'boss': the boss lands, with its health bar and a marker", game.director.boss != null and game.hud.run._boss.visible
+		and game.hud.run._boss_name.text == "COLOSSUS" and game.hud.run.markers.count() == 1)
 	game.director.boss.target.hp = 0.0
 	game.director.boss.target.dead = true
 	t0 = Time.get_ticks_msec()

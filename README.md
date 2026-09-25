@@ -99,7 +99,9 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 - **Lobby and loading screen**: Risk of Rain style. Everyone ready → (online: a 3 s countdown) →
   a loading card with the stage number, name, progress and tips, which stays up while the stage
   loads and, online, until everyone has loaded.
-- **A run** (see "A run" below): 8 waves that get bigger and tougher, then the Colossus boss;
+- **A run** (see "A run" below): 8 waves that get bigger and tougher (enemies find their way to
+  you around walls and up to ledges, never spawn inside anything, and the last few of a wave are
+  marked on screen), then the Colossus boss;
   kill it and the stage is cleared (a rare or legendary drop, 12 s to grab loot), then the loading
   screen and the next stage with your items, level and gold. Die and the run is over (a results
   screen: TRY AGAIN / MAIN MENU).
@@ -168,7 +170,7 @@ per tick.
 FREEZE / HEAL / KILL ALL, next to a text bar that takes the same as commands: `spawn flyer beam`,
 `spawn beam`, `spawn swarmer 5`, `spawn runner` (a random runner), `killall`, `god [on/off]`,
 `heal`, `freeze [on/off]` / `unfreeze`, `list`, `help`. Up/Down recalls what you typed. Enemies
-spawn 12 m in front of you, facing you. The console gives items too (see "Items"). In a run:
+spawn 12 m in front of you, facing you (or the nearest spot they fit, if that's inside something). The console gives items too (see "Items"). In a run:
 `wave <n>` (skip to wave n), `boss` (straight to the boss), `nextstage` (clear the stage now),
 `levelup [n]`, `chest <kind>`.
 
@@ -182,9 +184,15 @@ boss bar and results). Each stage:
    and projectile flyers 5, snipers and beam flyers 6, healers 7, brutes 10). New types unlock as
    the waves go by: lobbers and projectile flyers at wave 2, snipers and beam flyers at 3, brutes
    at 4, healers at 5.
-2. They arrive in groups of 1-3 over the first seconds of the wave, 16-34 m from you on open
-   ground (never on top of you, never inside a wall), at most 36 alive at once. The HUD says
+2. They arrive in groups of 1-3 over the first seconds of the wave, 16-34 m from you, at most 36
+   alive at once. Each one appears on a spot of its own on the nav grid (below) with room for its
+   whole body (a brute or the Colossus needs more), on ground that can walk to you: never inside a
+   wall, a rock or a tree, never on a tree top or a ledge it can't get down from. The HUD says
    `WAVE 3 / 8` and how many are left; the wave ends when all of it is dead, then a 7 s break.
+   **The last 5 of a wave are marked**: a red marker over each one, seen through walls, with how
+   far it is; off screen, an arrow on the edge of the screen points to it. The boss gets a gold
+   one. A wave enemy that hasn't seen you for 25 s (stuck, or lost somewhere) is brought back
+   16-34 m from you, so a wave never hangs on one you can't find.
 3. Every wave is tougher (+15% health, +6% damage a wave); every stage more so (+60% health, +30%
    damage), and pays more (+50% gold, and chests cost 50% more).
 4. After wave 8: **BOSS INCOMING**, and the Colossus lands near you with a health bar across the
@@ -192,6 +200,15 @@ boss bar and results). Each stage:
 5. Kill it: **STAGE CLEARED**, it drops a rare (or, 35% of the time, a legendary) item, and 12 s
    later the loading screen takes you to the next stage. Items, level, XP, gold, kills and time
    carry over; you arrive at full health.
+
+**Pathfinding** (`scripts/nav.gd`): when a stage loads, a grid of standing spots 1.5 m apart is
+built over it (the tops of boxes and ramps where a body fits, about 30,000 on Sunstone Valley, in
+under a second on a worker thread behind the loading screen), linked where you can walk, step,
+jump (up to 1 m), drop (up to 10 m) or ride a launch pad. A ground enemy that sees you with flat
+ground between you walks straight at you; otherwise it follows a path from Godot's AStar3D
+around walls, up ramps, off ledges and over pads (a new one about every second; a path costs a
+fraction of a millisecond). Paths never cut corners over a drop. When you're somewhere it can't
+reach, it goes as close as it can get. Flyers fly straight at you as before.
 
 Stages are listed in `Characters.STAGES` (Sunstone Valley, then the Fantasy Village, which isn't
 built yet: until it is, stage 2 is Sunstone Valley again, harder).
