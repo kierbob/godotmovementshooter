@@ -80,24 +80,29 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
     - **Around**: four floating sky isles (a pad up to each, a cannon from each to the crown),
       trees, boulders and sunstone shards.
   - **Fantasy Village** (stage 2): a big medieval town (320 x 320 m, about 1.8x Sunstone Valley)
-    built from the Medieval Village MegaKit (Quaternius, CC0, `assets/VillageFBX`): about 80
+    built from the Medieval Village MegaKit (Quaternius, CC0, `assets/VillageFBX`): about 130
     timber-framed houses put together from the kit's walls, corners, windows (with glass and
-    shutters), doors, chimneys, gables and tiled roofs, 6,800 pieces in all. Every roof is two
+    shutters), doors, chimneys, gables and tiled roofs, 10,000 pieces in all. Every roof is two
     steep ramps you can run up. The kit comes without its textures, so each of its materials gets
     a toon color (terracotta tiles, cream plaster, brown timber, grey-blue stone).
+    - **Streets and levels**: houses line the streets with their doors on them and alleys between.
+      The market square sits at the bottom; King's Road climbs out of it (a ramp and two grand
+      staircases) onto the **upper town**, a terrace 4 m up across the north (Upper Street, King's
+      Road on to the north gate), with the **high town** 8 m up behind it (High Street, the
+      guildhall on its plaza; a ramp up Tanner's Lane and stairs). The **chapel rise** in the east
+      is 3 m up (a ramp from the east road), **castle hill** in the north-west climbs 4, 8 and 12
+      m to the keep, and the **river** runs sunken down the west side with lanes of houses on both
+      banks. Every level has stone retaining walls.
     - **Center, the market square**: cobbles, a clock tower (a pad at its foot up the wall onto
-      its top, a belfry and spire above), a well, wagons and crate stacks, houses all around.
-    - **North-east, the old town**: up on a 6 m stone plateau (a grand staircase from the square
-      side, a long ramp from the north road, a launcher): tight lanes between 2-3 story houses,
-      and the guildhall with a golden chest spot on its ridge.
-    - **West, the river**: a sunken channel with water, a stone bridge on the west road and two
-      wooden ones, ramps out of the water, and a hamlet on the far bank.
-    - **North-west, the castle**: terraces up to a keep with battlements (a pad up its wall) and
-      a watchtower.
-    - **East, the chapel**: a long chapel with a bell tower, a walled graveyard with a shrine.
-    - **South, the farms**: fields in rows, fences, hay, wagons and a big barn.
-    - Hills all the way around, trees, 40 chest spots (tower tops, the keep, rooftops, alleys).
-    `tools/make_village.gd` builds it (re-running it overwrites the scene).
+      its top, a belfry and spire above), a well, wagons and crate stacks.
+    - **The chapel**, its bell tower and a walled graveyard with a shrine; **the castle**: a keep
+      with battlements (a pad up its wall) and a watchtower; **the farms** in the south: fields,
+      fences, hay, wagons and a big barn.
+    - Hills all the way around, trees, 60+ chest spots (towers, the keep, the guildhall's ridge,
+      alleys, courtyards).
+    `tools/make_village.gd` builds it (re-running it overwrites the scene); it checks its own
+    layout (no house on a street, another house or stairs, or over a terrace's edge), and
+    `-- --audit` makes `maps/zz-audit.tscn`, one house of every size to look at (delete it after).
   - **Bean Town**: a Nuketown-style FFA map. Two two-story houses face each other across a
     cul-de-sac, with a school bus, trucks and cars in the street. Built for speed: doors and windows
     3-5 m wide with knee-high sills you can sprint or slide straight through, stairs to the upstairs,
