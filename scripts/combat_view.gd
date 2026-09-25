@@ -18,6 +18,8 @@ const ITEM_BLASTS := {
 	"popper": [Color("ffffff"), Color("ff5ab4"), Color("ffd84a"), "POP!"],
 	"bomb": [Color("f0ffd0"), Color("8fe36b"), Color("3f9e2c"), "BOOM!"],
 	"stomp": [Color("f2e8ff"), Color("a77be0"), Color("5a3cc0"), "STOMP!"],
+	"orbital": [Color("ffffff"), Color("ff5ab4"), Color("b03cff"), ""],
+	"implode": [Color("f0e0ff"), Color("a77be0"), Color("2a1050"), "IMPLODE!"],
 }
 const CONFETTI := [Color("ff5ab4"), Color("ffd84a"), Color("5fb8ff"), Color("6fdc6a"), Color("ff8a30")]
 
@@ -29,6 +31,9 @@ var _meshes := {} # Combat.Projectile -> Node3D
 var _tracers: Array = [] # [{node, life}]
 var _zaps: Array = [] # [{node, life}] lightning bolts (Static Coil, Razor Wire, Ricochet)
 var _boom_word_t := -1.0 # last KABOOM: Triple Tap's three rockets get one word, not a pile
+var _drones: Array[Node3D] = [] # Drone Buddy models
+var _holes := {} # black hole id -> node
+var _beams: Array = [] # [{node, life}] Orbital Strike lasers
 var _next_tracer := 0
 var _decals: Array = [] # [{node, age}]
 var _next_decal := 0
@@ -169,6 +174,24 @@ func on_events(events: Array[Dictionary], muzzle: Vector3, player: PlayerSim) ->
 				_item_blast(e.pos, e.radius, e.kind, player)
 			"zap":
 				_add_zap(e.from, e.to, e.color, e.get("tracer", false))
+			"orbital":
+				_add_beam(e.pos)
+				word.emit("ZZAP!", e.pos + Vector3(0, 2, 0), null, "big")
+				shake = maxf(shake, 0.05)
+			"revive":
+				_add_ring(e.pos, Color("ffd84a"), 0.3, 6.0, 0.7, 1.0)
+				for i in 24:
+					var r := _rand_unit()
+					particles.spawn({"pos": e.pos + Vector3(0, 1, 0), "vel": Vector3(r.x * 4, absf(r.y) * 6 + 2, r.z * 4), "gravity": 4.0,
+						"life": 1.0, "size": [0.3, 0.05], "color": Color("ffe14d"), "color2": Color("ff6a1a"), "opacity": [1.0, 0.0]})
+				word.emit("REVIVED!", null, Vector2(0.5, 0.4), "big")
+			"level_up":
+				var feet := Vector3(player.px, player.py, player.pz)
+				_add_ring(feet, Color("ffd84a"), 0.3, 4.0, 0.5, 0.9)
+				for i in 16:
+					var a := TAU * i / 16.0
+					particles.spawn({"cube": true, "pos": feet + Vector3(cos(a), 0.2, sin(a)) * 0.8, "vel": Vector3(cos(a) * 1.5, 5.0, sin(a) * 1.5),
+						"gravity": 6.0, "spin": 8.0, "life": 0.9, "size": [0.1, 0.05], "color": Color("ffe066"), "opacity": [1.0, 0.0]})
 			"freeze":
 				add_star(e.pos, 0.9, 0.2, Color("bfe6ff"))
 				word.emit("FROZEN!", e.pos, null, "blue")
@@ -428,6 +451,99 @@ func _add_zap(from: Vector3, to: Vector3, color: Color, tracer: bool) -> void:
 	_zaps.append({"node": g, "life": 0.18, "mat": mat})
 
 
+## Orbital Strike: a pink laser from high up down onto `at`, fading out.
+func _add_beam(at: Vector3) -> void:
+	var mi := MeshInstance3D.new()
+	var c := CylinderMesh.new()
+	c.top_radius = 0.6
+	c.bottom_radius = 0.6
+	c.height = 80.0
+	c.radial_segments = 12
+	mi.mesh = c
+	var m := _flat(Color("ffb3ec"), 0.85)
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = at + Vector3(0, 40, 0)
+	add_child(mi)
+	_beams.append({"node": mi, "life": 0.45, "mat": m})
+	_add_ring(at, Color("ff5ab4"), 0.3, 3.5, 0.35, 0.9)
+
+
+## Drone Buddies, black holes and lasers: the persistent bits of the legendary items.
+func _update_legendaries(dt: float, combat: Combat) -> void:
+	var up := combat.up
+	while _drones.size() < up.drones.size():
+		var d := Node3D.new()
+		var core := MeshInstance3D.new()
+		var s := SphereMesh.new()
+		s.radius = 0.14
+		s.height = 0.28
+		core.mesh = s
+		core.material_override = _flat(Color("dffaff"), 1.0)
+		d.add_child(core)
+		var ring := MeshInstance3D.new()
+		var t := TorusMesh.new()
+		t.inner_radius = 0.2
+		t.outer_radius = 0.26
+		ring.mesh = t
+		ring.material_override = _flat(Color("6fe0ff"), 0.9)
+		d.add_child(ring)
+		add_child(d)
+		_drones.append(d)
+	while _drones.size() > up.drones.size():
+		_drones.pop_back().queue_free()
+	for i in _drones.size():
+		_drones[i].position = up.drones[i]
+		_drones[i].rotation.y += dt * 6.0
+	var seen := {}
+	for h: Dictionary in up.holes:
+		seen[h.id] = true
+		var node: Node3D = _holes.get(h.id)
+		if node == null:
+			node = Node3D.new()
+			var core := MeshInstance3D.new()
+			var s := SphereMesh.new()
+			s.radius = 0.7
+			s.height = 1.4
+			core.mesh = s
+			core.material_override = _flat(Color("120622"), 1.0)
+			node.add_child(core)
+			for k in 2:
+				var ring := MeshInstance3D.new()
+				var t := TorusMesh.new()
+				t.inner_radius = 1.1 + k * 0.5
+				t.outer_radius = 1.25 + k * 0.5
+				ring.mesh = t
+				ring.material_override = _flat(Color("b07bff") if k == 0 else Color("6a3cc0"), 0.8)
+				ring.rotation.x = 0.4 * (k + 1)
+				node.add_child(ring)
+			node.position = h.pos
+			add_child(node)
+			_holes[h.id] = node
+		node.rotation.y += dt * 4.0
+		var pulse := 1.0 + 0.08 * sin(_time * 20.0)
+		node.scale = Vector3.ONE * pulse * clampf(float(h.t) * 3.0, 0.2, 1.0)
+		# bits of the world getting sucked in
+		var r := _rand_unit() * 4.0
+		particles.spawn({"pos": node.position + r, "vel": -r * 2.0, "life": 0.45, "size": [0.12, 0.02],
+			"color": Color("d8b8ff"), "opacity": [0.9, 0.0]})
+	for id: int in _holes.keys():
+		if not seen.has(id):
+			(_holes[id] as Node3D).queue_free()
+			_holes.erase(id)
+	var beams_left: Array = []
+	for b: Dictionary in _beams:
+		b.life -= dt
+		if b.life <= 0:
+			(b.node as Node3D).queue_free()
+			continue
+		(b.mat as StandardMaterial3D).albedo_color.a = minf(0.85, b.life / 0.3)
+		(b.node as Node3D).scale.x = b.life / 0.45
+		(b.node as Node3D).scale.z = b.life / 0.45
+		beams_left.append(b)
+	_beams = beams_left
+
+
 ## Smoke trails behind flying projectiles.
 func _trail(pr: Combat.Projectile, mesh: Node3D, dt: float) -> void:
 	var every := 0.018 if pr.kind == "rocket" else 0.035
@@ -448,6 +564,9 @@ func _trail(pr: Combat.Projectile, mesh: Node3D, dt: float) -> void:
 		"impulse":
 			particles.spawn({"cube": true, "pos": back, "vel": jitter, "spin": 15.0, "life": 0.3, "size": [0.06, 0.01],
 				"color": Color("7ff6ff"), "opacity": [1.0, 0.5]})
+		"missile":
+			particles.spawn({"lit": true, "pos": back, "vel": jitter * 0.5, "drag": 2.0, "life": 0.35, "size": [0.08, 0.25],
+				"color": Color("e4e7ec"), "color2": Color("9aa0a8"), "opacity": [0.8, 0.0]})
 		"wisp":
 			particles.spawn({"pos": back, "vel": jitter * 0.5, "life": 0.4, "size": [0.14, 0.02],
 				"color": Color("dffaff"), "color2": Color("8fe8ff"), "opacity": [0.9, 0.0]})
@@ -537,6 +656,7 @@ func update(dt: float, combat: Combat, extra: Array = []) -> void:
 			(_meshes[pr] as Node3D).queue_free()
 			_meshes.erase(pr)
 
+	_update_legendaries(dt, combat)
 	var zaps_left: Array = []
 	for z: Dictionary in _zaps:
 		z.life -= dt

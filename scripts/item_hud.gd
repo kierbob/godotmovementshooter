@@ -20,6 +20,9 @@ var _gold_add: Label
 var _gold_add_t := 0.0
 var _gold_shown := -1
 var _prompt: Label
+var _level: Label
+var _xp_bg: ColorRect
+var _xp_fill: ColorRect
 
 
 func _ready() -> void:
@@ -80,6 +83,32 @@ func _ready() -> void:
 	_prompt.visible = false
 	add_child(_prompt)
 
+	# level + XP bar, just above the health bar (bottom left)
+	_level = _text(24, Color("ffd84a"), _comic)
+	_level.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	_level.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_level.offset_left = 30
+	_level.offset_right = 290
+	_level.offset_top = -146
+	_level.offset_bottom = -118
+	_level.visible = false
+	add_child(_level)
+	_xp_bg = ColorRect.new()
+	_xp_bg.color = Color(0, 0, 0, 0.5)
+	_xp_bg.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	_xp_bg.offset_left = 30
+	_xp_bg.offset_right = 290
+	_xp_bg.offset_top = -116
+	_xp_bg.offset_bottom = -110
+	_xp_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_xp_bg.visible = false
+	add_child(_xp_bg)
+	_xp_fill = ColorRect.new()
+	_xp_fill.color = Color("ffd84a")
+	_xp_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_xp_fill.size = Vector2(0, 6)
+	_xp_bg.add_child(_xp_fill)
+
 
 func _text(size: int, color: Color, font: Font) -> Label:
 	var l := UiStyle.label("", size, color)
@@ -113,6 +142,15 @@ func set_gold(gold: int) -> void:
 		_gold.text = "$%d" % gold
 
 
+## Your level and how far to the next one (level < 1 hides it: not in a run).
+func set_level(level: int, frac: float) -> void:
+	_level.visible = level >= 1
+	_xp_bg.visible = level >= 1
+	if level >= 1:
+		_level.text = "LV %d" % level
+		_xp_fill.size = Vector2(260.0 * clampf(frac, 0.0, 1.0), 6)
+
+
 ## A "+7" under the gold for a moment (quick kills add up into one number).
 func gold_added(amount: int) -> void:
 	var prev := int(_gold_add.text.trim_prefix("+")) if _gold_add_t > 0 and _gold_add.text.begins_with("+") else 0
@@ -143,7 +181,7 @@ func _rebuild(up: Upgrades) -> void:
 		c.queue_free()
 	# Rarest first, then in list order: the good stuff reads first.
 	var ids: Array = []
-	for rarity: String in ["rare", "uncommon", "common"]:
+	for rarity: String in ["legendary", "rare", "uncommon", "common"]:
 		for id: String in Upgrades.LIST:
 			if up.count(id) > 0 and Upgrades.LIST[id].rarity == rarity:
 				ids.append(id)

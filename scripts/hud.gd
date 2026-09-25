@@ -323,6 +323,8 @@ func on_events(events: Array[Dictionary]) -> void:
 	for e in events:
 		if e.type == "shot":
 			_bloom = minf(1.0, _bloom + float(Items.WEAPONS[e.weapon].kick) * 0.8)
+		elif e.type == "level_up":
+			word("LEVEL UP!", null, Vector2(0.5, 0.36), "big")
 		elif e.type == "hit":
 			if e.get("src", "gun") == "gun" or e.kill: # burn ticks and lightning don't flash the crosshair
 				_hitmarker.hit("kill" if e.kill else "head" if e.zone == "head" else "body")

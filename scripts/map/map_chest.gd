@@ -1,11 +1,13 @@
 @tool
 class_name MapChest
 extends MapPoint
-## A spot where a chest can appear. Each run puts chests on a random pick of the map's spots
-## (Loot.CHESTS_PER_RUN), so place plenty: out in the open, and as rewards up high or tucked away.
-## size "any" is usually a small chest, sometimes a large one; turn it to face the chest's front.
+## A spot where a chest can appear. Each run fills a random pick of the map's spots
+## (Loot.CHESTS_PER_RUN; barrels go on some of the rest), so place plenty: out in the open, and as
+## rewards up high or tucked away. size "any" rolls what it is (Loot.KIND_WEIGHTS: mostly chests,
+## sometimes a themed chest, a shrine, a shop, rarely a golden chest); a large spot is sometimes
+## golden. Turn it to face the chest's front (a shop's three terminals line up across it).
 
-@export_enum("any", "small", "large") var size := "any":
+@export_enum("any", "small", "large", "golden", "damage", "utility", "healing", "shop", "shrine") var size := "any":
 	set(v):
 		size = v
 		refresh()
@@ -28,7 +30,15 @@ func _pull_extra() -> void:
 
 
 func _draw_view(v: Node3D) -> void:
-	v.add_child(LootView.make_chest("large" if size == "large" else "small"))
+	match size:
+		"shop":
+			v.add_child(LootView.make_terminal())
+		"shrine":
+			v.add_child(LootView.make_shrine())
+		"any":
+			v.add_child(LootView.make_chest("small"))
+		_:
+			v.add_child(LootView.make_chest(size))
 	var l := _label("CHEST" if size == "any" else size.to_upper() + " CHEST", 36, Color("ffd84a"))
 	l.position.y = 1.6
 	v.add_child(l)

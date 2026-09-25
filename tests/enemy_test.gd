@@ -261,6 +261,19 @@ func _init() -> void:
 			highest = maxf(highest, e.pos.y)
 	check("attacking flyers hover within reach too (highest %.1f m)" % highest, highest <= Enemies.FLY_MAX + 0.5 and highest >= Enemies.FLY_MIN)
 
+	# enemies are solid to each other: a pile spawned on one spot spreads out
+	setup()
+	for i in 12:
+		enemies.spawn("swarmer" if i % 2 else "charger", Vector3(0.02 * i, 0, -20))
+	enemies.god = true
+	run(3.0)
+	var closest := INF
+	for a_e in enemies.list:
+		for b_e in enemies.list:
+			if a_e != b_e and absf(a_e.target.pos.y - b_e.target.pos.y) < 1.0:
+				closest = minf(closest, Vector2(a_e.target.pos.x - b_e.target.pos.x, a_e.target.pos.z - b_e.target.pos.z).length())
+	check("enemies don't stand inside each other (closest pair %.2f m apart)" % closest, closest > 0.4)
+
 	# a crowd far away thinks less often, but still gets where it's going
 	setup()
 	var far_one := enemies.spawn("charger", Vector3(0, 0, -60))

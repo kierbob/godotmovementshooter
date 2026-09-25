@@ -123,6 +123,7 @@ func _ready() -> void:
 	enemy_view.particles = combat_view.particles # burning, bleeding, snow on chilled ones
 	add_child(enemy_view)
 	loot_view = LootView.new()
+	loot_view.particles = combat_view.particles
 	add_child(loot_view)
 	_build_beans()
 	_setup_environment()
@@ -752,13 +753,22 @@ func _play_combat_sounds(events: Array[Dictionary]) -> void:
 				elif e.get("src") == "item":
 					sound.play("hit", {"gap": 0.08, "vol": 0.5}) # burn/bleed ticks stay quiet
 			"impact": sound.play("impact", {"pos": e.pos, "gap": 0.03})
-			"explosion" when e.kind == "bigbang":
+			"explosion" when e.kind in ["bigbang", "orbital"]:
 				sound.play("impact", {"pos": e.pos, "gap": 0.05}) # goes off on every hit: keep it small
 			"explosion": sound.play("impulse" if e.kind == "impulse" else "explosion", {"pos": e.pos, "gap": 0.0})
 			"zap": sound.play("impulse", {"pos": e.to, "gap": 0.1, "vol": 0.45})
 			"freeze", "shatter": sound.play("dry" if e.type == "freeze" else "impact", {"pos": e.pos, "gap": 0.05})
 			"item_proc": sound.play("reload", {"gap": 0.1, "vol": 0.6})
+			"level_up": sound.play("finish")
+			"orbital": sound.play("sniper", {"pos": e.pos, "gap": 0.0})
+			"black_hole": sound.play("impulse", {"pos": e.pos, "gap": 0.1})
+			"hydra": sound.play("rocket", {"gap": 0.05, "vol": 0.6})
+			"revive": sound.play("teleport")
 			"throw": sound.play("knifeThrow" if e.ability == "knife" else "throw")
+			"dash":
+				sound.play("wallJump")
+				sound.play("slide", {"gap": 0.0})
+				combat_view.shake = maxf(combat_view.shake, 0.02)
 			"switch": sound.play("switch")
 			# (reload sounds come from the gun toss animation: throw, then catch)
 
@@ -1268,6 +1278,7 @@ func _handle_enemy_events(evs: Array[Dictionary]) -> void:
 ## Chests, dropped items, gold and the "open chest" prompt.
 func _update_loot(dt: float) -> void:
 	loot_view.update(loot, camera, dt)
+	loot_view.on_events(loot.events)
 	for e in loot.events:
 		match e.type:
 			"gold":
@@ -1275,6 +1286,19 @@ func _update_loot(dt: float) -> void:
 				sound.play("coin", {"gap": 0.05, "vol": 0.6})
 			"chest_open":
 				sound.play("chest", {"pos": e.pos})
+				if e.rarity == "legendary":
+					hud.word("LEGENDARY!!", e.pos + Vector3(0, 2.2, 0), null, "big")
+					sound.play("finish")
+				elif e.rarity == "rare":
+					hud.word("RARE!", e.pos + Vector3(0, 2.2, 0), null, "kill")
+			"barrel":
+				hud.items.gold_added(e.amount)
+				sound.play("impact", {"pos": e.pos})
+				sound.play("coin", {"gap": 0.0, "vol": 0.6})
+				hud.word("CRUNCH!", e.pos + Vector3(0, 1.2, 0), null, "small")
+			"shrine_fail":
+				sound.play("deny", {"gap": 0.1})
+				hud.word("NOTHING...", e.pos + Vector3(0, 2.6, 0), null, "small")
 			"pickup":
 				hud.items.pickup(e.item, e.count)
 				sound.play("pickup")
@@ -1283,11 +1307,13 @@ func _update_loot(dt: float) -> void:
 	loot.events.clear()
 	var in_run := state != "menu" and not (trial and trial.active)
 	hud.items.set_gold(loot.gold if in_run and (not map.chests.is_empty() or loot.gold > 0) else -1)
+	var up := combat.up
+	hud.items.set_level(up.level if in_run else 0, up.xp / Upgrades.xp_to_next(up.level))
 	var chest := loot.chest_in_reach(player) if in_run and not player.dead else null
 	if chest:
 		var key := Settings.bind_label(Settings.binds.get("interact", ""))
-		hud.items.set_prompt("%s   OPEN %s   $%d" % [key, String(Loot.CHESTS[chest.size].name).to_upper(), Loot.cost(chest)],
-			loot.gold >= Loot.cost(chest))
+		var price := "   $%d" % chest.cost if chest.cost > 0 else ""
+		hud.items.set_prompt("%s   %s%s" % [key, Loot.action(chest), price], loot.gold >= chest.cost)
 	else:
 		hud.items.set_prompt("")
 
@@ -1364,7 +1390,7 @@ func admin(what: String, data: Dictionary) -> String:
 		"items":
 			if data.all:
 				var lines := PackedStringArray()
-				for rarity: String in ["common", "uncommon", "rare"]:
+				for rarity: String in ["common", "uncommon", "rare", "legendary"]:
 					var names := PackedStringArray()
 					for id: String in Upgrades.LIST:
 						if Upgrades.LIST[id].rarity == rarity:
@@ -1377,6 +1403,10 @@ func admin(what: String, data: Dictionary) -> String:
 			for id: String in combat.up.stacks:
 				have.append("%s x%d" % [Upgrades.LIST[id].name, combat.up.count(id)])
 			return ", ".join(have)
+		"levelup":
+			for i in int(data.n):
+				combat.up.add_xp(Upgrades.xp_to_next(combat.up.level) - combat.up.xp, player)
+			return "Level %d" % combat.up.level
 		"gold":
 			loot.gold = maxi(0, loot.gold + int(data.amount))
 			return "Gold: $%d" % loot.gold
@@ -1385,7 +1415,8 @@ func admin(what: String, data: Dictionary) -> String:
 			var at := Vector3(player.px, player.py, player.pz) + fwd * 2.2 # right in reach
 			var g := enemies._ground_under(at + Vector3(0, 3, 0))
 			at.y = g if g > -30 else player.py
-			loot.add_chest(at, data.size, yaw + PI) # front facing you
+			if data.size != "shop" or not loot._place_shop(at, yaw + PI): # a shop: all three terminals
+				loot.add_chest(at, data.size, yaw + PI) # front facing you
 			return "A %s appeared ($%d)" % [String(Loot.CHESTS[data.size].name).to_lower(), Loot.CHESTS[data.size].cost]
 		"clearitems":
 			var had := combat.up.total

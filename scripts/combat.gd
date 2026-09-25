@@ -412,7 +412,7 @@ func damage_target(t: Target, dmg: float, zone: String, point: Vector3, src := "
 		fx.append({"type": "impact", "pos": point, "normal": Vector3.UP, "on_player": true})
 		return
 	var crit := false
-	if up.total > 0:
+	if up.active:
 		var m := up.modify_damage(t, dmg, zone, point, src)
 		dmg = m[0]
 		crit = m[1]
@@ -426,7 +426,7 @@ func damage_target(t: Target, dmg: float, zone: String, point: Vector3, src := "
 		last_hit = {"dmg": dmg, "zone": zone, "kill": kill, "time": time}
 	fx.append({"type": "hit", "target": t.id, "pos": point, "dmg": dmg, "zone": zone, "kill": kill,
 		"src": src, "crit": crit, "dot": dot})
-	if up.total > 0:
+	if up.active:
 		if src == "gun":
 			up.on_hit(t, dmg, zone, point)
 		if kill:
@@ -466,6 +466,8 @@ func _fire(p: PlayerSim, c: Cmd, w: Dictionary) -> void:
 		for i in dirs.size():
 			_spawn_projectile(w.id, w.projectile, o, dirs[i], false, p).copy = i > 0
 		fx.append({"type": "shot", "weapon": w.id, "origin": o, "ends": []})
+	if up.active:
+		up.on_fire(o, dirs[0])
 	if w.knockback > 0:
 		# From the 64-bit yaw/pitch directly, so the push matches the web game as closely as it can.
 		var cp := cos(c.pitch)
@@ -474,11 +476,27 @@ func _fire(p: PlayerSim, c: Cmd, w: Dictionary) -> void:
 
 
 func _throw_ability(p: PlayerSim, c: Cmd) -> void:
+	if ability.has("dash"):
+		_dash(p, c)
+		return
 	var dirs := up.fire_dirs(aim_dir(c.yaw, c.pitch))
 	for i in dirs.size():
 		_spawn_projectile(ability.id, ability.projectile, eye_position(p), dirs[i], ability.projectile.get("inherit", true), p).copy = i > 0
 	ability_cd = ability.cooldown
 	fx.append({"type": "throw", "ability": ability.id})
+
+
+## Combat Dash: at least dash.speed along your aim (flattened), plus a little hop.
+func _dash(p: PlayerSim, c: Cmd) -> void:
+	var d: Dictionary = ability.dash
+	var dx := -sin(c.yaw)
+	var dz := -cos(c.yaw)
+	var along := p.vx * dx + p.vz * dz
+	var push := maxf(0.0, float(d.speed) - along)
+	# (an upward impulse first stops any fall, so the hop is up to d.up from there)
+	p.apply_impulse(dx * push, maxf(0.0, float(d.up) - maxf(p.vy, 0.0)), dz * push, ability.name)
+	ability_cd = ability.cooldown
+	fx.append({"type": "dash", "ability": ability.id})
 
 
 func _spawn_projectile(kind: String, def: Dictionary, origin: Vector3, d: Vector3, inherit: bool, p: PlayerSim) -> Projectile:
@@ -536,6 +554,11 @@ func _update_projectiles(p: PlayerSim, dt: float) -> void:
 				if hit.target:
 					damage_target(hit.target, def.damage, "body", hit.point, pr.src)
 				fx.append({"type": "impact", "pos": hit.point, "normal": hit.normal, "small": true})
+				pr.alive = false
+			"missile": # Hydra: a hit, then a small blast
+				if hit.target:
+					damage_target(hit.target, def.damage, "body", hit.point, pr.src)
+				item_explosion(hit.point - dir * 0.1, def.blast, def.damage * 0.5, "bigbang")
 				pr.alive = false
 			"stick":
 				if hit.target:

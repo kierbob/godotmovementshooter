@@ -343,6 +343,66 @@ func _init() -> void:
 	run(0.4)
 	check("Knockout Glove: hits shove them back (%.1f m)" % (kb.target.pos.z - z0), kb.target.pos.z - z0 > 1.0)
 
+	# ---- legendaries ----
+	var legends: Array = Upgrades.LIST.keys().filter(func(k: String) -> bool: return Upgrades.LIST[k].rarity == "legendary")
+	check("6 legendaries (%s)" % ", ".join(legends), legends.size() == 6)
+	setup([Vector3(0, 0, 8)], {"drone_buddy": 1}) # (south: the test wall is north)
+	run(1.0)
+	check("Drone Buddy: orbits you and shoots (%.0f damage in 1 s)" % (Combat.DUMMY_HP - dummy(0).hp),
+		combat.up.drones.size() == 1 and absf((Combat.DUMMY_HP - dummy(0).hp) - 48.0) <= 12.0)
+	setup([], {"orbital_strike": 1})
+	var tough := enemies.spawn("brute", Vector3(0, 0, -20))
+	var weak := enemies.spawn("swarmer", Vector3(8, 0, -20))
+	enemies.frozen = true
+	run(6.1)
+	check("Orbital Strike: the toughest enemy near you gets 250 from the sky (brute %.0f / 400, swarmer untouched)" % tough.target.hp,
+		tough.target.hp <= 400.0 - 250.0 and weak.target.hp == weak.target.max_hp)
+	setup([Vector3(0, 0, 12)], {"hydra": 1})
+	for i in Upgrades.HYDRA_EVERY:
+		combat.up.on_fire(Vector3(0, 1.6, 0), Vector3(0, 0, 1))
+	var missiles := combat.projectiles.filter(func(pr: Combat.Projectile) -> bool: return pr.kind == "missile").size()
+	run(2.0)
+	check("Hydra Launcher: every 5th shot launches 4 missiles (%d) that home in (%.0f damage)" % [missiles, Combat.DUMMY_HP - dummy(0).hp],
+		missiles == 4 and dummy(0).hp < Combat.DUMMY_HP - 60.0)
+	setup([], {"singularity": 1, "four_leaf": 30})
+	var pulled := enemies.spawn("gunner", Vector3(6, 0, -20))
+	var center := enemies.spawn("brute", Vector3(0, 0, -20))
+	enemies.frozen = true
+	combat.damage_target(center.target, 1.0, "body", center.center())
+	var hole_at: Vector3 = combat.up.holes[0].pos if not combat.up.holes.is_empty() else Vector3.ZERO
+	var d0 := Vector2(pulled.target.pos.x - hole_at.x, pulled.target.pos.z - hole_at.z).length()
+	run(1.0)
+	var d1 := Vector2(pulled.target.pos.x - hole_at.x, pulled.target.pos.z - hole_at.z).length()
+	run(2.0)
+	check("Singularity: a black hole drags them in (%.1f -> %.1f m), grinds and implodes (brute %.0f / 400)" % [d0, d1, center.target.hp],
+		d1 < d0 - 1.0 and center.target.hp < 400.0 - 120.0 and combat.up.holes.is_empty())
+	setup([], {"phoenix": 1})
+	enemies.hurt_player(player, 500.0, Vector3.ZERO, "test")
+	check("Phoenix Feather: a killing blow leaves you at half health, and the feather's gone",
+		not player.dead and player.hp == player.max_hp * 0.5 and player.invuln > 0 and combat.up.count("phoenix") == 0)
+	player.invuln = 0.0
+	enemies.hurt_player(player, 500.0, Vector3.ZERO, "test")
+	check("...once", player.dead)
+	setup([Vector3(0, 0, -30)], {"glass_cannon": 1})
+	shoot(0, 10.0)
+	check("Glass Cannon: double damage (%.0f), half health (%.0f)" % [hits()[0].dmg, player.max_hp], absf(hits()[0].dmg - 20.0) < 0.001 and player.max_hp == 50.0)
+
+	# ---- levels ----
+	setup([Vector3(0, 0, -30)])
+	player.hp = 40.0
+	combat.up.add_xp(Upgrades.xp_to_next(1) - 1.0, player)
+	check("not quite enough XP: still level 1", combat.up.level == 1 and player.hp == 40.0)
+	combat.up.add_xp(1.0, player)
+	check("level 2: +%.0f max health and a full heal (%.0f / %.0f)" % [Upgrades.LEVEL_HEALTH, player.hp, player.max_hp],
+		combat.up.level == 2 and player.max_hp == 100.0 + Upgrades.LEVEL_HEALTH and player.hp == player.max_hp
+		and combat.fx.any(func(e: Dictionary) -> bool: return e.type == "level_up"))
+	shoot(0, 10.0)
+	check("...and +10%% damage (%.1f)" % hits()[0].dmg, absf(hits()[0].dmg - 11.0) < 0.001)
+	combat.up.add_xp(Upgrades.xp_to_next(2) + Upgrades.xp_to_next(3) + 0.5, player)
+	check("a big XP gain can go up several levels (level %d)" % combat.up.level, combat.up.level == 4)
+	check("each level needs more XP (%.0f, %.0f, %.0f)" % [Upgrades.xp_to_next(1), Upgrades.xp_to_next(2), Upgrades.xp_to_next(5)],
+		Upgrades.xp_to_next(2) > Upgrades.xp_to_next(1) and Upgrades.xp_to_next(5) > 2.0 * Upgrades.xp_to_next(1))
+
 	print("\n%s" % ("all item checks passed" if fails == 0 else "%d item check(s) failed" % fails))
 	quit(1 if fails else 0)
 

@@ -19,6 +19,7 @@ const RARITY := {
 	"common": {"name": "Common", "color": Color("e8e8f0"), "weight": 70},
 	"uncommon": {"name": "Uncommon", "color": Color("6fdc6a"), "weight": 25},
 	"rare": {"name": "Rare", "color": Color("ff5a5a"), "weight": 5},
+	"legendary": {"name": "Legendary", "color": Color("ffb020"), "weight": 0}, # golden chests only
 }
 
 ## Every item. desc = what one does, stack = what more of them add. tag groups them loosely;
@@ -96,6 +97,19 @@ const LIST := {
 		"desc": "Kills release 2 wisps that hunt down enemies for 40 each.", "stack": "+1 wisp"},
 	"four_leaf": {"name": "Four Leaf", "rarity": "rare", "tag": "luck", "icon": "FL", "color": Color("3fbf5f"),
 		"desc": "Every chance rolls twice, keeping the lucky one.", "stack": "+1 reroll"},
+	# ---- legendary (golden chests) ----
+	"drone_buddy": {"name": "Drone Buddy", "rarity": "legendary", "tag": "gun", "icon": "DB", "color": Color("6fe0ff"),
+		"desc": "A drone orbits you and shoots the nearest enemy it can see (12 a shot, 4 a second).", "stack": "+1 drone"},
+	"orbital_strike": {"name": "Orbital Strike", "rarity": "legendary", "tag": "damage", "icon": "OS", "color": Color("ff5ab4"),
+		"desc": "Every 6 s a laser from the sky hits the toughest enemy near you for 250.", "stack": "fires 1 s sooner"},
+	"hydra": {"name": "Hydra Launcher", "rarity": "legendary", "tag": "gun", "icon": "HY", "color": Color("ff8a30"),
+		"desc": "Every 5th shot also launches 4 homing missiles (30 each, small blasts).", "stack": "+2 missiles"},
+	"singularity": {"name": "Singularity", "rarity": "legendary", "tag": "status", "icon": "SG", "color": Color("a77be0"),
+		"desc": "10% chance on hit to open a black hole: it drags enemies in and grinds them, then implodes for 120.", "stack": "+5% chance"},
+	"phoenix": {"name": "Phoenix Feather", "rarity": "legendary", "tag": "defense", "icon": "PF", "color": Color("ffd84a"),
+		"desc": "The hit that would kill you doesn't: you rise at half health, briefly untouchable. Burns up after.", "stack": "+1 life"},
+	"glass_cannon": {"name": "Glass Cannon", "rarity": "legendary", "tag": "damage", "icon": "GC", "color": Color("dff4ff"),
+		"desc": "Double damage. Half max health.", "stack": "double again, half again"},
 }
 
 ## Status numbers.
@@ -110,13 +124,28 @@ const DOT_EVERY := 0.5 # damage over time lands in chunks (one number, not 120 a
 const WISP := {"speed": 16.0, "up": 0.0, "gravity": 0.0, "radius": 0.25, "impact": "wisp", "damage": 40.0,
 	"head_mult": 1.0, "hit_pad": 0.35, "homing": 5.0, "life": 5.0, "inherit": false}
 const COPY_ANGLE := 7.0 # degrees between Triple Tap copies
+const DRONE := {"range": 35.0, "damage": 12.0, "rate": 4.0, "orbit": 1.3}
+const ORBITAL := {"every": 6.0, "damage": 250.0, "range": 50.0, "radius": 3.0}
+const HYDRA_EVERY := 5
+const MISSILE := {"speed": 24.0, "up": 4.0, "gravity": 0.0, "radius": 0.18, "impact": "missile", "damage": 30.0,
+	"head_mult": 1.0, "hit_pad": 0.3, "homing": 4.0, "life": 4.0, "inherit": false, "blast": 2.5}
+const HOLE := {"time": 2.5, "pull_r": 9.0, "pull": 7.0, "grind_r": 3.0, "dps": 30.0, "implode": 120.0}
+## Levels (Risk of Rain style): kills give XP; each level is +LEVEL_DAMAGE damage and
+## +LEVEL_HEALTH max health, and a full heal. Level n -> n+1 takes XP_BASE * XP_GROWTH^(n-1).
+const LEVEL_DAMAGE := 0.1
+const LEVEL_HEALTH := 12.0
+const XP_BASE := 20.0
+const XP_GROWTH := 1.45
 
 var combat: Combat: # weak: Combat owns us, and a reference loop would never be freed
 	get:
 		return _combat.get_ref()
 var _combat: WeakRef
 var stacks := {} # id -> how many
-var total := 0 # items held (0 = every hook is a no-op)
+var total := 0 # items held
+var level := 1
+var xp := 0.0 # toward the next level
+var active := false # anything to do at all (items or levels): false = every hook is a no-op
 var rng := RandomNumberGenerator.new()
 var adrenaline_t := 0.0
 var _kills: Array[Combat.Target] = [] # waiting for their kill effects (next tick)
@@ -124,6 +153,15 @@ var _max_bonus := 0.0 # Tough Skin health already added to the player
 var _was_grounded := true
 var _fall_speed := 0.0 # how fast we were falling the tick before landing
 var _slid := {} # target -> time until Slide Spikes can hit it again
+var drones: Array[Vector3] = [] # where the Drone Buddies are (the view draws them there)
+var _drone_cd := 0.0
+var _orbital_t := 0.0
+var _shots := 0 # gun shots fired (Hydra)
+var holes: Array[Dictionary] = [] # black holes {pos, t, acc}
+var _pull_t := 0.0
+var _hole_acc := {} # target -> black hole damage built up (dealt in chunks)
+var _hole_id := 0 # the view keys its black holes on this (a Dictionary's hash changes as it ticks)
+var _time := 0.0
 
 
 func _init(c: Combat) -> void:
@@ -142,17 +180,42 @@ func add(id: String, n := 1) -> void:
 	total = 0
 	for k: String in stacks:
 		total += stacks[k]
+	active = total > 0 or level > 1
 
 
 func clear() -> void:
 	stacks.clear()
 	total = 0
+	active = level > 1
+
+
+## XP needed to go from `lvl` to the next.
+static func xp_to_next(lvl: int) -> float:
+	return XP_BASE * pow(XP_GROWTH, lvl - 1)
+
+
+## Kills pay XP (Loot calls this). Levelling up: stronger, tougher, and topped up.
+func add_xp(amount: float, p: PlayerSim) -> void:
+	xp += amount
+	while xp >= xp_to_next(level):
+		xp -= xp_to_next(level)
+		level += 1
+		active = true
+		if p:
+			_apply_stats(p)
+			if not p.dead:
+				p.hp = p.max_hp
+		combat.fx.append({"type": "level_up", "level": level})
 
 
 ## A random item id, weighted by rarity (common 70%, uncommon 25%, rare 5%).
 func random_id() -> String:
 	var roll := rng.randf() * 100.0
-	var rarity := "common" if roll < 70 else "uncommon" if roll < 95 else "rare"
+	return random_of("common" if roll < 70 else "uncommon" if roll < 95 else "rare")
+
+
+## A random item of one rarity.
+func random_of(rarity: String) -> String:
 	var ids: Array = LIST.keys().filter(func(k: String) -> bool: return LIST[k].rarity == rarity)
 	return ids[rng.randi() % ids.size()]
 
@@ -212,7 +275,9 @@ func modify_damage(t: Combat.Target, dmg: float, zone: String, point: Vector3, s
 	var mark: Dictionary = t.status.get("mark", {})
 	if not mark.is_empty():
 		mult += float(mark.mult)
-	return [dmg * mult * (2.0 if crit else 1.0), crit]
+	var lvl := 1.0 + LEVEL_DAMAGE * (level - 1) # everything you deal grows with your level
+	var glass := pow(2.0, count("glass_cannon"))
+	return [dmg * mult * lvl * glass * (2.0 if crit else 1.0), crit]
 
 
 ## A "gun" hit landed (after the damage): roll every proc.
@@ -254,6 +319,10 @@ func on_hit(t: Combat.Target, dmg: float, zone: String, point: Vector3) -> void:
 		var bombs: Array = t.status.get("bombs", [])
 		bombs.append({"t": BOMB_FUSE, "dmg": dmg * 1.8})
 		t.status.bombs = bombs
+	if count("singularity") > 0 and roll(minf(1.0, 0.1 + 0.05 * (count("singularity") - 1))) and holes.size() < 3:
+		_hole_id += 1
+		holes.append({"id": _hole_id, "pos": t.pos + Vector3(0, 1.0 * t.size, 0), "t": HOLE.time})
+		combat.fx.append({"type": "black_hole", "pos": t.pos + Vector3(0, 1.0 * t.size, 0)})
 	if count("tracker_dart") > 0:
 		t.status.mark = {"t": MARK_TIME, "mult": 0.2 * count("tracker_dart")}
 	if count("frost_tip") > 0 and not t.status.has("freeze"):
@@ -312,6 +381,12 @@ func _kill_effects(t: Combat.Target) -> void:
 func on_hurt(p: PlayerSim, dmg: float) -> float:
 	if total == 0:
 		return dmg
+	if count("phoenix") > 0 and dmg >= p.hp:
+		add("phoenix", -1) # it burns up
+		p.hp = p.max_hp * 0.5
+		p.invuln = 2.0
+		combat.fx.append({"type": "revive", "pos": Vector3(p.px, p.py, p.pz)})
+		return 0.0
 	var n := count("bubble_wrap")
 	if n > 0 and roll(1.0 - 1.0 / (1.0 + 0.12 * n)):
 		return 0.0
@@ -344,7 +419,19 @@ func tick(p: PlayerSim, dt: float) -> void:
 	_apply_stats(p) # also puts everything back after the items are dropped
 	if total == 0:
 		return
+	_time += dt
 	adrenaline_t = maxf(0.0, adrenaline_t - dt)
+	if count("drone_buddy") > 0:
+		_drones(p, dt)
+	elif not drones.is_empty():
+		drones.clear()
+	if count("orbital_strike") > 0:
+		_orbital_t += dt
+		if _orbital_t >= maxf(2.0, ORBITAL.every - (count("orbital_strike") - 1)):
+			_orbital_t = 0.0
+			_orbital(p)
+	if not holes.is_empty():
+		_tick_holes(dt)
 	if count("slide_spikes") > 0:
 		_slide_spikes(p, dt)
 	if count("stomp_boots") > 0:
@@ -354,12 +441,105 @@ func tick(p: PlayerSim, dt: float) -> void:
 	_was_grounded = p.grounded
 
 
+## A gun fired (Combat._fire): Hydra counts the shots.
+func on_fire(o: Vector3, d: Vector3) -> void:
+	_shots += 1
+	if count("hydra") > 0 and _shots % HYDRA_EVERY == 0:
+		var n := 4 + 2 * (count("hydra") - 1)
+		var side := d.cross(Vector3.UP).normalized()
+		for i in n:
+			var spread := (float(i) / maxf(1.0, n - 1) - 0.5) * 1.6
+			combat.spawn_item_projectile("missile", MISSILE, o + side * spread * 0.4, (d + side * spread + Vector3(0, 0.6, 0)).normalized())
+		combat.fx.append({"type": "hydra", "pos": o})
+
+
+## Drone Buddies: circle over your shoulders, each shooting the nearest enemy it can see.
+func _drones(p: PlayerSim, dt: float) -> void:
+	var n := count("drone_buddy")
+	drones.resize(n)
+	var head := Vector3(p.px, p.py + p.height + 0.4, p.pz)
+	for i in n:
+		var a := _time * 1.6 + TAU * i / n
+		drones[i] = head + Vector3(cos(a) * DRONE.orbit, sin(_time * 3.0 + i) * 0.15, sin(a) * DRONE.orbit)
+	_drone_cd -= dt
+	if _drone_cd > 0:
+		return
+	_drone_cd = 1.0 / (DRONE.rate * n) # the drones take turns
+	var from: Vector3 = drones[(_shots + int(_time * 10.0)) % n]
+	var t := _nearest(from, DRONE.range, [], true)
+	if t == null:
+		return
+	var to := t.pos + Vector3(0, 1.0 * t.size, 0)
+	combat.fx.append({"type": "zap", "from": from, "to": to, "color": Color("9ff0ff"), "tracer": true})
+	combat.damage_target(t, DRONE.damage, "body", to, "item")
+
+
+## Orbital Strike: the toughest enemy in range gets a laser from the sky.
+func _orbital(p: PlayerSim) -> void:
+	var me := Vector3(p.px, p.py, p.pz)
+	var best: Combat.Target = null
+	for t in combat.targets:
+		if t.dead or t.kind not in ["enemy", "dummy"] or t.pos.distance_to(me) > ORBITAL.range:
+			continue
+		if best == null or t.hp > best.hp:
+			best = t
+	if best == null:
+		return
+	var at := best.pos
+	combat.fx.append({"type": "orbital", "pos": at})
+	combat.damage_target(best, ORBITAL.damage, "body", at + Vector3(0, 1.0 * best.size, 0), "item")
+	combat.item_explosion(at + Vector3(0, 0.3, 0), ORBITAL.radius, ORBITAL.damage * 0.3, "orbital")
+
+
+## Black holes: pull everything nearby in, grind what's inside, implode at the end.
+func _tick_holes(dt: float) -> void:
+	_pull_t -= dt
+	var pull_now := _pull_t <= 0
+	if pull_now:
+		_pull_t = 0.1
+	var left: Array[Dictionary] = []
+	for h in holes:
+		h.t -= dt
+		var c: Vector3 = h.pos
+		for t in combat.targets:
+			if t.dead or t.kind not in ["enemy", "dummy"]:
+				continue
+			var mid := t.pos + Vector3(0, 1.0 * t.size, 0)
+			var d := mid.distance_to(c)
+			if d > HOLE.pull_r:
+				continue
+			if pull_now and d > 0.5 and t.kind == "enemy":
+				# steer them in (at most HOLE.pull m/s, slower close up) rather than adding shoves:
+				# stacked shoves flung them straight through and out the other side
+				var want := c - mid
+				want.y = 0.0
+				want = want.normalized() * minf(HOLE.pull, want.length() * 2.5)
+				if t.body:
+					var dv := want - Vector3(t.body.vx, 0, t.body.vz)
+					t.body.apply_impulse(dv.x, 1.0 if t.body.grounded else 0.0, dv.z, "item")
+				else:
+					t.knock += want * 0.3
+			if d < HOLE.grind_r:
+				_hole_acc[t] = float(_hole_acc.get(t, 0.0)) + HOLE.dps * dt
+				if _hole_acc[t] >= 10.0:
+					combat.damage_target(t, _hole_acc[t], "body", mid, "item")
+					_hole_acc.erase(t)
+		if h.t <= 0:
+			combat.item_explosion(c, HOLE.pull_r * 0.6, HOLE.implode, "implode")
+		else:
+			left.append(h)
+	holes = left
+	if holes.is_empty():
+		_hole_acc.clear()
+
+
 ## Items that change the player itself.
 func _apply_stats(p: PlayerSim) -> void:
 	p.speed_mult = 1.0 + 0.1 * count("running_shoes") + (0.3 if adrenaline_t > 0 else 0.0)
 	p.extra_wall_jumps = count("wall_grips")
 	p.air_jumps = count("spring_heels")
-	var bonus := 25.0 * count("tough_skin")
+	# Glass Cannon halves the lot (the bonus can go negative: it's what's added to the 100 base)
+	var bonus := (100.0 + 25.0 * count("tough_skin") + LEVEL_HEALTH * (level - 1)) * pow(0.5, count("glass_cannon")) - 100.0
 	if bonus != _max_bonus:
 		p.max_hp += bonus - _max_bonus
 		if not p.dead:
@@ -417,8 +597,8 @@ func _tick_status(t: Combat.Target, dt: float) -> void:
 			s.erase("bombs")
 		else:
 			s.bombs = left
-	if t.dead:
-		s.clear()
+	if t.dead or s.keys() == ["dot_t"]:
+		s.clear() # nothing left on it (the dot clock alone doesn't count)
 
 
 func _dot(t: Combat.Target, b: Dictionary, kind: String, at: Vector3) -> void:

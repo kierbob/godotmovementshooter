@@ -9,7 +9,9 @@ extends CanvasLayer
 ##   list                  every enemy type
 ##   give <item> [count]   an item (give triple tap 3, give random 5); take <item> [count]
 ##   items                 what you're carrying; clearitems drops the lot
-##   gold [amount]         money for chests (100 if no amount); chest [small|large] puts one in front of you
+##   gold [amount]         money for chests (100 if no amount); chest [kind] puts one in front of you
+##                         (small, large, golden, damage, utility, healing, shop, shrine, barrel)
+##   levelup [n]           gain levels (1 if no number)
 ##   help
 ## Up / Down walk through what you typed before. Next to the text bar there are buttons for all
 ## of it (every enemy, a count, god / freeze / heal / kill all), and under it a button per item
@@ -20,7 +22,7 @@ const HELP := [
 	"spawn <enemy> [variant] [count]   e.g. spawn flyer beam, spawn swarmer 5, spawn runner",
 	"killall · god [on/off] · heal · freeze / unfreeze · list · help",
 	"give <item> [count] (give random 5) · take <item> · items · clearitems",
-	"gold [amount] · chest [small/large]",
+	"gold [amount] · chest [small/large/golden/damage/utility/healing/shop/shrine/barrel] · levelup [n]",
 ]
 const VARIANT_WORDS := {"projectile": "flyer_projectile", "beam": "flyer_beam", "healer": "flyer_healer",
 	"charger": "charger", "brute": "brute", "swarmer": "swarmer", "gunner": "gunner", "lobber": "lobber", "sniper": "sniper"}
@@ -142,7 +144,7 @@ func _build_items() -> Control:
 	grid.add_theme_constant_override("h_separation", 4)
 	grid.add_theme_constant_override("v_separation", 4)
 	row.add_child(grid)
-	for rarity: String in ["common", "uncommon", "rare"]:
+	for rarity: String in ["common", "uncommon", "rare", "legendary"]:
 		for id: String in Upgrades.LIST:
 			var it: Dictionary = Upgrades.LIST[id]
 			if it.rarity != rarity:
@@ -283,8 +285,15 @@ func execute(text: String) -> String:
 			return _call("clearitems", {})
 		"gold", "money":
 			return _call("gold", {"amount": int(words[1]) if words.size() > 1 and words[1].is_valid_int() else 100})
+		"levelup", "level":
+			return _call("levelup", {"n": clampi(int(words[1]), 1, 50) if words.size() > 1 and words[1].is_valid_int() else 1})
 		"chest":
-			return _call("chest", {"size": "large" if words.size() > 1 and words[1] in ["large", "big"] else "small"})
+			var kind := "small"
+			if words.size() > 1:
+				kind = "large" if words[1] == "big" else "golden" if words[1] == "gold" else words[1]
+			if not Loot.CHESTS.has(kind):
+				return "Kinds: " + ", ".join(Loot.CHESTS.keys())
+			return _call("chest", {"size": kind})
 		"list":
 			var out := PackedStringArray()
 			for fam: String in Enemies.FAMILIES:
