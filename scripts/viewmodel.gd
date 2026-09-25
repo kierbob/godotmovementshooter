@@ -215,7 +215,7 @@ func update(dt: float, combat: Combat, player: PlayerSim, yaw: float) -> void:
 	var draw_p := combat.draw_t / Combat.SWITCH_TIME
 
 	# Reload: 0–12% wind-up flick, 12–50% hands empty, 50–100% new gun springs up (overshoots).
-	var reload_p: float = 1.0 - st.reload_t / w.reload if st.reload_t > 0 else 0.0
+	var reload_p: float = 1.0 - st.reload_t / st.reload_len if st.reload_t > 0 else 0.0
 	var r_y := 0.0
 	var r_rot := 0.0
 	var r_x := 0.0

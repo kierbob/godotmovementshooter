@@ -326,6 +326,15 @@ static func projectile(kind: String) -> Node3D:
 			_part(spin, BoxMesh.new(), Vector3(0.03, 0.008, 0.2), Vector3(0, 0, -0.06), Color("d8dee9"), 0.0)
 			_part(spin, BoxMesh.new(), Vector3(0.035, 0.03, 0.1), Vector3(0, 0, 0.09), Color("2a1d14"), 0.0)
 			g.add_child(spin)
+		"wisp":
+			for layer: Array in [[0.1, Color("f4ffff"), 1.0], [0.24, Color("8fe8ff"), 0.4]]:
+				var mi := MeshInstance3D.new()
+				var sm := SphereMesh.new()
+				sm.radius = layer[0]
+				sm.height = layer[0] * 2
+				mi.mesh = sm
+				mi.material_override = _glow(layer[1], layer[2])
+				g.add_child(mi)
 		"impulse":
 			for layer: Array in [[0.12, Color("7ff6ff"), 1.0], [0.22, Color("38c8ff"), 0.35]]:
 				var mi := MeshInstance3D.new()

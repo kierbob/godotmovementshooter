@@ -76,6 +76,15 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   ticks enemies after the player (not on time trials) and runs solo health (`_tick_health`).
   Fair-play rules for every attack are in the enemies.gd header; `tests/enemy_test.gd` checks
   them, so keep it passing when adding or tuning enemies.
+- Items: `scripts/upgrades.gd` (Upgrades: the 34 items in `LIST`, stacks, and every effect;
+  Combat owns one as `combat.up` and calls its hooks: fire_dirs, modify_damage, on_hit, on_kill,
+  on_hurt from Enemies.hurt_player, tick). Damage has a source: "gun" procs items, "dot" and
+  "item" don't (no endless chains). Statuses live on `Combat.Target.status`; Enemies slows or
+  stops them via `Upgrades.time_scale`; `scripts/status_fx.gd` draws them on enemies and dummies;
+  `scripts/item_hud.gd` is the item bar + pickup banner. PlayerSim has `speed_mult`,
+  `extra_wall_jumps`, `air_jumps` whose defaults change nothing (compare.gd must keep passing).
+  With no items every hook is a no-op. F10: give/take/items/clearitems + item buttons.
+  `tests/item_test.gd` checks every item.
 - `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
   `nearby()` looks boxes up in an 8 m grid but returns exactly what a full scan would, in map order.
 - `scripts/world_view.gd`: map meshes, jump pads, bean dummies, clouds.
@@ -93,7 +102,8 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   `tests/menu_test.gd` clicks through the menus headless. `tests/combat_test.gd` checks the guns,
   `tests/trial_test.gd` the time trial, `tests/sound_test.gd` the sounds, `tests/net_test.gd`
   multiplayer (codec, server matches prediction, combat, lag comp, a real ENet host + client),
-  `tests/enemy_test.gd` the enemies (fairness, every type, console parsing).
+  `tests/enemy_test.gd` the enemies (fairness, every type, console parsing), `tests/item_test.gd`
+  the items.
 
 ## Rules
 
@@ -101,7 +111,7 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   collision in `map_data.gd`, run `tests/compare.gd`; it must pass. One deliberate difference: in
   the air, moving uphill into a ramp rides up onto it (the web game teleports you to the ramp's
   low end); see `PlayerSim._move_horizontal` and the ramp check in `tests/map_test.gd`.
-- After touching combat or menus, run `tests/combat_test.gd` and `tests/menu_test.gd` (and
+- After touching combat, items or menus, run `tests/combat_test.gd`, `tests/item_test.gd` and `tests/menu_test.gd` (and
   `tests/trial_test.gd` / `tests/sound_test.gd` for those areas). After touching multiplayer,
   PlayerSim or Combat, run `tests/net_test.gd`.
 - Don't regenerate traces: `tools/make_traces.mjs` needs the web project next to this folder.
@@ -133,6 +143,7 @@ godot --headless --path . --script res://tests/sound_test.gd
 godot --headless --path . --script res://tests/map_test.gd
 godot --headless --path . --script res://tests/net_test.gd
 godot --headless --path . --script res://tests/enemy_test.gd
+godot --headless --path . --script res://tests/item_test.gd
 ```
 
 To try two real games against each other, start one with `-- --host=7777` and another with
@@ -152,7 +163,7 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
 3. ~~Cartoon effects and sounds~~ (done).
 4. ~~Time trial~~ (done: guns off and guns on). ~~Risk of Rain style menus~~ (done: characters,
    lobby, loading screen).
-5. Roguelite: ~~enemies~~ (9 types + F10 admin console), ~~stage 1 map~~ (Sunstone Valley), spawn director, run over on death,
-   gold + chests + stacking items, teleporter/boss/next stage, more stages, character passives.
+5. Roguelite: ~~enemies~~ (9 types + F10 admin console), ~~stage 1 map~~ (Sunstone Valley),
+   ~~stacking items~~ (34, F10 give), spawn director, run over on death, gold + chests, teleporter/boss/next stage, more stages, character passives.
 6. ~~Multiplayer~~ (first version done: host/join, FFA, prediction, lag compensation). Later:
    teams, match rules, dedicated server.

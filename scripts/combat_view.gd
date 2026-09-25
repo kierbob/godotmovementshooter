@@ -9,7 +9,17 @@ extends Node3D
 ## "small" | "big" | "head" | "kill" | "blue".
 signal word(text: String, world_pos: Variant, screen_pos: Variant, style: String)
 
-const EXPLOSION_COLOR := {"rocket": Color("ff8a30"), "frag": Color("ff7a20"), "impulse": Color("40d8ff")}
+const EXPLOSION_COLOR := {"rocket": Color("ff8a30"), "frag": Color("ff7a20"), "impulse": Color("40d8ff"),
+	"popper": Color("ff5ab4"), "stomp": Color("a77be0")}
+## Item explosions: [flash, fireball, ring] colors and the comic word (none for Big Bang: it goes
+## off on every hit).
+const ITEM_BLASTS := {
+	"bigbang": [Color("fff1a0"), Color("ff8a30"), Color("ff5a1a"), ""],
+	"popper": [Color("ffffff"), Color("ff5ab4"), Color("ffd84a"), "POP!"],
+	"bomb": [Color("f0ffd0"), Color("8fe36b"), Color("3f9e2c"), "BOOM!"],
+	"stomp": [Color("f2e8ff"), Color("a77be0"), Color("5a3cc0"), "STOMP!"],
+}
+const CONFETTI := [Color("ff5ab4"), Color("ffd84a"), Color("5fb8ff"), Color("6fdc6a"), Color("ff8a30")]
 
 var shake := 0.0 # camera shake amount; main.gd applies it and it decays here
 var particles: Particles
@@ -17,6 +27,8 @@ var _time := 0.0
 var _combat: Combat
 var _meshes := {} # Combat.Projectile -> Node3D
 var _tracers: Array = [] # [{node, life}]
+var _zaps: Array = [] # [{node, life}] lightning bolts (Static Coil, Razor Wire, Ricochet)
+var _boom_word_t := -1.0 # last KABOOM: Triple Tap's three rockets get one word, not a pile
 var _next_tracer := 0
 var _decals: Array = [] # [{node, age}]
 var _next_decal := 0
@@ -133,22 +145,47 @@ func on_events(events: Array[Dictionary], muzzle: Vector3, player: PlayerSim) ->
 				if w.knockback > 0:
 					shake = maxf(shake, w.knockback * 0.006)
 			"hit":
+				if e.get("src", "gun") == "dot":
+					_dot_puff(e)
+					continue
 				_hit_splat(e)
-				if e.get("quiet", false):
+				if e.get("src", "gun") != "gun":
+					pass # an item's damage: splat only, no comic words
+				elif e.get("quiet", false):
 					pass # someone else's hit, online: just the splat
 				elif e.kill:
 					word.emit("SPLAT!", e.pos, null, "kill")
 				elif e.zone == "head" and randf() < 0.5:
 					word.emit("BONK!", e.pos, null, "head")
 			"impact":
-				if e.get("on_player", false):
+				if e.get("small", false):
+					add_star(e.pos, 0.3, 0.08, Color("bff4ff"))
+				elif e.get("on_player", false):
 					add_star(e.pos, 0.3, 0.08, Color("fff3b0")) # the shot stopped on another player: no hole in the air
 				else:
 					_impact(e.pos, e.normal)
+			"explosion" when e.get("small", false):
+				_item_blast(e.pos, e.radius, e.kind, player)
+			"zap":
+				_add_zap(e.from, e.to, e.color, e.get("tracer", false))
+			"freeze":
+				add_star(e.pos, 0.9, 0.2, Color("bfe6ff"))
+				word.emit("FROZEN!", e.pos, null, "blue")
+			"shatter":
+				for i in 14:
+					var r := _rand_unit()
+					particles.spawn({
+						"cube": true, "pos": e.pos, "gravity": 16.0, "spin": 14.0, "life": randf_range(0.5, 0.8),
+						"vel": Vector3(r.x * 5, absf(r.y) * 5 + 2, r.z * 5), "size": [0.16, 0.08],
+						"color": Color("dff4ff"), "color2": Color("8fd3ff"), "opacity": [0.95, 0.9],
+					})
+				word.emit("SHATTER!", e.pos, null, "blue")
 			"explosion":
 				_explosion(e.pos, e.radius, e.kind)
 				var blue: bool = e.kind == "impulse"
-				word.emit("BWOMP!" if blue else "KABOOM!", e.pos, null, "blue" if blue else "big")
+				if _time - _boom_word_t > 0.15:
+					_boom_word_t = _time
+					word.emit("BWOMP!" if blue else "KABOOM!", e.pos, null, "blue" if blue else "big")
 				var slot: Dictionary = _lights[_next_light % _lights.size()]
 				_next_light += 1
 				var l: OmniLight3D = slot.light
@@ -299,6 +336,93 @@ func _explosion(pos: Vector3, radius: float, kind: String) -> void:
 	_add_ring(pos, pal[1], 0.3, radius * 1.15, 0.3, 0.8)
 
 
+## An item's blast: smaller than a rocket's, in the item's colors (Party Popper throws confetti).
+func _item_blast(pos: Vector3, radius: float, kind: String, player: PlayerSim) -> void:
+	var st: Array = ITEM_BLASTS.get(kind, ITEM_BLASTS.bigbang)
+	var k := radius / 4.5
+	particles.spawn({"pos": pos, "life": 0.1, "size": [0.3, 1.8 * k], "color": st[0], "color2": st[1], "opacity": [1.0, 0.0]})
+	for i in 8:
+		var d := _rand_unit()
+		d.y = absf(d.y) * 0.8 + 0.15
+		particles.spawn({
+			"pos": pos + d * 0.2, "vel": d * randf_range(4, 7) * k, "drag": 5.0,
+			"life": randf_range(0.25, 0.4), "size": [0.3 * k, randf_range(0.7, 1.1) * k],
+			"color": st[1], "color2": st[2], "opacity": [1.0, 0.0], "fade_start": 0.5,
+		})
+	if kind == "popper":
+		for i in 18:
+			var d := _rand_unit()
+			particles.spawn({
+				"cube": true, "pos": pos, "gravity": 9.0, "drag": 1.5, "spin": 16.0, "life": randf_range(0.8, 1.2),
+				"vel": Vector3(d.x * 6, absf(d.y) * 7 + 2, d.z * 6), "size": [0.1, 0.08],
+				"color": CONFETTI[i % CONFETTI.size()], "opacity": [1.0, 1.0],
+			})
+	elif kind == "stomp":
+		for i in 10:
+			var a := TAU * i / 10.0
+			particles.spawn({
+				"lit": true, "pos": pos, "vel": Vector3(cos(a), 0.3, sin(a)) * 7.0, "drag": 3.0,
+				"life": 0.6, "size": [0.3, 0.9], "color": Color("d8cfc0"), "opacity": [0.9, 0.0], "fade_start": 0.4,
+			})
+		shake = maxf(shake, 0.06)
+	_add_ring(pos, st[1], 0.3, radius * 1.1, 0.25, 0.7)
+	if st[3] != "":
+		word.emit(st[3], pos, null, "small")
+	if kind in ["popper", "stomp"]:
+		var slot: Dictionary = _lights[_next_light % _lights.size()]
+		_next_light += 1
+		var l: OmniLight3D = slot.light
+		l.light_color = EXPLOSION_COLOR[kind]
+		l.position = pos + Vector3(0, 0.3, 0)
+		slot.life = 0.2
+	if player and kind == "popper":
+		var d := pos.distance_to(Vector3(player.px, player.py, player.pz))
+		shake = maxf(shake, maxf(0.0, 0.03 * (1 - d / 12)))
+
+
+## A burn or bleed tick: a little puff in its color (the number is the HUD's).
+func _dot_puff(e: Dictionary) -> void:
+	var col := Color("ff8a30") if e.dot == "burn" else Color("c0392b")
+	for i in 3:
+		var r := _rand_unit()
+		particles.spawn({
+			"pos": e.pos + r * 0.2, "vel": Vector3(r.x, 1.5, r.z), "life": 0.35, "size": [0.12, 0.04],
+			"color": col, "opacity": [1.0, 0.0], "lit": e.dot != "burn",
+		})
+
+
+## A lightning bolt from `from` to `to`: a few jagged segments that flicker out. tracer: a
+## straight bouncing bullet instead (Ricochet).
+func _add_zap(from: Vector3, to: Vector3, color: Color, tracer: bool) -> void:
+	var g := Node3D.new()
+	add_child(g)
+	var mat := _flat(color, 1.0)
+	var pts: Array[Vector3] = [from]
+	var n := 1 if tracer else 6
+	for i in range(1, n):
+		var p := from.lerp(to, float(i) / n)
+		pts.append(p + _rand_unit() * 0.35)
+	pts.append(to)
+	for i in pts.size() - 1:
+		var a := pts[i]
+		var b := pts[i + 1]
+		var length := a.distance_to(b)
+		if length < 0.01:
+			continue
+		var mi := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3(0.05 if not tracer else 0.025, 0.05 if not tracer else 0.025, length)
+		mi.mesh = bm
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var dir := (b - a) / length
+		mi.basis = Basis.looking_at(dir, Vector3.RIGHT if absf(dir.y) > 0.99 else Vector3.UP)
+		mi.position = (a + b) / 2
+		g.add_child(mi)
+	add_star(to, 0.4, 0.1, color)
+	_zaps.append({"node": g, "life": 0.18, "mat": mat})
+
+
 ## Smoke trails behind flying projectiles.
 func _trail(pr: Combat.Projectile, mesh: Node3D, dt: float) -> void:
 	var every := 0.018 if pr.kind == "rocket" else 0.035
@@ -319,6 +443,9 @@ func _trail(pr: Combat.Projectile, mesh: Node3D, dt: float) -> void:
 		"impulse":
 			particles.spawn({"cube": true, "pos": back, "vel": jitter, "spin": 15.0, "life": 0.3, "size": [0.06, 0.01],
 				"color": Color("7ff6ff"), "opacity": [1.0, 0.5]})
+		"wisp":
+			particles.spawn({"pos": back, "vel": jitter * 0.5, "life": 0.4, "size": [0.14, 0.02],
+				"color": Color("dffaff"), "color2": Color("8fe8ff"), "opacity": [0.9, 0.0]})
 
 
 # ---------- the reload toss ----------
@@ -405,6 +532,16 @@ func update(dt: float, combat: Combat, extra: Array = []) -> void:
 			(_meshes[pr] as Node3D).queue_free()
 			_meshes.erase(pr)
 
+	var zaps_left: Array = []
+	for z: Dictionary in _zaps:
+		z.life -= dt
+		if z.life <= 0:
+			(z.node as Node3D).queue_free()
+			continue
+		zaps_left.append(z)
+		(z.node as Node3D).visible = fmod(z.life, 0.06) > 0.015 # flicker
+		(z.mat as StandardMaterial3D).albedo_color.a = minf(1.0, z.life / 0.1)
+	_zaps = zaps_left
 	for t: Dictionary in _tracers:
 		if t.life <= 0:
 			continue
@@ -467,6 +604,9 @@ func clear() -> void:
 	for t: Dictionary in _tossed:
 		(t.node as Node3D).queue_free()
 	_tossed.clear()
+	for z: Dictionary in _zaps:
+		(z.node as Node3D).queue_free()
+	_zaps.clear()
 	for d: Dictionary in _decals:
 		(d.node as Node3D).visible = false
 	for st: Dictionary in _stars:

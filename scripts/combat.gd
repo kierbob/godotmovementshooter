@@ -34,6 +34,8 @@ class Target:
 	var max_hp := DUMMY_HP
 	var dead := false
 	var respawn_t := 0.0
+	var status := {} # burn, bleed, chill, freeze, mark, bombs (Upgrades ticks them)
+	var knock := Vector3.ZERO # flyers: a shove from an item, applied by Enemies next tick
 
 
 class Projectile:
@@ -46,6 +48,8 @@ class Projectile:
 	var alive := true
 	var stuck := false
 	var resting := false
+	var copy := false # a Triple Tap copy: its explosion doesn't push you
+	var src := "gun" # "item" for wisps (they don't proc)
 
 
 class Hit:
@@ -73,10 +77,13 @@ var ability_cd := 0.0
 var fire_queued := 0.0
 var last_hit := {}
 var _next_projectile := 1
+var up: Upgrades # the items you carry (empty = no effect at all)
+var player: PlayerSim # whose guns these are (set every tick; items read it)
 
 
 func _init(map_boxes: Array[MapData.Box], map_targets: Array) -> void:
 	boxes = map_boxes
+	up = Upgrades.new(self)
 	for i in map_targets.size():
 		var src: Dictionary = map_targets[i]
 		var t := Target.new()
@@ -92,8 +99,8 @@ func set_loadout(lo: Dictionary) -> void:
 	loadout = lo.duplicate()
 	slots = {"primary": Items.WEAPONS[lo.primary], "secondary": Items.WEAPONS[lo.secondary]}
 	state = {
-		"primary": {"ammo": slots.primary.mag, "reload_t": 0.0, "next_fire": 0.0},
-		"secondary": {"ammo": slots.secondary.mag, "reload_t": 0.0, "next_fire": 0.0},
+		"primary": {"ammo": mag_size("primary"), "reload_t": 0.0, "reload_len": 1.0, "next_fire": 0.0},
+		"secondary": {"ammo": mag_size("secondary"), "reload_t": 0.0, "reload_len": 1.0, "next_fire": 0.0},
 	}
 	active = "primary"
 	draw_t = 0.0
@@ -120,9 +127,16 @@ func weapon_state() -> Dictionary:
 	return state[active]
 
 
+## Magazine size with items (Extended Mag).
+func mag_size(slot := "") -> int:
+	return up.mag_size(int(slots[active if slot == "" else slot].mag))
+
+
 func tick(p: PlayerSim, c: Cmd, dt: float) -> void:
 	time += dt
+	player = p
 	_update_targets(p, dt)
+	up.tick(p, dt)
 	if not enabled:
 		_update_projectiles(p, dt)
 		return
@@ -134,7 +148,7 @@ func tick(p: PlayerSim, c: Cmd, dt: float) -> void:
 			s.reload_t -= dt
 			if s.reload_t <= 0:
 				s.reload_t = 0.0
-				s.ammo = slots[slot].mag
+				s.ammo = mag_size(slot)
 
 	# Weapon switching. An empty gun starts reloading whether you switch to it or away from it.
 	var want := c.slot
@@ -152,7 +166,7 @@ func tick(p: PlayerSim, c: Cmd, dt: float) -> void:
 
 	var w := weapon()
 	var st := weapon_state()
-	if c.reload and st.reload_t == 0 and st.ammo < w.mag:
+	if c.reload and st.reload_t == 0 and st.ammo < mag_size():
 		start_reload()
 
 	fire_queued = SEMI_BUFFER if c.fire_pressed else maxf(0.0, fire_queued - dt)
@@ -164,7 +178,7 @@ func tick(p: PlayerSim, c: Cmd, dt: float) -> void:
 			fire_queued = 0.0
 			_fire(p, c, w)
 			st.ammo -= 1
-			st.next_fire = time + 1.0 / w.fire_rate
+			st.next_fire = time + 1.0 / up.fire_rate(w.fire_rate)
 			if st.ammo == 0:
 				start_reload()
 
@@ -178,7 +192,8 @@ func tick(p: PlayerSim, c: Cmd, dt: float) -> void:
 func start_reload(slot := "") -> void:
 	if slot == "":
 		slot = active
-	state[slot].reload_t = slots[slot].reload
+	state[slot].reload_t = up.reload_time(slots[slot].reload)
+	state[slot].reload_len = state[slot].reload_t
 	# Only the gun in your hands makes reload noise/animation.
 	if slot == active:
 		fx.append({"type": "reload", "weapon": slots[slot].id})
@@ -383,7 +398,9 @@ static func zone_mult(zone: String, head_mult: float) -> float:
 	return head_mult if zone == "head" else 1.0
 
 
-func damage_target(t: Target, dmg: float, zone: String, point: Vector3) -> void:
+## src: "gun" (your weapons: items proc on these), "dot" (burn/bleed ticks, dot = which) or
+## "item" (item explosions, lightning, wisps).
+func damage_target(t: Target, dmg: float, zone: String, point: Vector3, src := "gun", dot := "") -> void:
 	if t.dead:
 		return
 	if t.body and t.body.invuln > 0:
@@ -393,41 +410,60 @@ func damage_target(t: Target, dmg: float, zone: String, point: Vector3) -> void:
 		# damage (and sends the hit back so the hitmarker only shows real hits).
 		fx.append({"type": "impact", "pos": point, "normal": Vector3.UP, "on_player": true})
 		return
+	var crit := false
+	if up.total > 0:
+		var m := up.modify_damage(t, dmg, zone, point, src)
+		dmg = m[0]
+		crit = m[1]
 	t.hp -= dmg
 	var kill := t.hp <= 0
 	if kill:
 		t.dead = true
 		t.hp = 0.0
 		t.respawn_t = DUMMY_RESPAWN
-	last_hit = {"dmg": dmg, "zone": zone, "kill": kill, "time": time}
-	fx.append({"type": "hit", "target": t.id, "pos": point, "dmg": dmg, "zone": zone, "kill": kill})
+	if src == "gun":
+		last_hit = {"dmg": dmg, "zone": zone, "kill": kill, "time": time}
+	fx.append({"type": "hit", "target": t.id, "pos": point, "dmg": dmg, "zone": zone, "kill": kill,
+		"src": src, "crit": crit, "dot": dot})
+	if up.total > 0:
+		if src == "gun":
+			up.on_hit(t, dmg, zone, point)
+		if kill:
+			up.on_kill(t)
 
 
 # ---------- firing ----------
 
 func _fire(p: PlayerSim, c: Cmd, w: Dictionary) -> void:
 	var o := eye_position(p)
-	var d := aim_dir(c.yaw, c.pitch)
+	var dirs := up.fire_dirs(aim_dir(c.yaw, c.pitch)) # just the aim, unless Triple Tap
 	if w.type == "hitscan":
 		var ends: Array[Vector3] = []
 		var per_target := {} # add up pellets so a shotgun blast counts as one hit per dummy
-		for i in int(w.pellets):
-			var dir := spread_dir(d, w.spread)
-			var hit := raycast(o, dir, w.range)
-			ends.append(hit.point if hit else o + dir * float(w.range))
-			if hit and hit.target:
-				var acc: Dictionary = per_target.get(hit.target, {"dmg": 0.0, "zone": hit.zone, "point": hit.point})
-				acc.dmg += w.damage * zone_mult(hit.zone, w.head_mult)
-				if hit.zone == "head":
-					acc.zone = "head"
-				per_target[hit.target] = acc
-			elif hit:
-				fx.append({"type": "impact", "pos": hit.point, "normal": hit.normal})
+		var bounces: Array[Vector3] = [] # wall hits Ricochet may bounce
+		for d in dirs:
+			for i in int(w.pellets):
+				var dir := spread_dir(d, w.spread)
+				var hit := raycast(o, dir, w.range)
+				ends.append(hit.point if hit else o + dir * float(w.range))
+				if hit and hit.target:
+					var acc: Dictionary = per_target.get(hit.target, {"dmg": 0.0, "zone": hit.zone, "point": hit.point})
+					acc.dmg += w.damage * zone_mult(hit.zone, w.head_mult)
+					if hit.zone == "head":
+						acc.zone = "head"
+					per_target[hit.target] = acc
+				elif hit:
+					fx.append({"type": "impact", "pos": hit.point, "normal": hit.normal})
+					bounces.append(hit.point + hit.normal * 0.1)
 		for t: Target in per_target:
 			damage_target(t, per_target[t].dmg, per_target[t].zone, per_target[t].point)
+		if up.count("ricochet") > 0:
+			for b in bounces:
+				up.ricochet(b, w.damage)
 		fx.append({"type": "shot", "weapon": w.id, "origin": o, "ends": ends})
 	else:
-		_spawn_projectile(w.id, w.projectile, o, d, false, p)
+		for i in dirs.size():
+			_spawn_projectile(w.id, w.projectile, o, dirs[i], false, p).copy = i > 0
 		fx.append({"type": "shot", "weapon": w.id, "origin": o, "ends": []})
 	if w.knockback > 0:
 		# From the 64-bit yaw/pitch directly, so the push matches the web game as closely as it can.
@@ -437,13 +473,14 @@ func _fire(p: PlayerSim, c: Cmd, w: Dictionary) -> void:
 
 
 func _throw_ability(p: PlayerSim, c: Cmd) -> void:
-	var d := aim_dir(c.yaw, c.pitch)
-	_spawn_projectile(ability.id, ability.projectile, eye_position(p), d, ability.projectile.get("inherit", true), p)
+	var dirs := up.fire_dirs(aim_dir(c.yaw, c.pitch))
+	for i in dirs.size():
+		_spawn_projectile(ability.id, ability.projectile, eye_position(p), dirs[i], ability.projectile.get("inherit", true), p).copy = i > 0
 	ability_cd = ability.cooldown
 	fx.append({"type": "throw", "ability": ability.id})
 
 
-func _spawn_projectile(kind: String, def: Dictionary, origin: Vector3, d: Vector3, inherit: bool, p: PlayerSim) -> void:
+func _spawn_projectile(kind: String, def: Dictionary, origin: Vector3, d: Vector3, inherit: bool, p: PlayerSim) -> Projectile:
 	var pr := Projectile.new()
 	pr.id = _next_projectile
 	_next_projectile += 1
@@ -454,6 +491,13 @@ func _spawn_projectile(kind: String, def: Dictionary, origin: Vector3, d: Vector
 		pr.vel += Vector3(p.vx, maxf(0.0, p.vy) * 0.5, p.vz)
 	pr.pos = origin + d * 0.5
 	projectiles.append(pr)
+	return pr
+
+
+## A projectile an item made (Wisp Jar): starts right at `pos`, never procs.
+func spawn_item_projectile(kind: String, def: Dictionary, pos: Vector3, d: Vector3) -> void:
+	var pr := _spawn_projectile(kind, def, pos - d * 0.5, d, false, null)
+	pr.src = "item"
 
 
 func _update_projectiles(p: PlayerSim, dt: float) -> void:
@@ -465,16 +509,18 @@ func _update_projectiles(p: PlayerSim, dt: float) -> void:
 				pr.alive = false
 			continue
 		if def.has("fuse") and pr.age >= def.fuse:
-			_explode(pr.pos, def.explode, p, pr.kind)
+			_explode(pr.pos, def.explode, p, pr.kind, not pr.copy)
 			pr.alive = false
 			continue
-		if pr.age > 8:
+		if pr.age > def.get("life", 8.0):
 			pr.alive = false
 			continue
 		if pr.resting:
 			continue
 
 		pr.vel.y -= def.get("gravity", 0.0) * dt
+		if def.has("homing"):
+			_home(pr, float(def.homing) * dt)
 		var speed := pr.vel.length()
 		var dir := pr.vel / (speed if speed > 0 else 1.0)
 		var hit := raycast(pr.pos, dir, speed * dt + def.radius, def.radius + def.get("hit_pad", 0.0))
@@ -483,11 +529,16 @@ func _update_projectiles(p: PlayerSim, dt: float) -> void:
 			continue
 		match def.impact:
 			"explode":
-				_explode(hit.point - dir * 0.1, def.explode, p, pr.kind)
+				_explode(hit.point - dir * 0.1, def.explode, p, pr.kind, not pr.copy)
+				pr.alive = false
+			"wisp":
+				if hit.target:
+					damage_target(hit.target, def.damage, "body", hit.point, pr.src)
+				fx.append({"type": "impact", "pos": hit.point, "normal": hit.normal, "small": true})
 				pr.alive = false
 			"stick":
 				if hit.target:
-					damage_target(hit.target, def.damage * zone_mult(hit.zone, def.head_mult), hit.zone, hit.point)
+					damage_target(hit.target, def.damage * zone_mult(hit.zone, def.head_mult), hit.zone, hit.point, pr.src)
 					pr.alive = false
 				else:
 					pr.pos = hit.point - dir * float(def.radius)
@@ -504,7 +555,42 @@ func _update_projectiles(p: PlayerSim, dt: float) -> void:
 	projectiles = projectiles.filter(func(pr: Projectile) -> bool: return pr.alive)
 
 
-func _explode(pos: Vector3, e: Dictionary, p: PlayerSim, kind: String) -> void:
+## Turn a homing projectile toward the nearest living enemy (by at most `turn` radians).
+func _home(pr: Projectile, turn: float) -> void:
+	var best: Target = null
+	var best_d := 40.0
+	for t in targets:
+		if not t.dead and t.kind in ["enemy", "dummy"]:
+			var d := pr.pos.distance_to(t.pos + Vector3(0, t.size, 0))
+			if d < best_d:
+				best = t
+				best_d = d
+	if best == null:
+		return
+	var want := (best.pos + Vector3(0, best.size, 0) - pr.pos).normalized()
+	var speed := pr.vel.length()
+	var cur := pr.vel / maxf(speed, 0.001)
+	var ang := cur.angle_to(want)
+	if ang > 0.0001:
+		var axis := cur.cross(want)
+		cur = cur.rotated(axis.normalized(), minf(ang, turn)) if axis.length() > 1e-6 else want
+	pr.vel = cur * speed
+
+
+## An item's explosion (Big Bang, Party Popper, Sticky Bomb, Stomp Boots): hurts enemies and
+## dummies only, never pushes you, never procs.
+func item_explosion(pos: Vector3, radius: float, dmg: float, kind: String) -> void:
+	for t in targets:
+		if t.dead or t.kind not in ["enemy", "dummy"]:
+			continue
+		var d := maxf(0.0, pos.distance_to(t.pos + Vector3(0, 0.9 * t.size, 0)) - 0.5 * t.size)
+		if d < radius:
+			damage_target(t, dmg * (1 - 0.5 * (d / radius)), "body", t.pos + Vector3(0, 1.2 * t.size, 0), "item")
+	fx.append({"type": "explosion", "pos": pos, "radius": radius, "kind": kind, "small": true})
+
+
+## self_knock false: a Triple Tap copy's blast doesn't launch you (only the real one does).
+func _explode(pos: Vector3, e: Dictionary, p: PlayerSim, kind: String, self_knock := true) -> void:
 	for t in targets:
 		if t.dead:
 			continue
@@ -523,6 +609,9 @@ func _explode(pos: Vector3, e: Dictionary, p: PlayerSim, kind: String) -> void:
 				t.body.apply_impulse(kdir.x * ks, kdir.y * ks, kdir.z * ks, kind)
 
 	# Knockback on the player (no self-damage).
+	if not self_knock:
+		fx.append({"type": "explosion", "pos": pos, "radius": e.radius, "kind": kind})
+		return
 	var hw := Cfg.PLAYER_HALF_WIDTH
 	var closest := Vector3(
 		clampf(pos.x, p.px - hw, p.px + hw),

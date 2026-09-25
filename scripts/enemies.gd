@@ -154,21 +154,29 @@ func tick(p: PlayerSim, dt: float) -> void:
 		if e.body and e.body.py < -30:
 			e.alive = false # fell out of the world
 			continue
-		if frozen:
+		if e.target.knock != Vector3.ZERO: # an item shoved it (ground types get it through their body)
+			e.vel += e.target.knock
+			e.target.knock = Vector3.ZERO
+		# Items slow time for it: chilled runs at half speed, frozen stops (and loses its attack).
+		var edt := dt * Upgrades.time_scale(e.target)
+		if frozen or edt == 0.0:
+			if edt == 0.0 and e.state != "move":
+				_enter(e, "move")
+				e.cd = maxf(e.cd, 0.5)
 			_hold(e)
 			continue
-		e.cd = maxf(0.0, e.cd - dt)
-		e.t += dt
-		e.los_t -= dt
+		e.cd = maxf(0.0, e.cd - edt)
+		e.t += edt
+		e.los_t -= edt
 		if e.los_t <= 0:
 			e.los_t = 0.2
 			e.los = _can_see(_eye(e), _player_center(p))
 		if e.def.family == "flyer":
-			_tick_flyer(e, p, dt)
+			_tick_flyer(e, p, edt)
 		else:
-			_tick_ground(e, p, dt)
+			_tick_ground(e, p, edt)
 		if e.wave_r >= 0:
-			_tick_wave(e, p, dt)
+			_tick_wave(e, p, edt)
 	var alive: Array[Enemy] = []
 	for e in list:
 		if e.alive:
@@ -182,6 +190,10 @@ func tick(p: PlayerSim, dt: float) -> void:
 ## The player takes a hit (from an enemy at `from`).
 func hurt_player(p: PlayerSim, dmg: float, from: Vector3, by: String) -> void:
 	if god or p.dead or p.invuln > 0:
+		return
+	dmg = combat.up.on_hurt(p, dmg) # Bubble Wrap may block it, Razor Wire lashes back
+	if dmg <= 0:
+		events.append({"type": "blocked", "from": from})
 		return
 	p.hp = maxf(0.0, p.hp - dmg)
 	p.regen_delay = REGEN_DELAY

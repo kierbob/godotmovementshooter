@@ -7,14 +7,18 @@ extends CanvasLayer
 ##   heal                  full health
 ##   freeze [on|off]       enemies stand still (no word: toggle); unfreeze = off
 ##   list                  every enemy type
+##   give <item> [count]   an item (give triple tap 3, give random 5); take <item> [count]
+##   items                 what you're carrying; clearitems drops the lot
 ##   help
 ## Up / Down walk through what you typed before. Next to the text bar there are buttons for all
-## of it (every enemy, a count, god / freeze / heal / kill all), which just run the same commands.
+## of it (every enemy, a count, god / freeze / heal / kill all), and under it a button per item
+## (hover for its name; the count applies to these too); they just run the same commands.
 ## The game (main.gd) does the work in admin().
 
 const HELP := [
 	"spawn <enemy> [variant] [count]   e.g. spawn flyer beam, spawn swarmer 5, spawn runner",
 	"killall · god [on/off] · heal · freeze / unfreeze · list · help",
+	"give <item> [count] (give random 5) · take <item> · items · clearitems",
 ]
 const VARIANT_WORDS := {"projectile": "flyer_projectile", "beam": "flyer_beam", "healer": "flyer_healer",
 	"charger": "charger", "brute": "brute", "swarmer": "swarmer", "gunner": "gunner", "lobber": "lobber", "sniper": "sniper"}
@@ -48,14 +52,18 @@ func _ready() -> void:
 	_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	_panel.theme = UiStyle.theme()
 	add_child(_panel)
+	var rows := VBoxContainer.new()
+	rows.add_theme_constant_override("separation", 8)
+	_panel.add_child(rows)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 24)
-	_panel.add_child(row)
+	rows.add_child(row)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(v)
 	row.add_child(_build_buttons())
+	rows.add_child(_build_items())
 	var title := UiStyle.label("ADMIN · F10 TO CLOSE", 18, UiStyle.YELLOW)
 	v.add_child(title)
 	var mono := SystemFont.new()
@@ -116,6 +124,46 @@ func _build_buttons() -> Control:
 	grid.add_child(tools)
 	_refresh_buttons()
 	return grid
+
+
+## A button per item (its HUD chip colors, hover for the name), plus random and clear.
+func _build_items() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	var tag := _tag("ITEMS")
+	tag.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	row.add_child(tag)
+	var grid := GridContainer.new()
+	grid.columns = 18
+	grid.add_theme_constant_override("h_separation", 4)
+	grid.add_theme_constant_override("v_separation", 4)
+	row.add_child(grid)
+	for rarity: String in ["common", "uncommon", "rare"]:
+		for id: String in Upgrades.LIST:
+			var it: Dictionary = Upgrades.LIST[id]
+			if it.rarity != rarity:
+				continue
+			var b := Button.new()
+			b.text = it.icon
+			b.tooltip_text = "%s (%s)\n%s" % [it.name, rarity, it.desc]
+			b.custom_minimum_size = Vector2(42, 32)
+			b.focus_mode = Control.FOCUS_NONE
+			b.add_theme_font_size_override("font_size", 15)
+			for state: String in ["normal", "hover", "pressed"]:
+				var st := StyleBoxFlat.new()
+				st.bg_color = (it.color as Color).darkened(0.45 if state == "normal" else 0.2)
+				st.border_color = Upgrades.RARITY[rarity].color
+				st.set_border_width_all(2)
+				st.set_corner_radius_all(5)
+				b.add_theme_stylebox_override(state, st)
+			b.pressed.connect(func() -> void: _press("give %s %d" % [id, _count]))
+			grid.add_child(b)
+	var tools := VBoxContainer.new()
+	tools.add_theme_constant_override("separation", 4)
+	tools.add_child(_btn("RANDOM", func() -> void: _press("give random %d" % _count)))
+	tools.add_child(_btn("CLEAR", func() -> void: _press("clearitems")))
+	row.add_child(tools)
+	return row
 
 
 func _tag(text: String) -> Label:
@@ -218,6 +266,17 @@ func execute(text: String) -> String:
 			return _call("freeze", {"on": words[1] if words.size() > 1 else "toggle"})
 		"unfreeze":
 			return _call("freeze", {"on": "off"})
+		"give", "g", "take":
+			var r := parse_give(words.slice(1))
+			if r.is_empty():
+				return "Don't know that item. Try: items all"
+			if cmd == "take":
+				r.count = -r.count
+			return _call("give", r)
+		"items":
+			return _call("items", {"all": words.size() > 1})
+		"clearitems":
+			return _call("clearitems", {})
 		"list":
 			var out := PackedStringArray()
 			for fam: String in Enemies.FAMILIES:
@@ -233,6 +292,22 @@ func _call(what: String, data: Dictionary) -> String:
 	if game and game.has_method("admin"):
 		return game.admin(what, data)
 	return "(no game to run it in)"
+
+
+## The words after "give": {id, count} ("random" for a random one), or {} if it isn't an item.
+static func parse_give(words: Array) -> Dictionary:
+	var count := 1
+	var name := PackedStringArray()
+	for w: String in words:
+		if w.is_valid_int():
+			count = clampi(int(w), 1, 100)
+		else:
+			name.append(w)
+	var joined := " ".join(name)
+	if joined == "random" or joined == "any":
+		return {"id": "random", "count": count}
+	var id := Upgrades.find(joined)
+	return {} if id == "" else {"id": id, "count": count}
 
 
 ## The words after "spawn" -> {type, count}, or {} if it isn't an enemy. Order doesn't matter:
