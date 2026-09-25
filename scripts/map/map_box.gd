@@ -19,7 +19,7 @@ extends Node3D
 @export_enum("floor", "wall", "block", "stair", "pillar", "low", "test", "plat", "trialfloor", "arenafloor", "gate",
 	"grass", "road", "sidewalk", "wood", "house_blue", "house_yellow", "trim", "roof", "fence", "hedge", "bus", "truck",
 	"shed", "leaves", "trunk", "crate", "barrier", "sandstone", "cliff", "sand", "ruin", "ruin_dark", "sunstone",
-	"cobble", "stone", "stone_dark", "dirt", "field", "water", "hill", "plank", "hay", "hidden")
+	"cobble", "stone", "stone_dark", "dirt", "field", "water", "hill", "plank", "hay", "hidden", "interior")
 var kind := "block":
 	set(v):
 		kind = v

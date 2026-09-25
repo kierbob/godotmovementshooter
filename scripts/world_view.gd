@@ -21,10 +21,10 @@ const COLORS := {
 	# Fantasy Village (stage 2); "hidden" is solid but not drawn (collision under kit models)
 	"cobble": Color("9ea3b8"), "stone": Color("a9b1c6"), "stone_dark": Color("7d86a0"), "dirt": Color("c9a26b"),
 	"field": Color("a9c95a"), "water": Color("5fb3e8"), "hill": Color("6aa85c"), "plank": Color("b8875a"),
-	"hay": Color("f0cf6a"), "hidden": Color("ff9f40"),
+	"hay": Color("f0cf6a"), "hidden": Color("ff9f40"), "interior": Color("2e2622"),
 }
 const NO_SHADOW_KINDS := ["floor", "trialfloor", "arenafloor", "grass", "road", "sidewalk", "wood", "cobble", "dirt",
-	"field", "water"]
+	"field", "water", "interior"]
 ## Toon colors for the village kit's materials (it comes without its textures): by material name.
 const KIT_COLORS := {
 	"MI_WoodTrim": Color("8a5a3c"), "MI_WoodTrim_Wear": Color("a0714a"), "MI_RockTrim": Color("a3abbf"),

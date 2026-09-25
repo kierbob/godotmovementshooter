@@ -702,6 +702,8 @@ func house(grp: String, c: Vector3, w: int, d: int, floors: int, style := "brick
 				var piece := "Wall_%s_Straight" % mat
 				if f == 0 and side == front and i == n / 2:
 					piece = "Wall_%s_Door_Round" % mat
+					# the frame fills the arch around the door (it's wider than the door)
+					model(g, "DoorFrame_Round_Brick" if stone else "DoorFrame_Round_WoodDark", p, yaw)
 					# the door sits in the arch, hinged on its left edge
 					model(g, "Door_%d_Round" % [1, 2, 4, 8][rng.randi() % 4], p - Vector3(side.z, 0, -side.x) * 0.5, yaw)
 				elif rng.randf() < 0.6:
@@ -729,6 +731,9 @@ func house(grp: String, c: Vector3, w: int, d: int, floors: int, style := "brick
 		var at := Vector3(c.x + off, top, c.z + along_off) if across_x else Vector3(c.x + along_off, top, c.z + off)
 		model(g, "Prop_Chimney" if rng.randf() < 0.5 else "Prop_Chimney2", at, 0.0, 1.0)
 	_solids.append(Rect2(x0, z0, w, d))
+	# a dark room just behind the walls: the kit's walls are one-sided, so without it any gap
+	# (round a door, through a window) shows straight out the far side of the house
+	box(g, "Inside", "interior", Vector3(x0 + 0.34, c.y, z0 + 0.34), Vector3(x1 - 0.34, top, z1 - 0.34))
 	_houses.append([Rect2(x0, z0, w, d), c.y])
 	var eave := top + float(info.eave)
 	var ridge := top + float(info.ridge)
