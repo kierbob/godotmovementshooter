@@ -30,8 +30,10 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   first run stage: a 240 m valley, grouped by area; big maps set `MapRoot.view_scale` to push the
   haze out), `fantasy-village` (stage 2: a 320 m medieval town built by `tools/make_village.gd`
   from the Quaternius Medieval Village kit in `assets/VillageFBX` (CC0): MapModel nodes for the
-  looks, "hidden" boxes for collision, roofs as two ramps; re-running the tool overwrites the
-  scene) and `bean-town` (Nuketown-style FFA,
+  looks, "hidden" boxes for collision, roofs as two ramps; houses come from `row()` along
+  streets and must be a size the kit has a roof for (a short roof leaves see-through gables);
+  `check_layout()` reports overlaps and houses over terrace edges; `-- --audit` writes a test map
+  of every house size (delete maps/zz-audit.tscn after); re-running the tool overwrites the scene) and `bean-town` (Nuketown-style FFA,
   grouped by place; the yellow half mirrors the blue half through the center). A box's `kind` is
   its color from `WorldView.COLORS` (add new kinds there and to MapBox's enum). Kind `barrier` is
   an invisible wall: solid for players, not drawn, ignored by shots. Kind `hidden` is solid for

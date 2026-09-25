@@ -33,13 +33,25 @@ func _init() -> void:
 	town.grad_from = Color("6fc3ff")
 	town.grad_to = Color("5a8f3c")
 	town.view_scale = 1.8
-	build()
+	var out := OUT
+	if "--audit" in OS.get_cmdline_user_args():
+		# one house of every size and height in a row, to look at from all sides
+		out = "res://maps/zz-audit.tscn"
+		town.map_name = "Audit"
+		audit()
+	else:
+		build()
+		var problems := check_layout()
+		for pr in problems:
+			print("  LAYOUT: ", pr)
+		if not problems.is_empty():
+			print("%d layout problems" % problems.size())
 	_own(town, town)
 	var ps := PackedScene.new()
 	var err := ps.pack(town)
 	if err == OK:
-		err = ResourceSaver.save(ps, OUT)
-	print("%s: %d nodes, %s" % [OUT, _n, error_string(err)])
+		err = ResourceSaver.save(ps, out)
+	print("%s: %d nodes, %s" % [out, _n, error_string(err)])
 	town.free()
 	quit(0 if err == OK else 1)
 
@@ -50,27 +62,91 @@ func _own(n: Node, owner_node: Node) -> void:
 		_own(c, owner_node)
 
 
+func audit() -> void:
+	box("Ground", "Grass", "grass", Vector3(-100, -1, -60), Vector3(100, 0, 60))
+	spawn("Spawn", Vector3(0, 0, 40), 0.0)
+	var z := -36.0
+	for span: int in [4, 6, 8]:
+		var x := -80.0
+		for l: int in ROOF_LENGTHS[span]:
+			for floors: int in [1, 3]:
+				house("Houses", Vector3(x, 0, z), span, l, floors, "brick" if floors > 1 else "plaster")
+				x += span + 8
+		z += 30.0
+
+
 func build() -> void:
 	ground()
-	market()
+	terraces()
 	roads()
-	old_town()
+	market()
+	lower_town()
+	upper_town()
+	high_town()
+	chapel()
 	river()
 	castle()
-	chapel()
 	farms()
 	edges()
 	trees()
 
 
 # ---------- the town ----------
+# Levels: the market and the lowlands at 0; the upper town terrace (4 m) across the north with
+# the high town (8 m) behind it; the chapel rise (3 m) in the east; castle hill (4, 8, 12 m) in the
+# north-west past the river, which runs sunken down the west side. Streets are cobbled boxes a
+# hair above their level; houses line them, doors to the street, alleys between.
 
 const HALF := 160.0 # the map is 320 x 320 m
 const RIVER_X0 := -96.0 # the river runs north-south between these
 const RIVER_X1 := -80.0
-const OLD_Y := 6.0 # the old town's plateau
-const OLD := Rect2(40, -150, 110, 110) # x, z, w, d
+const UPPER_Y := 4.0
+const UPPER := Rect2(-30, -160, 190, 116) # x -30..160, z -160..-44 (to the map's edge: no ditch behind)
+const HIGH_Y := 8.0
+const HIGH := Rect2(40, -160, 120, 60) # x 40..160, z -160..-100
+const RISE_Y := 3.0
+const RISE := Rect2(92, -20, 68, 90) # x 92..160, z -20..70
 const CASTLE_Y := 12.0
+
+var _roads: Array[Rect2] = [] # streets (trees keep off them)
+var _houses: Array = [] # [footprint Rect2, ground y] of every house (check_layout)
+var _blocks: Array[Rect2] = [] # stairs, wagons, towers... (houses mustn't overlap them)
+
+
+## Houses that overlap each other, a street, a field or stairs, or hang over a level change.
+func check_layout() -> Array[String]:
+	var out: Array[String] = []
+	for i in _houses.size():
+		var r: Rect2 = _houses[i][0]
+		var y: float = _houses[i][1]
+		var inner := r.grow(-0.05)
+		for j in range(i + 1, _houses.size()):
+			if inner.intersects((_houses[j][0] as Rect2).grow(-0.05)):
+				out.append("houses overlap at %s and %s" % [r, _houses[j][0]])
+		for rd in _roads:
+			if inner.intersects(rd):
+				out.append("house %s on a street %s" % [r, rd])
+		for b in _blocks:
+			if inner.intersects(b):
+				out.append("house %s on %s" % [r, b])
+		for p: Vector2 in [r.position, Vector2(r.end.x, r.position.y), Vector2(r.position.x, r.end.y), r.end, r.get_center()]:
+			var q := p + (r.get_center() - p).normalized() * 0.3
+			if absf(level_at(q.x, q.y) - y) > 0.05 and absf(level_at(q.x, q.y) + 0.02 - y) > 0.05:
+				out.append("house %s at y %.2f hangs over ground at %.1f (%s)" % [r, y, level_at(q.x, q.y), q])
+				break
+	return out
+
+
+## The ground height at (x, z) (the level it's on).
+func level_at(x: float, z: float) -> float:
+	var p := Vector2(x, z)
+	if x <= -120 and z <= -106: return CASTLE_Y
+	if x <= -110 and z <= -96: return 8.0
+	if x <= -100 and z <= -84: return 4.0
+	if HIGH.has_point(p): return HIGH_Y
+	if UPPER.has_point(p): return UPPER_Y
+	if RISE.has_point(p): return RISE_Y
+	return 0.0
 
 
 func ground() -> void:
@@ -81,98 +157,170 @@ func ground() -> void:
 	box("Ground", "Water", "water", Vector3(RIVER_X0, -3, -HALF), Vector3(RIVER_X1, -2.3, HALF))
 
 
-## The heart of town: a cobbled square under the clock tower, a well, market wagons and crates.
+## A raised level: stone retaining walls with grass on top.
+func terrace(grp: String, r: Rect2, y: float, top := "grass") -> void:
+	box(grp, "Wall", "stone_dark", Vector3(r.position.x, -1, r.position.y), Vector3(r.end.x, y - 0.3, r.end.y))
+	box(grp, "Top", top, Vector3(r.position.x, y - 0.3, r.position.y), Vector3(r.end.x, y, r.end.y))
+
+
+func terraces() -> void:
+	terrace("Terraces/Upper", UPPER, UPPER_Y)
+	terrace("Terraces/High", HIGH, HIGH_Y)
+	terrace("Terraces/Rise", RISE, RISE_Y)
+
+
+## A cobbled street on level y (a hair above it, so it reads as paving).
+func street(grp: String, r: Rect2, y: float, kind := "cobble") -> void:
+	box(grp, "Street", kind, Vector3(r.position.x, y - 0.5, r.position.y), Vector3(r.end.x, y + 0.02, r.end.y))
+	_roads.append(r)
+
+
+func roads() -> void:
+	var g := "Streets"
+	# level 0
+	street(g, Rect2(-36, -30, 72, 60), 0.0) # the market square
+	street(g, Rect2(-6, 30, 12, 126), 0.0) # King's Road south, to the farms
+	street(g, Rect2(-114, -6, 78, 12), 0.0) # the west road, over the bridge
+	street(g, Rect2(36, -6, 44, 12), 0.0) # the east road
+	street(g, Rect2(-76, -150, 8, 144), 0.0) # the east bank lane
+	street(g, Rect2(-124, -68, 10, 224), 0.0) # the west bank lane
+	# up to the upper town: King's Road climbs out of the square; stairs either side
+	box(g, "KingsRamp", "cobble", Vector3(-6, 0, -44), Vector3(6, UPPER_Y + 0.02, -30), "z-")
+	_roads.append(Rect2(-6, -44, 12, 14))
+	stairs(g + "/StairsWest", Vector3(-26, 0, -36), Vector3(0, 0, -1), 6, int(UPPER_Y))
+	stairs(g + "/StairsEast", Vector3(26, 0, -36), Vector3(0, 0, -1), 6, int(UPPER_Y))
+	stairs(g + "/StairsRiver", Vector3(-38, 0, -100), Vector3(1, 0, 0), 6, int(UPPER_Y))
+	stairs(g + "/StairsUpperWest", Vector3(-38, 0, -67), Vector3(1, 0, 0), 6, int(UPPER_Y)) # Upper Street's west end
+	pad(g, Vector3(90, 0.02, -34), 18.0, Vector2(0, -1), 8.0) # a launcher up onto the upper town
+	# up to the chapel rise
+	box(g, "RiseRamp", "cobble", Vector3(80, 0, -6), Vector3(92, RISE_Y + 0.02, 6), "x+")
+	_roads.append(Rect2(80, -6, 12, 12))
+	street(g, Rect2(92, -6, 68, 12), RISE_Y)
+	# the upper town
+	street(g, Rect2(-6, -160, 12, 116), UPPER_Y) # King's Road north, out through the north gate
+	street(g, Rect2(-30, -72, 180, 10), UPPER_Y) # Upper Street
+	street(g, Rect2(58, -86, 12, 14), UPPER_Y) # Tanner's Lane, then a ramp up to the high town
+	box(g, "TannersRamp", "cobble", Vector3(58, UPPER_Y, -100), Vector3(70, HIGH_Y + 0.02, -86), "z-")
+	_roads.append(Rect2(58, -100, 12, 14))
+	stairs(g + "/StairsHigh", Vector3(130, UPPER_Y, -92), Vector3(0, 0, -1), 6, int(HIGH_Y - UPPER_Y))
+	# the high town
+	street(g, Rect2(40, -128, 120, 8), HIGH_Y) # High Street
+
+
+## The heart of town: the square under the clock tower, a well, market wagons and crates; the
+## upper town's retaining wall and stairs on its north side.
 func market() -> void:
 	var g := "Market"
-	box(g, "Square", "cobble", Vector3(-36, -0.5, -32), Vector3(36, 0.02, 30))
 	spawn("Spawn", Vector3(0, 0.02, 22), 0.0)
-	# the clock tower (a pad at its foot, a belfry and spire on top)
-	var t := Vector3(0, 0, -8)
+	var t := Vector3(0, 0, -10)
 	tower(g + "/ClockTower", t, 11.0, Vector3(0, 0, 1), true)
 	chest(g + "/ClockTower", t + Vector3(-2.2, 11.0, 2.3), "large")
-
 	pad(g, Vector3(-24, 0.02, 14), 0.0)
 	pad(g, Vector3(24, 0.02, 14), 0.0)
-	# the well
-	var w := Vector3(0, 0, 10)
+	var w := Vector3(0, 0, 12)
 	box(g + "/Well", "Rim", "stone", w + Vector3(-2.2, 0, -2.2), w + Vector3(2.2, 1, -1.6))
 	box(g + "/Well", "Rim", "stone", w + Vector3(-2.2, 0, 1.6), w + Vector3(2.2, 1, 2.2))
 	box(g + "/Well", "Rim", "stone", w + Vector3(-2.2, 0, -1.6), w + Vector3(-1.6, 1, 1.6))
 	box(g + "/Well", "Rim", "stone", w + Vector3(1.6, 0, -1.6), w + Vector3(2.2, 1, 1.6))
 	box(g + "/Well", "Water", "water", w + Vector3(-1.6, 0, -1.6), w + Vector3(1.6, 0.5, 1.6))
-	# market stalls: wagons and crates as cover
-	for a: Array in [[Vector3(-22, 0, -2), 0.3], [Vector3(20, 0, -14), 1.9], [Vector3(-14, 0, -22), 1.3], [Vector3(26, 0, 4), -0.4], [Vector3(-28, 0, 20), 2.6]]:
+	for a: Array in [[Vector3(-22, 0, -4), 0.0], [Vector3(20, 0, -16), 1.6], [Vector3(-14, 0, -22), 1.6], [Vector3(26, 0, 6), 0.0]]:
 		wagon(g, a[0], a[1])
 	for c: Vector3 in [Vector3(-16, 0, 6), Vector3(14, 0, 2), Vector3(10, 0, -24), Vector3(-30, 0, -14), Vector3(30, 0, -26), Vector3(-8, 0, 24)]:
 		crates(g, c, 2 + rng.randi() % 4)
-	for c: Vector3 in [Vector3(-12, 0.02, 4), Vector3(12, 0.02, -2), Vector3(30, 0.02, 16), Vector3(-32, 0.02, -26)]:
+	for c: Vector3 in [Vector3(-12, 0.02, 4), Vector3(12, 0.02, -4), Vector3(30, 0.02, 20), Vector3(-30, 0.02, -26)]:
 		chest(g, c)
-	# houses around the square, doors facing it
-	var south := [[-28, 4], [-18, 3], [-8, 2], [8, 2], [18, 3], [28, 4]]
-	for i in south.size():
-		house(g + "/South", Vector3(south[i][0], 0, 40), 6, 8 if i % 2 == 0 else 6, south[i][1], "brick", Vector3(0, 0, -1))
-	for z: float in [-26.0, -12.0, 2.0, 16.0]:
-		house(g + "/West", Vector3(-46, 0, z), 8, 10 if z != 2.0 else 8, 2 + int(abs(z)) % 2, "brick", Vector3(1, 0, 0))
-		house(g + "/East", Vector3(46, 0, z), 8, 10 if z != 2.0 else 8, 2 + (int(abs(z)) + 1) % 2, "brick", Vector3(-1, 0, 0))
-	house(g + "/North", Vector3(-24, 0, -42), 6, 12, 3, "brick", Vector3(0, 0, 1))
-	house(g + "/North", Vector3(24, 0, -42), 6, 12, 3, "brick", Vector3(0, 0, 1))
+	# houses around three sides, doors onto the square
+	row(g + "/West", Vector3(-36, 0, -28), Vector3(-36, 0, -8), Vector3(-1, 0, 0), 12.0)
+	row(g + "/West", Vector3(-36, 0, 8), Vector3(-36, 0, 28), Vector3(-1, 0, 0), 12.0)
+	row(g + "/East", Vector3(36, 0, -28), Vector3(36, 0, -8), Vector3(1, 0, 0), 12.0)
+	row(g + "/East", Vector3(36, 0, 8), Vector3(36, 0, 28), Vector3(1, 0, 0), 12.0)
+	row(g + "/South", Vector3(-34, 0, 30), Vector3(-8, 0, 30), Vector3(0, 0, 1), 12.0)
+	row(g + "/South", Vector3(8, 0, 30), Vector3(34, 0, 30), Vector3(0, 0, 1), 12.0)
 
 
-## Cobbled roads out of the square: north to the castle and old town, south to the farms, east to
-## the chapel, west over the river.
-func roads() -> void:
-	var g := "Roads"
-	box(g, "North", "cobble", Vector3(-6, -0.5, -HALF + 20), Vector3(6, 0.02, -32))
-	box(g, "South", "cobble", Vector3(-6, -0.5, 30), Vector3(6, 0.02, 60))
-	box(g, "East", "cobble", Vector3(36, -0.5, -6), Vector3(HALF - 20, 0.02, 6))
-	box(g, "West", "cobble", Vector3(RIVER_X1, -0.5, -6), Vector3(-36, 0.02, 6))
-	box(g, "Farm", "dirt", Vector3(-5, -0.5, 60), Vector3(5, 0.02, HALF - 16))
-	for c: Vector3 in [Vector3(-10, 0.02, -60), Vector3(10, 0.02, 48), Vector3(70, 0.02, 10), Vector3(-60, 0.02, -10)]:
-		chest(g, c)
-
-
-## Up on a 6 m stone plateau: narrow lanes between tall houses, stairs up from the square's
-## side and a ramp from the north road, and a guildhall in the middle.
-func old_town() -> void:
-	var g := "OldTown"
-	var x0 := OLD.position.x
-	var z0 := OLD.position.y
-	var x1 := OLD.end.x
-	var z1 := OLD.end.y
-	box(g, "Plateau", "stone_dark", Vector3(x0, -1, z0), Vector3(x1, OLD_Y - 0.3, z1))
-	box(g, "Top", "cobble", Vector3(x0, OLD_Y - 0.3, z0), Vector3(x1, OLD_Y, z1))
-	# ways up: two stairs on its south side, a long ramp on its west side (from the north road)
-	stairs(g + "/StairsSW", Vector3(56, 0, z1 + 12), Vector3(0, 0, -1), 6, int(OLD_Y))
-	stairs(g + "/StairsSE", Vector3(124, 0, z1 + 12), Vector3(0, 0, -1), 6, int(OLD_Y))
-	box(g, "Ramp", "cobble", Vector3(x0 - 30, 0, -126), Vector3(x0, OLD_Y, -114), "x+")
-	pad(g, Vector3(90, 0.02, z1 + 6), 18.0, Vector2(0, -1), 8.0)
-	# lanes of houses (rows along x, doors on the lanes)
-	var y := OLD_Y
-	for row: Array in [[-138, Vector3(0, 0, 1)], [-112, Vector3(0, 0, -1)], [-96, Vector3(0, 0, 1)], [-70, Vector3(0, 0, -1)], [-54, Vector3(0, 0, 1)]]:
-		var z: float = row[0]
-		var x := x0 + 8.0
-		while x < x1 - 8:
-			var w := [6, 8, 6, 4][rng.randi() % 4] as int
-			var d := [8, 10, 12][rng.randi() % 3] as int
-			if absf(x + w / 2.0 - 95) < 12 and z > -100 and z < -60:
-				x += 26 # the guildhall's plaza
-				continue
-			house(g + "/Lanes", Vector3(x + w / 2.0, y, z), w, d, 2 + rng.randi() % 2, "brick" if rng.randf() < 0.6 else "plaster", row[1])
-			x += w + [2, 4, 6][rng.randi() % 3]
-	# the guildhall: 8 x 14, four stories, on its plaza; a chest on its ridge
-	box(g, "Plaza", "stone", Vector3(80, y, -92), Vector3(110, y + 0.02, -62))
-	house(g + "/Guildhall", Vector3(95, y, -77), 8, 14, 3, "brick", Vector3(0, 0, 1))
-	chest(g, Vector3(95, y + 3 * STORY + ROOF[8].ridge, -77), "golden")
-	pad(g, Vector3(104, y + 0.02, -77), 24.0) # straight up beside it: drift onto the roof
-	for c: Vector3 in [Vector3(58, y, -125), Vector3(130, y, -83), Vector3(66, y, -62), Vector3(118, y, -125), Vector3(84, y, -104), Vector3(106, y, -46)]:
+## The lowland streets: King's Road south, the west and east roads, the east bank lane.
+func lower_town() -> void:
+	var g := "LowerTown"
+	row(g + "/KingsSouth", Vector3(-6, 0, 46), Vector3(-6, 0, 70), Vector3(-1, 0, 0), 10.0)
+	row(g + "/KingsSouth", Vector3(6, 0, 46), Vector3(6, 0, 70), Vector3(1, 0, 0), 10.0)
+	row(g + "/WestRoad", Vector3(-78, 0, 6), Vector3(-52, 0, 6), Vector3(0, 0, 1), 12.0)
+	row(g + "/EastRoad", Vector3(52, 0, -6), Vector3(78, 0, -6), Vector3(0, 0, -1), 12.0)
+	row(g + "/EastRoad", Vector3(52, 0, 6), Vector3(78, 0, 6), Vector3(0, 0, 1), 12.0)
+	row(g + "/EastBank", Vector3(-68, 0, -140), Vector3(-68, 0, -12), Vector3(1, 0, 0), 12.0)
+	# a green between the east bank houses and the upper town
+	for c: Vector3 in [Vector3(-44, 0, -60), Vector3(-48, 0, -130), Vector3(-52, 0, -24)]:
 		chest(g, c)
 
 
-## The river: a sunken channel with water, three bridges (stone on the west road, wood north and
-## south), ramps out of the water, and a hamlet on the far bank.
+## Up on the terrace: King's Road north and Upper Street lined with taller houses, a well court.
+func upper_town() -> void:
+	var g := "UpperTown"
+	var y := UPPER_Y
+	row(g + "/KingsNorth", Vector3(-6, y, -148), Vector3(-6, y, -76), Vector3(-1, 0, 0), 10.0, 2, 3)
+	row(g + "/KingsNorth", Vector3(6, y, -148), Vector3(6, y, -76), Vector3(1, 0, 0), 10.0, 2, 3)
+	row(g + "/UpperNorth", Vector3(20, y, -72), Vector3(56, y, -72), Vector3(0, 0, -1), 12.0, 2, 3)
+	row(g + "/UpperNorth", Vector3(72, y, -72), Vector3(158, y, -72), Vector3(0, 0, -1), 12.0, 2, 3)
+	row(g + "/UpperSouth", Vector3(-28, y, -62), Vector3(-8, y, -62), Vector3(0, 0, 1), 14.0, 2, 3)
+	row(g + "/UpperSouth", Vector3(8, y, -62), Vector3(158, y, -62), Vector3(0, 0, 1), 14.0, 2, 3)
+	# the north gate at the end of King's Road: two towers and an arch over the road
+	for sx: float in [-1.0, 1.0]:
+		box(g + "/NorthGate", "Tower", "stone", Vector3(sx * 6.0, y, -160), Vector3(sx * 12.0, y + 11, -152))
+		for i in 3:
+			var mx := sx * (6.4 + i * 2.2)
+			box(g + "/NorthGate", "Merlon", "stone_dark", Vector3(mx - 0.6, y + 11, -154), Vector3(mx + 0.6, y + 12.2, -152))
+	box(g + "/NorthGate", "Arch", "stone_dark", Vector3(-6, y + 7.5, -159), Vector3(6, y + 10, -153))
+	# the well court west of the high town
+	var c := Vector3(30, y, -120)
+	box(g + "/Court", "Paving", "stone", c + Vector3(-12, 0, -16), c + Vector3(8, 0.02, 16))
+	crates(g + "/Court", c + Vector3(-6, 0.02, -10), 4)
+	wagon(g + "/Court", c + Vector3(2, 0.02, 8), 0.0)
+	for p: Vector3 in [c + Vector3(-4, 0.02, 0), c + Vector3(4, 0.02, -12), Vector3(100, y, -92), Vector3(-24, y, -100), Vector3(40, y, -80)]:
+		chest(g, p)
+
+
+## The high town: High Street between tall houses, and the guildhall on its plaza.
+func high_town() -> void:
+	var g := "HighTown"
+	var y := HIGH_Y
+	row(g + "/North", Vector3(42, y, -128), Vector3(78, y, -128), Vector3(0, 0, -1), 14.0, 2, 3)
+	row(g + "/North", Vector3(112, y, -128), Vector3(158, y, -128), Vector3(0, 0, -1), 14.0, 2, 3)
+	row(g + "/South", Vector3(42, y, -120), Vector3(158, y, -120), Vector3(0, 0, 1), 14.0, 2, 3)
+	box(g, "Plaza", "stone", Vector3(80, y, -158), Vector3(110, y + 0.02, -128))
+	house(g + "/Guildhall", Vector3(95, y + 0.02, -141), 14, 8, 3, "brick", Vector3(0, 0, 1))
+	chest(g, Vector3(95, y + 0.02 + 3 * STORY + ROOF[8].ridge, -141), "golden")
+	pad(g, Vector3(95, y + 0.02, -131.5), 24.0) # straight up beside it: drift onto the roof
+	for p: Vector3 in [Vector3(84, y + 0.02, -131), Vector3(108, y + 0.02, -148)]:
+		chest(g, p)
+
+
+## The chapel rise (east): a long chapel, its bell tower, a walled graveyard with a shrine.
+func chapel() -> void:
+	var g := "Chapel"
+	var y := RISE_Y
+	house(g, Vector3(106, y, 26), 14, 8, 3, "brick", Vector3(0, 0, -1))
+	var t := Vector3(124, y, 18)
+	tower(g + "/Tower", t, 11.0, Vector3(-1, 0, 0), true)
+	chest(g, t + Vector3(-2.3, 11.0, -2.2), "large")
+	var y0 := Vector3(130, y, 32)
+	fence(g + "/Graveyard", y0, y0 + Vector3(18, 0, 0))
+	fence(g + "/Graveyard", y0 + Vector3(0, 0, 32), y0 + Vector3(18, 0, 32))
+	fence(g + "/Graveyard", y0, y0 + Vector3(0, 0, 32))
+	for i in 3:
+		for j in 5:
+			var at := y0 + Vector3(4 + i * 5, 0, 5 + j * 5.5)
+			box(g + "/Graveyard", "Stone", "stone", at + Vector3(-0.5, 0, -0.15), at + Vector3(0.5, 1.1, 0.15))
+	chest(g, y0 + Vector3(9, 0, 30), "shrine")
+	row(g + "/Houses", Vector3(96, y, -6), Vector3(158, y, -6), Vector3(0, 0, -1), 12.0)
+	row(g + "/Houses", Vector3(134, y, 6), Vector3(158, y, 6), Vector3(0, 0, 1), 10.0)
+	for c: Vector3 in [Vector3(96, y, 12), Vector3(98, y, 46), Vector3(118, y, 62)]:
+		chest(g, c)
+
+
+## The river: bridges (stone on the west road, wood north and south), ramps out of the water,
+## and the west bank lane of houses.
 func river() -> void:
 	var g := "River"
-	for z: float in [0.0, -95.0, 95.0]:
+	for z: float in [0.0, -40.0, 95.0]:
 		var wood := z != 0.0
 		var hw := 7.0 if not wood else 3.0
 		box(g + "/Bridges", "Deck", "stone" if not wood else "plank", Vector3(RIVER_X0 - 2, -0.6, z - hw), Vector3(RIVER_X1 + 2, 0.4, z + hw))
@@ -184,27 +332,30 @@ func river() -> void:
 		if not wood:
 			box(g + "/Bridges", "Pier", "stone_dark", Vector3(-90, -4, -3), Vector3(-86, -0.6, 3))
 	# ramps out of the water (so nothing is stuck in it)
-	for z: float in [-140.0, -50.0, 45.0, 140.0]:
+	for z: float in [-140.0, -70.0, 45.0, 140.0]:
 		box(g, "Ramp", "dirt", Vector3(RIVER_X0, -3, z - 3), Vector3(RIVER_X0 + 7, 0, z + 3), "x-")
 		box(g, "Ramp", "dirt", Vector3(RIVER_X1 - 7, -3, z + 12), Vector3(RIVER_X1, 0, z + 18), "x+")
-	# the hamlet on the west bank
-	for h: Array in [[Vector3(-112, 0, -40), 6, 8], [Vector3(-130, 0, -22), 8, 10], [Vector3(-114, 0, 30), 6, 10], [Vector3(-134, 0, 48), 6, 6], [Vector3(-116, 0, 70), 8, 8], [Vector3(-136, 0, 88), 4, 6], [Vector3(-112, 0, 112), 6, 12]]:
-		house(g + "/Hamlet", h[0], h[1], h[2], 1 + rng.randi() % 2, "plaster" if rng.randf() < 0.5 else "brick")
-	for c: Vector3 in [Vector3(-88, -2.3, -30), Vector3(-104, 0, 8), Vector3(-126, 0, 64), Vector3(-104, 0, 96), Vector3(-146, 0, -6)]:
+	# the west bank lane (from the castle's foot down to the farms), houses both sides
+	# (gaps where the bridges come ashore)
+	row(g + "/WestBank", Vector3(-114, 0, -30), Vector3(-114, 0, -10), Vector3(1, 0, 0), 12.0)
+	row(g + "/WestBank", Vector3(-114, 0, 10), Vector3(-114, 0, 86), Vector3(1, 0, 0), 12.0)
+	row(g + "/WestBank", Vector3(-114, 0, 104), Vector3(-114, 0, 150), Vector3(1, 0, 0), 12.0)
+	row(g + "/WestBank", Vector3(-124, 0, -54), Vector3(-124, 0, -10), Vector3(-1, 0, 0), 12.0)
+	row(g + "/WestBank", Vector3(-124, 0, 10), Vector3(-124, 0, 150), Vector3(-1, 0, 0), 12.0)
+	for c: Vector3 in [Vector3(-88, -2.3, -110), Vector3(-104, 0, 8), Vector3(-146, 0, -6), Vector3(-88, -2.3, 60)]:
 		chest(g, c)
 
 
-## Castle hill in the north-west (west bank): terraces up to a keep with a walkable top, and a
-## watchtower with a spire.
+## Castle hill in the north-west (west bank): terraces up to a keep with battlements (a pad up its
+## wall) and a watchtower.
 func castle() -> void:
 	var g := "Castle"
-	box(g, "Terrace1", "hill", Vector3(-HALF, -1, -HALF), Vector3(-100, 4, -84))
-	box(g, "Terrace2", "hill", Vector3(-HALF, 4, -HALF), Vector3(-110, 8, -96))
-	box(g, "Terrace3", "stone_dark", Vector3(-HALF, 8, -HALF), Vector3(-120, CASTLE_Y, -106))
-	box(g, "RampUp1", "dirt", Vector3(-116, 0, -84), Vector3(-106, 4, -68), "z-") # from the town
+	terrace(g + "/Terrace1", Rect2(-HALF, -HALF, 60, 76), 4.0)
+	terrace(g + "/Terrace2", Rect2(-HALF, -HALF, 50, 64), 8.0)
+	terrace(g + "/Terrace3", Rect2(-HALF, -HALF, 40, 54), CASTLE_Y, "stone")
+	box(g, "RampUp1", "dirt", Vector3(-124, 0, -84), Vector3(-114, 4, -68), "z-") # from the west bank lane
 	box(g, "RampUp2", "dirt", Vector3(-110, 4, -126), Vector3(-100, 8, -114), "x-")
 	box(g, "RampUp3", "stone", Vector3(-140, 8, -106), Vector3(-130, CASTLE_Y, -96), "z-")
-	# the keep: 22 x 22, 14 m, battlements on top
 	var k0 := Vector3(-150, CASTLE_Y, -150)
 	var kh := 10.0
 	box(g + "/Keep", "Body", "stone", k0, k0 + Vector3(22, kh, 22))
@@ -216,60 +367,37 @@ func castle() -> void:
 	chest(g, k0 + Vector3(11, kh, 11), "large")
 	chest(g, k0 + Vector3(4, kh, 17))
 	pad(g, k0 + Vector3(23.6, 0.02, 11), 24.0, Vector2(-1, 0), 4.0) # against the wall: up and onto the keep
-	# the watchtower: a flat top with a low wall
 	var t := Vector3(-126, CASTLE_Y, -114)
 	tower(g + "/Tower", t, 10.5, Vector3(0, 0, 1), false)
 	chest(g + "/Tower", t + Vector3(0, 10.5, 0), "large")
-	for h: Array in [[Vector3(-146, 8, -102), 6, 8], [Vector3(-146, 4, -90), 6, 6], [Vector3(-124, 4, -90), 6, 6]]:
-		house(g + "/Houses", h[0], h[1], h[2], 2, "brick")
+	house(g + "/Houses", Vector3(-146, 8, -101), 6, 8, 2, "brick", Vector3(0, 0, 1))
+	house(g + "/Houses", Vector3(-146, 4, -90), 6, 6, 2, "brick", Vector3(0, 0, 1))
+	house(g + "/Houses", Vector3(-134, 4, -90), 6, 6, 1, "brick", Vector3(0, 0, 1))
 	for p: Vector3 in [Vector3(-104, 4, -90), Vector3(-116, 8, -100), Vector3(-126, CASTLE_Y, -126)]:
 		chest(g, p)
-
-
-## The chapel quarter (east): a long chapel with a bell tower, a graveyard behind a fence, houses.
-func chapel() -> void:
-	var g := "Chapel"
-	house(g, Vector3(100, 0, 30), 8, 14, 3, "brick", Vector3(-1, 0, 0))
-	var t := Vector3(100, 0, 12)
-	tower(g + "/Tower", t, 11.0, Vector3(-1, 0, 0), true)
-	chest(g, t + Vector3(-2.3, 11.0, -2.2), "large")
-	# the graveyard: stones in rows, a fence around
-	var y0 := Vector3(116, 0, 18)
-	fence(g + "/Graveyard", y0, y0 + Vector3(26, 0, 0))
-	fence(g + "/Graveyard", y0 + Vector3(0, 0, 30), y0 + Vector3(26, 0, 30))
-	fence(g + "/Graveyard", y0 + Vector3(26, 0, 0), y0 + Vector3(26, 0, 30))
-	for i in 4:
-		for j in 5:
-			var at := y0 + Vector3(4 + i * 6, 0, 4 + j * 5.5)
-			box(g + "/Graveyard", "Stone", "stone", at + Vector3(-0.5, 0, -0.15), at + Vector3(0.5, 1.1, 0.15))
-	chest(g, y0 + Vector3(13, 0, 15), "shrine")
-	for h: Array in [[Vector3(70, 0, 34), 6, 8, Vector3(0, 0, -1)], [Vector3(84, 0, 60), 6, 10, Vector3(-1, 0, 0)], [Vector3(130, 0, -30), 8, 8, Vector3(0, 0, 1)], [Vector3(96, 0, -28), 6, 12, Vector3(0, 0, 1)], [Vector3(66, 0, -26), 4, 6, Vector3(0, 0, 1)], [Vector3(140, 0, 70), 6, 8, Vector3(-1, 0, 0)]]:
-		house(g + "/Houses", h[0], h[1], h[2], 2, "plaster" if rng.randf() < 0.5 else "brick", h[3])
-	for c: Vector3 in [Vector3(80, 0, 16), Vector3(124, 0, 58), Vector3(146, 0, -10), Vector3(112, 0, -35)]:
-		chest(g, c)
 
 
 ## Farms in the south: fields in rows, fences, hay, wagons, a big barn and farmhouses.
 func farms() -> void:
 	var g := "Farms"
-	for f: Rect2 in [Rect2(-70, 70, 50, 34), Rect2(16, 70, 50, 34), Rect2(-70, 112, 50, 32), Rect2(80, 100, 50, 40)]:
+	for f: Rect2 in [Rect2(-70, 78, 50, 32), Rect2(16, 78, 50, 32), Rect2(-70, 118, 50, 30), Rect2(80, 100, 50, 40)]:
 		for r in int(f.size.y / 4):
 			var z := f.position.y + r * 4 + 1
 			box(g + "/Fields", "Row", "field", Vector3(f.position.x, 0, z), Vector3(f.end.x, 0.4, z + 2)) # low enough to walk over
 		fence(g + "/Fences", Vector3(f.position.x, 0, f.position.y - 1), Vector3(f.end.x, 0, f.position.y - 1))
 		fence(g + "/Fences", Vector3(f.position.x, 0, f.end.y + 1), Vector3(f.end.x, 0, f.end.y + 1))
-	# the barn: 8 x 14, tall, doors to the road
-	house(g + "/Barn", Vector3(40, 0, 128), 8, 14, 2, "plaster", Vector3(-1, 0, 0))
-	house(g + "/Houses", Vector3(-24, 0, 128), 6, 8, 2, "brick", Vector3(1, 0, 0))
-	house(g + "/Houses", Vector3(110, 0, 82), 6, 10, 1, "plaster", Vector3(0, 0, -1))
-	house(g + "/Houses", Vector3(-110, 0, 140), 6, 8, 2, "brick", Vector3(1, 0, 0))
-	for c: Vector3 in [Vector3(12, 0, 110), Vector3(-10, 0, 90), Vector3(70, 0, 88), Vector3(30, 0, 144)]:
+		_solids.append(f)
+		_blocks.append(f.grow(1.2))
+	house(g + "/Barn", Vector3(40, 0, 132), 14, 8, 2, "plaster", Vector3(-1, 0, 0))
+	house(g + "/Houses", Vector3(-14, 0, 130), 6, 8, 2, "brick", Vector3(1, 0, 0))
+	house(g + "/Houses", Vector3(110, 0, 84), 10, 6, 1, "plaster", Vector3(0, 0, -1))
+	for c: Vector3 in [Vector3(12, 0, 114), Vector3(-10, 0, 96), Vector3(72, 0, 92), Vector3(24, 0, 146)]:
 		hay(g, c)
-	for a: Array in [[Vector3(-12, 0, 70), 1.5], [Vector3(14, 0, 140), -0.3], [Vector3(66, 0, 120), 0.8]]:
+	for a: Array in [[Vector3(-12, 0, 76), 0.0], [Vector3(14, 0, 142), 1.6], [Vector3(70, 0, 124), 0.0]]:
 		wagon(g, a[0], a[1])
-	for c: Vector3 in [Vector3(-44, 0, 108), Vector3(44, 0, 108), Vector3(100, 0, 96), Vector3(-40, 0, 150), Vector3(8, 0, 150), Vector3(60, 0, 150)]:
+	for c: Vector3 in [Vector3(-44, 0, 114), Vector3(44, 0, 114), Vector3(100, 0, 96), Vector3(-40, 0, 152), Vector3(8, 0, 152), Vector3(60, 0, 152)]:
 		chest(g, c)
-	chest(g, Vector3(40, 2 * STORY + ROOF[8].ridge, 128), "large")
+	chest(g, Vector3(40, 2 * STORY + ROOF[8].ridge, 132), "large")
 
 
 ## Hills all the way around, with an invisible wall above them.
@@ -282,35 +410,82 @@ func edges() -> void:
 		var along_x := hi.x - lo.x > hi.z - lo.z
 		var n := int((hi.x - lo.x if along_x else hi.z - lo.z) / 20.0)
 		for i in n:
-			var h := 10.0 + rng.randf() * 18.0
+			var h := 12.0 + rng.randf() * 18.0
 			var a := lo + (Vector3(i * 20, 0, 0) if along_x else Vector3(0, 0, i * 20))
 			var b := Vector3(a.x + (20 if along_x else hi.x - lo.x), h, a.z + (hi.z - lo.z if along_x else 20))
 			box(g, "Hill", "hill", a, b)
 		box(g, "Wall", "barrier", Vector3(lo.x, 0, lo.z), Vector3(hi.x, 70, hi.z))
 
 
-## Trees here and there (not on roads, in houses or the river).
+## Trees wherever there's room (not on streets, in houses, on fields or in the river), on
+## whatever level the ground is.
 func trees() -> void:
 	var placed := 0
 	var tries := 0
-	while placed < 90 and tries < 4000:
+	while placed < 110 and tries < 6000:
 		tries += 1
-		var p := Vector3(rng.randf_range(-HALF + 6, HALF - 6), 0, rng.randf_range(-HALF + 6, HALF - 6))
-		if absf(p.x) < 50 and absf(p.z) < 50: continue # the square
-		if absf(p.x) < 10 or absf(p.z) < 10: continue # the roads
-		if p.x > RIVER_X0 - 4 and p.x < RIVER_X1 + 4: continue
-		if OLD.grow(6).has_point(Vector2(p.x, p.z)): continue
-		if p.x < -96 and p.z < -80: continue # the castle
-		if _near_building(p, 7.0): continue
-		tree("Trees", p, 0.8 + rng.randf() * 0.7)
+		var x := rng.randf_range(-HALF + 6, HALF - 6)
+		var z := rng.randf_range(-HALF + 6, HALF - 6)
+		if x > RIVER_X0 - 4 and x < RIVER_X1 + 4: continue
+		if Rect2(-40, -34, 80, 68).has_point(Vector2(x, z)): continue # the square
+		if x < -96 and z < -80: continue # the castle
+		if _near(Vector2(x, z), 5.0): continue
+		if _edge_near(Vector2(x, z), 4.0): continue # not right at a terrace's edge
+		tree("Trees", Vector3(x, level_at(x, z), z), 0.8 + rng.randf() * 0.7)
+		_solids.append(Rect2(x - 2, z - 2, 4, 4))
 		placed += 1
 
 
-func _near_building(p: Vector3, r: float) -> bool:
+func _near(p: Vector2, r: float) -> bool:
 	for b in _solids:
-		if b.grow(r).has_point(Vector2(p.x, p.z)):
+		if b.grow(r).has_point(p):
+			return true
+	for b in _roads:
+		if b.grow(r).has_point(p):
 			return true
 	return false
+
+
+## Within r of a level change (a terrace edge): a tree there would hang over the drop.
+func _edge_near(p: Vector2, r: float) -> bool:
+	var h := level_at(p.x, p.y)
+	for d: Vector2 in [Vector2(r, 0), Vector2(-r, 0), Vector2(0, r), Vector2(0, -r), Vector2(r, r), Vector2(-r, -r), Vector2(r, -r), Vector2(-r, r)]:
+		if level_at(p.x + d.x, p.y + d.y) != h:
+			return true
+	return false
+
+
+## Houses along one side of a straight street, from a to b (the street's edge, at its level),
+## doors to the street, up to max_depth deep (out: from the street toward the houses). Sizes are
+## ones the kit has a roof for; some gables face the street, some eaves; alleys between, and
+## sometimes a chest in one.
+func row(grp: String, a: Vector3, b: Vector3, out: Vector3, max_depth: float, min_floors := 1, max_floors := 3) -> void:
+	var dir := (b - a).normalized()
+	var total := a.distance_to(b)
+	var t := rng.randf_range(0.0, 1.5)
+	var options: Array = []
+	for span: int in ROOF_LENGTHS:
+		for l: int in ROOF_LENGTHS[span]:
+			options.append([span, l]) # gable to the street
+			if l != span:
+				options.append([l, span]) # eaves to the street
+	while true:
+		var fits := options.filter(func(o: Array) -> bool: return o[0] <= total - t and o[1] <= max_depth and o[0] <= 12)
+		if fits.is_empty():
+			break
+		var o: Array = fits[rng.randi() % fits.size()]
+		var along: int = o[0]
+		var depth: int = o[1]
+		var c := a + dir * (t + along / 2.0) + out * (0.6 + depth / 2.0)
+		var w := along if absf(dir.x) > 0.5 else depth
+		var d := depth if absf(dir.x) > 0.5 else along
+		var floors := rng.randi_range(min_floors, max_floors)
+		house(grp, c, w, d, floors, "brick" if floors > 1 or rng.randf() < 0.4 else "plaster", -out)
+		t += along
+		var gap := rng.randf_range(2.5, 6.0)
+		if gap > 3.5 and t + gap < total and rng.randf() < 0.3:
+			chest(grp, a + dir * (t + gap / 2.0) + out * 3.0) # tucked in the alley
+		t += gap
 
 
 # ---------- building blocks ----------
@@ -414,6 +589,7 @@ func stairs(grp: String, base: Vector3, dir: Vector3, width: int, rise: int) -> 
 			model(grp, piece, base + dir * (1 + 2 * k) + off + Vector3(0, k, 0), yaw)
 	var a := base - across * (width / 2.0)
 	var b := base + across * (width / 2.0) + dir * (2 * rise)
+	_blocks.append(Rect2(Vector2(minf(a.x, b.x), minf(a.z, b.z)), Vector2(absf(a.x - b.x), absf(a.z - b.z))))
 	var ramp := ("x+" if dir.x > 0 else "x-") if dir.x != 0 else ("z+" if dir.z > 0 else "z-")
 	box(grp, "Ramp", "hidden", Vector3(minf(a.x, b.x), base.y, minf(a.z, b.z)), Vector3(maxf(a.x, b.x), base.y + rise, maxf(a.z, b.z)), ramp)
 
@@ -440,6 +616,7 @@ func wagon(grp: String, p: Vector3, yaw: float) -> void:
 	var half := Vector3(1.0, 0, 2.0) if along_z else Vector3(2.0, 0, 1.0)
 	box(grp + "/Wagons", "Wagon", "hidden", p - half, p + half + Vector3(0, 1.4, 0))
 	_solids.append(Rect2(p.x - half.x, p.z - half.z, half.x * 2, half.z * 2))
+	_blocks.append(Rect2(p.x - half.x, p.z - half.z, half.x * 2, half.z * 2))
 
 
 ## A stack of crates (n of them, up to two high).
@@ -469,6 +646,8 @@ func tree(grp: String, p: Vector3, s: float) -> void:
 ## the edge; the top is flush with the wall so nothing stops you on the way), and optionally a
 ## belfry with the kit's spire on top.
 func tower(grp: String, t: Vector3, top: float, face: Vector3, belfry: bool) -> void:
+	_blocks.append(Rect2(t.x - 5, t.z - 5, 10, 10))
+	_blocks.append(Rect2(t.x + face.x * 6.2 - 1.3, t.z + face.z * 6.2 - 1.3, 2.6, 2.6)) # its pad
 	box(grp, "Base", "stone_dark", t + Vector3(-5, 0, -5), t + Vector3(5, 1.2, 5))
 	box(grp, "Body", "stone", t + Vector3(-4, 1.2, -4), t + Vector3(4, top - 0.5, 4))
 	box(grp, "Top", "stone_dark", t + Vector3(-4, top - 0.5, -4), t + Vector3(4, top, 4))
@@ -499,6 +678,9 @@ func house(grp: String, c: Vector3, w: int, d: int, floors: int, style := "brick
 	var span := w if across_x else d
 	var length := d if across_x else w
 	assert(ROOF.has(span), "a house's short side must be 4, 6 or 8")
+	# the roof (and its gable ends) must be exactly as long as the house, or there'd be gaps
+	# you can see through and collision where no roof is drawn
+	assert(ROOF_LENGTHS[span].has(length), "no %dx%d roof in the kit" % [span, length])
 	var x0 := c.x - w / 2.0
 	var x1 := c.x + w / 2.0
 	var z0 := c.z - d / 2.0
@@ -537,8 +719,7 @@ func house(grp: String, c: Vector3, w: int, d: int, floors: int, style := "brick
 				model(g, "Corner_Exterior_Brick" if stone else "Corner_Exterior_Wood", Vector3(cx, y, cz), atan2(sign(cx - c.x), sign(cz - c.z)) - PI / 4)
 	# the roof, its gable ends, and the collision
 	var info: Dictionary = ROOF[span]
-	var rl := _roof_length(span, length)
-	model(g, "Roof_RoundTiles_%dx%d" % [span, rl], Vector3(c.x, top, c.z), 0.0 if across_x else PI / 2)
+	model(g, "Roof_RoundTiles_%dx%d" % [span, length], Vector3(c.x, top, c.z), 0.0 if across_x else PI / 2)
 	for s: float in [-1.0, 1.0]:
 		var at := Vector3(c.x, top, c.z + s * length / 2.0) if across_x else Vector3(c.x + s * length / 2.0, top, c.z)
 		model(g, "Roof_Front_Brick%d" % span, at, (0.0 if s > 0 else PI) + (0.0 if across_x else PI / 2))
@@ -548,6 +729,7 @@ func house(grp: String, c: Vector3, w: int, d: int, floors: int, style := "brick
 		var at := Vector3(c.x + off, top, c.z + along_off) if across_x else Vector3(c.x + along_off, top, c.z + off)
 		model(g, "Prop_Chimney" if rng.randf() < 0.5 else "Prop_Chimney2", at, 0.0, 1.0)
 	_solids.append(Rect2(x0, z0, w, d))
+	_houses.append([Rect2(x0, z0, w, d), c.y])
 	var eave := top + float(info.eave)
 	var ridge := top + float(info.ridge)
 	box(g, "Walls", "hidden", Vector3(x0 - 0.1, c.y, z0 - 0.1), Vector3(x1 + 0.1, eave, z1 + 0.1))
@@ -557,12 +739,3 @@ func house(grp: String, c: Vector3, w: int, d: int, floors: int, style := "brick
 	else:
 		box(g, "RoofL", "hidden", Vector3(x0, eave, z0 - 0.1), Vector3(x1, ridge, c.z), "z+")
 		box(g, "RoofR", "hidden", Vector3(x0, eave, c.z), Vector3(x1, ridge, z1 + 0.1), "z-")
-
-
-## The roof model length for a house `length` long (the nearest the kit has).
-func _roof_length(span: int, length: int) -> int:
-	var best: int = ROOF_LENGTHS[span][0]
-	for l: int in ROOF_LENGTHS[span]:
-		if absi(l - length) < absi(best - length):
-			best = l
-	return best
