@@ -12,7 +12,8 @@ The game is heading toward a Risk of Rain style roguelite (runs over several sta
 items that stack). The menus already work that way:
 
 - **SINGLEPLAYER** → the lobby: pick your character (Brawler, Bomber, Sharpshooter, Commando; each is a
-  fixed kit), press **READY** → the loading screen → stage 1, Sunstone Valley.
+  fixed kit), press **READY** → the loading screen → stage 1, Sunstone Valley: survive 8 waves,
+  kill the boss, and on to the next stage (see "A run").
 - **MULTIPLAYER**: greyed out for now (the code is there, parked while the solo game comes
   together).
 - **PRACTICE** → the Dev Arena (free play with the dummies) and the two **time trials** (guns
@@ -98,12 +99,16 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 - **Lobby and loading screen**: Risk of Rain style. Everyone ready → (online: a 3 s countdown) →
   a loading card with the stage number, name, progress and tips, which stays up while the stage
   loads and, online, until everyone has loaded.
-- **Enemies** (see "Enemies" below): 9 types in 3 families, with solo health, regen and
-  respawning.
+- **A run** (see "A run" below): 8 waves that get bigger and tougher, then the Colossus boss;
+  kill it and the stage is cleared (a rare or legendary drop, 12 s to grab loot), then the loading
+  screen and the next stage with your items, level and gold. Die and the run is over (a results
+  screen: TRY AGAIN / MAIN MENU).
+- **Enemies** (see "Enemies" below): 9 types in 3 families plus the Colossus boss, with solo
+  health and regen (practice respawns you; a run doesn't).
 - **Gold and chests** (see "Items" below): kills pay gold, chests around the stage cost gold, and
   an opened chest throws out an item that floats in a glow of its rarity's color until you walk
   into it.
-- **Items** (see "Items" below): 34 stacking items in three rarities: status effects (burn, bleed,
+- **Items** (see "Items" below): 40 stacking items in three rarities: status effects (burn, bleed,
   chill/freeze, marks, sticky bombs), chain lightning, kill explosions, Triple Tap's V of shots,
   movement items (speed, wall jumps, air jumps, Slide Spikes, Stomp Boots), an item bar and pickup
   banner on the HUD.
@@ -145,8 +150,13 @@ Settings (mouse sensitivity + FOV, video, lighting, volume, every keybind) are s
 Fair-play rules every attack follows (tests/enemy_test.gd checks them): a visible windup (red
 "!", glow, a click) of at least 0.25 s before anything can hurt you, no attack without line of
 sight, shots aimed where you are (never led) and slow enough to dodge. You have 100 HP,
-regenerate 3 s after the last hit, and get back up 2.5 s after being splatted (1.5 s of spawn
-protection). No automatic spawning yet: that's the director, next.
+regenerate 3 s after the last hit. In practice you get back up 2.5 s after being splatted (1.5 s
+of spawn protection); in a run, being splatted ends it.
+
+**The Colossus** (the boss, 2500 HP, 2.6 m tall with a gold crown) rotates three attacks, each
+with its own windup: a **slam** when you're close (a big shockwave ring rolls out 24 m: jump it),
+a **volley** of 7 slow orbs in a fan when you're not, and every third attack it **summons** 4
+swarmers.
 
 Flyers hover 2.5-8 m over the ground (or over you, if you're up high). Big crowds stay cheap:
 enemies think and move 60 times a second (30 once they're 40 m away) instead of every 120 Hz
@@ -158,7 +168,33 @@ per tick.
 FREEZE / HEAL / KILL ALL, next to a text bar that takes the same as commands: `spawn flyer beam`,
 `spawn beam`, `spawn swarmer 5`, `spawn runner` (a random runner), `killall`, `god [on/off]`,
 `heal`, `freeze [on/off]` / `unfreeze`, `list`, `help`. Up/Down recalls what you typed. Enemies
-spawn 12 m in front of you, facing you. The console gives items too (see "Items").
+spawn 12 m in front of you, facing you. The console gives items too (see "Items"). In a run:
+`wave <n>` (skip to wave n), `boss` (straight to the boss), `nextstage` (clear the stage now),
+`levelup [n]`, `chest <kind>`.
+
+## A run
+
+`scripts/director.gd` (the waves and the boss), `scripts/run_hud.gd` (the wave counter, banners,
+boss bar and results). Each stage:
+
+1. 5 s to look around, then **wave 1**. A wave has a budget (28 at wave 1, +10 a wave, x1.5 a
+   stage) spent on enemies by cost (swarmers 2 each in packs of 3, chargers and gunners 4, lobbers
+   and projectile flyers 5, snipers and beam flyers 6, healers 7, brutes 10). New types unlock as
+   the waves go by: lobbers and projectile flyers at wave 2, snipers and beam flyers at 3, brutes
+   at 4, healers at 5.
+2. They arrive in groups of 1-3 over the first seconds of the wave, 16-34 m from you on open
+   ground (never on top of you, never inside a wall), at most 36 alive at once. The HUD says
+   `WAVE 3 / 8` and how many are left; the wave ends when all of it is dead, then a 7 s break.
+3. Every wave is tougher (+15% health, +6% damage a wave); every stage more so (+60% health, +30%
+   damage), and pays more (+50% gold, and chests cost 50% more).
+4. After wave 8: **BOSS INCOMING**, and the Colossus lands near you with a health bar across the
+   top of the screen.
+5. Kill it: **STAGE CLEARED**, it drops a rare (or, 35% of the time, a legendary) item, and 12 s
+   later the loading screen takes you to the next stage. Items, level, XP, gold, kills and time
+   carry over; you arrive at full health.
+
+Stages are listed in `Characters.STAGES` (Sunstone Valley, then the Fantasy Village, which isn't
+built yet: until it is, stage 2 is Sunstone Valley again, harder).
 
 ## Items
 
@@ -351,12 +387,12 @@ godot --headless --path . --script res://tests/enemy_test.gd
 
 The roguelite, in this order:
 
-1. ~~Enemies~~ (done: 9 types, admin console). Next: the spawn director (enemies arrive over
-   time, harder as the clock runs), tuning from playtests.
-2. "Run over" when you die in a run (solo health and dying are in).
+1. ~~Enemies~~ (done: 9 types, admin console). ~~Waves~~ (done: the director). Next: tuning from
+   playtests.
+2. ~~"Run over" when you die in a run~~ (done: the results screen).
 3. ~~Stacking items~~ (done: 40 with 6 legendaries, see "Items"). ~~Gold, chests, shops, shrines,
    barrels~~ (done). ~~Levels~~ (done). Next: chest prices that rise over the run, equipment
    (an active item on a key), more items.
-4. Run structure: teleporter + boss wave (the altar in the middle of the Sunstone Ruins is the
-   spot), then the next stage (the loading screen is ready for it), a difficulty clock.
+4. ~~Run structure~~ (done: 8 waves → the Colossus → stage cleared → the next stage). Next: the
+   Fantasy Village as stage 2 (from the owner's building assets), a boss per stage.
 5. More stages, character passives, unlocks. Multiplayer becomes co-op.

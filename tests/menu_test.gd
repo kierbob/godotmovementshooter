@@ -299,9 +299,47 @@ func _init() -> void:
 	await create_timer(1.5).timeout # it hops out toward you and lands at your feet
 	check("it lands by you and it's yours, with its banner", item != "" and game.loot.drops.is_empty()
 		and game.combat.up.count(item) == had + 1 and game.hud.items._banner.modulate.a > 0.5)
-	await create_timer(2.0).timeout
-	menu.to_main_menu.emit()
+
+	# the run: waves, the boss, the next stage (your stuff comes along), and the end
+	check("a run has its waves (%s)" % game.hud.run._wave.text, game.director != null and game.hud.run._wave.visible
+		and (game.hud.run._wave.text.begins_with("WAVE") or game.hud.run._wave.text.begins_with("STAGE")))
+	game.enemies.god = true
+	game.console.execute("boss")
+	t0 = Time.get_ticks_msec()
+	while game.director.phase != "boss" and Time.get_ticks_msec() - t0 < 8000:
+		await process_frame
+	await frames(3)
+	check("'boss': the boss lands, with its health bar", game.director.boss != null and game.hud.run._boss.visible
+		and game.hud.run._boss_name.text == "COLOSSUS")
+	game.director.boss.target.hp = 0.0
+	game.director.boss.target.dead = true
+	t0 = Time.get_ticks_msec()
+	while game.director.phase != "cleared" and Time.get_ticks_msec() - t0 < 4000:
+		await process_frame
+	await frames(3)
+	check("killing it: STAGE CLEARED, and it drops something good", game.director.phase == "cleared"
+		and game.hud.run._b_title.text == "STAGE CLEARED" and not game.loot.drops.is_empty())
+	game.console.execute("give triple tap 2")
+	game.console.execute("levelup 2")
+	game.loot.gold = 77
+	var carried_items: int = game.combat.up.total
+	var carried_level: int = game.combat.up.level
+	game.console.execute("nextstage")
+	game = await wait_playing(game)
+	menu = game.menu
+	check("on to STAGE 2, with your items, level and gold (%d items, level %d, $%d)" % [game.combat.up.total, game.combat.up.level, game.loot.gold],
+		game.director != null and game.director.stage == 2 and game.combat.up.total == carried_items
+		and game.combat.up.count("triple_tap") >= 2 and game.combat.up.level == carried_level and game.loot.gold == 77)
+	await create_timer(1.5).timeout
+	game.player.invuln = 0.0
+	game.enemies.god = false
+	game.enemies.hurt_player(game.player, 99999.0, Vector3.ZERO, "test")
+	await create_timer(2.5).timeout
+	check("dying ends the run: the results screen", game.state == "over" and game.hud.run.results_up()
+		and game.hud.run._res_title.text == "RUN OVER")
+	button(game.hud.run._results, "MAIN MENU").pressed.emit()
 	await frames()
+	check("...and MAIN MENU from there", game.state == "menu" and menu.screen == "main" and not game.hud.run.results_up())
 
 	# multiplayer screen: name saved, a bad address explains itself, Esc goes back
 	check("MULTIPLAYER is greyed out for now", button(menu._screens.main, "MULTIPLAYER").disabled)

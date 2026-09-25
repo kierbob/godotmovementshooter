@@ -172,6 +172,23 @@ func _make(e: Enemies.Enemy) -> Dictionary:
 				(horn.mesh as CylinderMesh).height = 0.26
 				horn.position = Vector3(sgn * 0.13, 1.98, 0.02)
 				horn.rotation.z = sgn * -0.5
+		"colossus":
+			for i in 5: # a gold crown
+				var spike := _part(CylinderMesh.new(), Color("ffcf2e"), body)
+				(spike.mesh as CylinderMesh).top_radius = 0.0
+				(spike.mesh as CylinderMesh).bottom_radius = 0.06
+				(spike.mesh as CylinderMesh).height = 0.22
+				var a := TAU * i / 5.0
+				spike.position = Vector3(sin(a) * 0.17, 2.02, cos(a) * 0.17)
+			var band := _part(CylinderMesh.new(), Color("ffcf2e"), body)
+			(band.mesh as CylinderMesh).top_radius = 0.2
+			(band.mesh as CylinderMesh).bottom_radius = 0.2
+			(band.mesh as CylinderMesh).height = 0.07
+			band.position.y = 1.9
+			for sgn: float in [-1.0, 1.0]:
+				var plate := _part(BoxMesh.new(), Color("3a2a4a"), body)
+				(plate.mesh as BoxMesh).size = Vector3(0.36, 0.16, 0.46)
+				plate.position = Vector3(sgn * 0.37, 1.3, 0)
 		"brute":
 			for sgn: float in [-1.0, 1.0]:
 				var plate := _part(BoxMesh.new(), Color("4b3a7a"), body)

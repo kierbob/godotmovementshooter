@@ -31,8 +31,17 @@ const LIST := {
 const ORDER := ["brawler", "bomber", "sharpshooter", "commando"]
 const DEFAULT := "brawler"
 
-## Runs start here (later: a random pick from the stage pool, then the next floors).
+## Runs start here, then go through STAGES in order (looping, harder each time round). A stage
+## whose map isn't there yet is skipped (fantasy-village is next, once it's built).
 const FIRST_STAGE := "sunstone-valley"
+const STAGES := ["sunstone-valley", "fantasy-village"]
+
+
+## The map for stage n (1-based) of a run.
+static func stage_map(n: int) -> String:
+	var have := MapData.list()
+	var pool := STAGES.filter(func(id: String) -> bool: return id in have)
+	return FIRST_STAGE if pool.is_empty() else pool[(n - 1) % pool.size()]
 
 
 static func get_info(id: String) -> Dictionary:

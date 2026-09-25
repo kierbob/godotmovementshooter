@@ -208,6 +208,10 @@ func feed(pieces: Array, style := "") -> void:
 
 
 ## Once per frame while online.
+func hide_death() -> void:
+	_death.visible = false
+
+
 func update(dt: float, player: PlayerSim, yaw: float, respawn_in: float, killer: String, badge: String) -> void:
 	var frac := clampf(player.hp / player.max_hp, 0.0, 1.0)
 	_hp_num.text = str(ceili(player.hp))
@@ -238,7 +242,10 @@ func update(dt: float, player: PlayerSim, yaw: float, respawn_in: float, killer:
 		var t := _death_age / 0.5
 		_death_word.pivot_offset = _death_word.size / 2
 		_death_word.scale = Vector2.ONE * (lerpf(0.4, 1.15, t / 0.6) if t < 0.6 else lerpf(1.15, 1.0, minf(1.0, (t - 0.6) / 0.4)))
-		_death_sub.text = ("%s got you · " % killer if killer != "" else "") + "Respawning in %.1f" % maxf(0.0, respawn_in)
+		if respawn_in < 0: # no respawn (a solo run): just what got you
+			_death_sub.text = "%s got you" % killer if killer != "" else ""
+		else:
+			_death_sub.text = ("%s got you · " % killer if killer != "" else "") + "Respawning in %.1f" % respawn_in
 	else:
 		_death.visible = false
 	var keep: Array = []

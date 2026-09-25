@@ -8,6 +8,8 @@ extends RefCounted
 ##                     over), Swarmer (small, fast, weak, comes in packs)
 ##   Shooters:         Gunner (slow bursts), Lobber (arcing grenades with a landing marker),
 ##                     Sniper (a laser that tracks you, locks, then fires)
+##   Boss:             Colossus (a giant: shockwave slams you jump, fans of slow orbs, calls in
+##                     swarmers; each with a long windup)
 ##   Flyers:           Projectile (dodgeable orbs), Beam (Moira-style lock-on that breaks at range
 ##                     or behind cover), Healer (heals the enemies that fight, never another healer,
 ##                     never hurts you)
@@ -45,11 +47,13 @@ const TYPES := {
 	"flyer_projectile": {"family": "flyer", "name": "Projectile Flyer", "hp": 70.0, "size": 0.8, "color": Color("ffd84a"), "speed": 7.0, "range": 14.0},
 	"flyer_beam": {"family": "flyer", "name": "Beam Flyer", "hp": 90.0, "size": 0.8, "color": Color("d65cff"), "speed": 9.0, "range": 8.0},
 	"flyer_healer": {"family": "flyer", "name": "Healer Flyer", "hp": 110.0, "size": 0.8, "color": Color("5ee0a0"), "speed": 8.0, "range": 6.0},
+	"colossus": {"family": "boss", "name": "Colossus", "hp": 2500.0, "size": 2.6, "color": Color("c0392b"), "move": "crouch"},
 }
 const FAMILIES := {
 	"runner": ["charger", "brute", "swarmer"],
 	"shooter": ["gunner", "lobber", "sniper"],
 	"flyer": ["flyer_projectile", "flyer_beam", "flyer_healer"],
+	"boss": ["colossus"],
 }
 
 # Attack numbers (seconds, meters, damage).
@@ -62,6 +66,11 @@ const SNIPER := {"reach": 60.0, "aim": 1.5, "lock": 0.4, "damage": 35.0, "cooldo
 const FLYER_ORB := {"reach": 35.0, "windup": 0.35, "speed": 22.0, "damage": 10.0, "cooldown": 1.8}
 const FLYER_BEAM := {"reach": 13.0, "break": 15.0, "windup": 0.6, "dps": 13.0, "max": 3.0, "cooldown": 3.0}
 const HEALER := {"reach": 25.0, "hps": 30.0}
+## The boss. Every third attack calls in swarmers; otherwise a slam when you're close (a big, fast
+## shockwave: jump it) or a fan of slow orbs aimed where you are.
+const COLOSSUS := {"slam_reach": 16.0, "slam_windup": 1.2, "wave_speed": 15.0, "wave_radius": 24.0, "wave_band": 1.1,
+	"slam_damage": 35.0, "volley_windup": 0.8, "orbs": 7, "spread": 0.9, "orb_speed": 17.0, "orb_damage": 12.0,
+	"summon_windup": 1.0, "summon": 4, "cooldown": 2.2, "recover": 0.8}
 const FLY_MIN := 2.5 # flyers stay this far above the ground...
 const FLY_MAX := 8.0 # ...and at most this far above it (or above you, if you're up high)
 
@@ -89,6 +98,9 @@ class Enemy:
 	var heal_target: Enemy = null
 	var wave_r := -1.0 # brute shockwave radius (-1 = none)
 	var wave_at := Vector3.ZERO
+	var attack := "" # the boss's attack being wound up
+	var attacks := 0 # how many it has started (every third is a summon)
+	var hp_mult := 1.0 # how much tougher than the base type (later waves, later stages)
 	var beam_acc := 0.0 # beam damage built up, dealt in small chunks (one hurt flash, not 120 a second)
 	var alive := true
 	var acc := 0.0 # sim time since it last thought (see LOD_FAR)
@@ -107,6 +119,7 @@ var projectiles: Array[Dictionary] = [] # {id, pos, vel, radius, damage, kind, g
 var events: Array[Dictionary] = [] # for the view and sounds; main clears it every frame
 var deaths: Array[Dictionary] = [] # this tick's kills {type, pos} (Loot pays gold for them)
 var god := false # admin: the player can't be hurt
+var damage_mult := 1.0 # everything hurts this much more (the wave director turns it up)
 var frozen := false # admin: enemies stand still and don't attack
 var time := 0.0
 var player_center := Vector3.ZERO # where the player was this tick (the view aims beams at it)
@@ -124,8 +137,10 @@ func _init(m: MapData, c: Combat) -> void:
 
 
 ## Spawn one. pos is the feet for ground types, the body center for flyers.
-func spawn(type: String, pos: Vector3) -> Enemy:
+## hp_mult: tougher than the type's base health (the wave director scales it up).
+func spawn(type: String, pos: Vector3, hp_mult := 1.0) -> Enemy:
 	var e := Enemy.new()
+	e.hp_mult = hp_mult
 	e.id = _next_id
 	_next_id += 1
 	e.type = type
@@ -135,8 +150,8 @@ func spawn(type: String, pos: Vector3) -> Enemy:
 	e.target.kind = "enemy"
 	e.target.name = e.def.name
 	e.target.size = e.def.size
-	e.target.hp = e.def.hp
-	e.target.max_hp = e.def.hp
+	e.target.hp = e.def.hp * hp_mult
+	e.target.max_hp = e.def.hp * hp_mult
 	e.cd = 1.0 # a moment to get their bearings: nothing attacks the instant it appears
 	if e.def.family == "flyer":
 		e.pos = pos
@@ -269,6 +284,7 @@ func _separate() -> void:
 func hurt_player(p: PlayerSim, dmg: float, from: Vector3, by: String) -> void:
 	if god or p.dead or p.invuln > 0:
 		return
+	dmg *= damage_mult
 	dmg = combat.up.on_hurt(p, dmg) # Bubble Wrap may block it, Razor Wire lashes back
 	if dmg <= 0:
 		events.append({"type": "blocked", "from": from})
@@ -306,6 +322,8 @@ func _tick_ground(e: Enemy, p: PlayerSim, dt: float) -> void:
 			move = _swarmer(e, p, dist) and dist > 1.0 # stop at your feet instead of running through you
 		"brute":
 			move = _brute(e, p, dist)
+		"colossus":
+			move = _colossus(e, p, dist) and dist > 4.0 # lumbers at you, but not into you
 		_:
 			move = _shooter(e, p, dist, dt)
 			# Keep their distance: back off when you're close, strafe when in range.
@@ -441,19 +459,62 @@ func _brute(e: Enemy, p: PlayerSim, dist: float) -> bool:
 	return true
 
 
-## The shockwave rolls out along the ground: jump over it.
+func _colossus(e: Enemy, p: PlayerSim, dist: float) -> bool:
+	match e.state:
+		"move":
+			if e.cd <= 0 and e.los and not p.dead:
+				e.attacks += 1
+				e.attack = "summon" if e.attacks % 3 == 0 else ("slam" if dist < COLOSSUS.slam_reach else "volley")
+				_enter(e, "windup")
+				events.append({"type": "windup", "id": e.id, "enemy": e.type, "pos": e.center(), "time": COLOSSUS[e.attack + "_windup"]})
+			return true
+		"windup":
+			if e.t >= COLOSSUS[e.attack + "_windup"]:
+				match e.attack:
+					"slam":
+						e.wave_r = 0.0
+						e.wave_at = Vector3(e.body.px, e.body.py, e.body.pz)
+						e.hit_done = false
+						events.append({"type": "slam", "id": e.id, "pos": e.wave_at, "radius": COLOSSUS.wave_radius})
+					"volley":
+						# a flat fan, the middle orb aimed where you are right now
+						var from := _eye(e)
+						var to := _player_center(p)
+						var d := to - from
+						var n: int = COLOSSUS.orbs
+						for i in n:
+							var a: float = (float(i) / (n - 1) - 0.5) * COLOSSUS.spread
+							_fire(e, from, from + d.rotated(Vector3.UP, a), COLOSSUS.orb_speed, COLOSSUS.orb_damage, 0.35, "orb")
+					"summon":
+						for i in COLOSSUS.summon:
+							var a := TAU * i / float(COLOSSUS.summon)
+							var at := Vector3(e.body.px + cos(a) * 3.0, e.body.py + 0.5, e.body.pz + sin(a) * 3.0)
+							spawn("swarmer", at, e.hp_mult).cd = 1.0
+						events.append({"type": "summon", "id": e.id, "pos": e.center()})
+				e.cd = COLOSSUS.cooldown
+				_enter(e, "recover")
+			return false
+		"recover":
+			if e.t >= COLOSSUS.recover:
+				_enter(e, "move")
+			return false
+	return true
+
+
+## The shockwave rolls out along the ground: jump over it. (The brute's, or the boss's bigger one.)
 func _tick_wave(e: Enemy, p: PlayerSim, dt: float) -> void:
-	e.wave_r += BRUTE.wave_speed * dt
-	if e.wave_r > BRUTE.wave_radius:
+	var boss := e.type == "colossus"
+	e.wave_r += (COLOSSUS.wave_speed if boss else BRUTE.wave_speed) * dt
+	if e.wave_r > (COLOSSUS.wave_radius if boss else BRUTE.wave_radius):
 		e.wave_r = -1.0
 		return
 	if e.hit_done:
 		return
 	var d := Vector2(p.px - e.wave_at.x, p.pz - e.wave_at.z).length()
 	var on_ground := p.grounded and absf(p.py - e.wave_at.y) < 0.6
-	if on_ground and absf(d - e.wave_r) < BRUTE.wave_band:
+	if on_ground and absf(d - e.wave_r) < (COLOSSUS.wave_band if boss else BRUTE.wave_band):
 		e.hit_done = true
-		hurt_player(p, BRUTE.damage, e.wave_at, e.def.name)
+		hurt_player(p, COLOSSUS.slam_damage if boss else BRUTE.damage, e.wave_at, e.def.name)
 		p.apply_impulse(0.0, 8.0, 0.0, "slam")
 
 

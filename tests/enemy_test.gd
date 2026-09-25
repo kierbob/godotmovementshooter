@@ -100,7 +100,8 @@ func _init() -> void:
 	# where each type starts: ground types on the floor, flyers in the air
 	var start := {"charger": Vector3(0, 0, -7), "brute": Vector3(0, 0, -4.5), "swarmer": Vector3(0, 0, -5),
 		"gunner": Vector3(0, 0, -14), "lobber": Vector3(0, 0, -16), "sniper": Vector3(0, 0, -28),
-		"flyer_projectile": Vector3(0, 4, -12), "flyer_beam": Vector3(0, 4, -8), "flyer_healer": Vector3(0, 4, -6)}
+		"flyer_projectile": Vector3(0, 4, -12), "flyer_beam": Vector3(0, 4, -8), "flyer_healer": Vector3(0, 4, -6),
+		"colossus": Vector3(0, 0, -12)}
 
 	for type: String in Enemies.TYPES:
 		setup()
