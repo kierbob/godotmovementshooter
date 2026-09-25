@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://vud8qdfv5bjt"]
 
-[ext_resource type="Script" uid="uid://bar6nghxji3is" path="res://assets/BinbunVFX/loot_effects/src/script/vfx_loot.gd" id="1_j826y"]
-[ext_resource type="Shader" uid="uid://bbocge3vbys4q" path="res://assets/BinbunVFX/loot_effects/src/shader/glow_tube.gdshader" id="1_sh3w1"]
-[ext_resource type="Shader" uid="uid://bbjfrhhtkkiim" path="res://assets/BinbunVFX/loot_effects/src/shader/billboard_flare.gdshader" id="2_j826y"]
-[ext_resource type="Shader" uid="uid://dbs5bc1ladm0b" path="res://assets/BinbunVFX/loot_effects/src/shader/glow_core.gdshader" id="3_luc1m"]
-[ext_resource type="Shader" uid="uid://dtdrmt7gok07c" path="res://assets/BinbunVFX/loot_effects/src/shader/particle_star.gdshader" id="4_ox7ra"]
+[ext_resource type="Script" uid="uid://bar6nghxji3is" path="res://assets/fx/GodotLootVFX/assets/BinbunVFX/loot_effects/src/script/vfx_loot.gd" id="1_j826y"]
+[ext_resource type="Shader" uid="uid://bbocge3vbys4q" path="res://assets/fx/GodotLootVFX/assets/BinbunVFX/loot_effects/src/shader/glow_tube.gdshader" id="1_sh3w1"]
+[ext_resource type="Shader" uid="uid://bbjfrhhtkkiim" path="res://assets/fx/GodotLootVFX/assets/BinbunVFX/loot_effects/src/shader/billboard_flare.gdshader" id="2_j826y"]
+[ext_resource type="Shader" uid="uid://dbs5bc1ladm0b" path="res://assets/fx/GodotLootVFX/assets/BinbunVFX/loot_effects/src/shader/glow_core.gdshader" id="3_luc1m"]
+[ext_resource type="Shader" uid="uid://dtdrmt7gok07c" path="res://assets/fx/GodotLootVFX/assets/BinbunVFX/loot_effects/src/shader/particle_star.gdshader" id="4_ox7ra"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_kwy2k"]
 frequency = 0.1
