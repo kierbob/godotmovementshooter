@@ -356,6 +356,83 @@ func _init() -> void:
 	run(0.4)
 	check("...and bosses don't budge", boss.target.pos.distance_to(bz) < 0.05)
 
+	# ---- character passives (solo play: Upgrades.passive) ----
+	setup([Vector3(0, 0, -5), Vector3(0, 0, 30)])
+	combat.up.passive = "brawler"
+	player.hp = 50.0
+	shoot(0, 9999.0)
+	run(0.05)
+	var near_hp := player.hp
+	player.hp = 50.0
+	shoot(1, 9999.0)
+	run(0.05)
+	check("Brawler, Scrapper: a kill within 8 m heals %.0f (50 -> %.0f), one 30 m away doesn't (50 -> %.0f)" % [Upgrades.PASSIVE.scrapper_heal, near_hp, player.hp],
+		absf(near_hp - 50.0 - Upgrades.PASSIVE.scrapper_heal) < 0.01 and player.hp == 50.0)
+	setup([Vector3(0, 0, -5)])
+	combat.up.passive = "brawler"
+	combat.fx.clear()
+	shoot(0, 10.0)
+	var ground_dmg: float = hits()[0].dmg
+	player.grounded = false
+	combat.fx.clear()
+	shoot(0, 10.0)
+	var air_dmg: float = hits()[0].dmg
+	check("...and gun hits in the air deal +15%% (%.1f on the ground, %.1f in the air)" % [ground_dmg, air_dmg],
+		absf(ground_dmg - 10.0) < 0.01 and absf(air_dmg - 11.5) < 0.01)
+
+	setup([Vector3(0, 0, -5), Vector3(0, 0, 30)])
+	combat.up.passive = "sharpshooter"
+	combat.fx.clear()
+	shoot(0, 50.0)
+	var close_dmg: float = hits()[0].dmg
+	combat.fx.clear()
+	shoot(1, 50.0)
+	var far_dmg: float = hits()[0].dmg
+	check("Sharpshooter, Deadeye: hits from 20 m+ deal +25%% (%.1f at 5 m, %.1f at 30 m)" % [close_dmg, far_dmg],
+		absf(close_dmg - 50.0) < 0.01 and absf(far_dmg - 62.5) < 0.01)
+	combat.ability_cd = 5.0
+	shoot(1, 9999.0, "body")
+	var cd_body := combat.ability_cd
+	shoot(0, 9999.0, "head")
+	check("...and a headshot kill gives the knife back (cooldown %.1f after a body kill, %.1f after a headshot kill)" % [cd_body, combat.ability_cd],
+		cd_body == 5.0 and combat.ability_cd == 0.0)
+
+	setup()
+	var ch := enemies.spawn("charger", Vector3(0, 0, -5))
+	enemies.frozen = true
+	run(0.1)
+	var rocket: Dictionary = Items.WEAPONS.rocket.projectile.explode
+	var blast := ch.target.pos + Vector3(5.2, 1.0, 0) # just past a rocket's 4.5 m radius
+	var hp0 := ch.target.hp
+	combat._explode(blast, rocket, player, "rocket")
+	var missed := ch.target.hp == hp0
+	combat.up.passive = "bomber"
+	combat.ability_cd = 5.0
+	combat._explode(blast, rocket, player, "rocket")
+	check("Bomber, Demolition: blasts 20%% bigger (a charger 5.2 m off: missed without, hit with), each enemy caught takes 0.4 s off the Frag (5.0 -> %.1f)" % combat.ability_cd,
+		missed and ch.target.hp < hp0 and absf(combat.ability_cd - 4.6) < 0.001)
+
+	setup([Vector3(0, 0, -5)])
+	var cm := Characters.get_info("commando")
+	combat.set_loadout({"primary": cm.primary, "secondary": cm.secondary, "ability": cm.ability})
+	combat.up.passive = "commando"
+	combat.state.primary.ammo = 0
+	combat.state.secondary.ammo = 1
+	combat._dash(player, Cmd.new())
+	var full: bool = combat.state.primary.ammo == combat.mag_size("primary") and combat.state.secondary.ammo == combat.mag_size("secondary")
+	combat.fx.clear()
+	shoot(0, 50.0)
+	var buffed: float = hits()[0].dmg
+	run(Upgrades.PASSIVE.run_gun_time + 0.1)
+	combat.fx.clear()
+	shoot(0, 50.0)
+	var after: float = hits()[0].dmg
+	check("Commando, Run and Gun: a dash reloads both guns, and shots deal +20%% for 2 s (%.1f just after, %.1f later)" % [buffed, after],
+		full and absf(buffed - 60.0) < 0.01 and absf(after - 50.0) < 0.01)
+	check("every character has a passive with a name and a description", Characters.ORDER.all(func(id: String) -> bool:
+		var pas: Dictionary = Characters.get_info(id).get("passive", {})
+		return pas.has("name") and pas.has("desc")))
+
 	# ---- legendaries ----
 	var legends: Array = Upgrades.LIST.keys().filter(func(k: String) -> bool: return Upgrades.LIST[k].rarity == "legendary")
 	check("6 legendaries (%s)" % ", ".join(legends), legends.size() == 6)

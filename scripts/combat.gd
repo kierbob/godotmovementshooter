@@ -430,7 +430,7 @@ func damage_target(t: Target, dmg: float, zone: String, point: Vector3, src := "
 		if src == "gun":
 			up.on_hit(t, dmg, zone, point)
 		if kill:
-			up.on_kill(t)
+			up.on_kill(t, zone, src)
 
 
 # ---------- firing ----------
@@ -497,6 +497,12 @@ func _dash(p: PlayerSim, c: Cmd) -> void:
 	p.apply_impulse(dx * push, maxf(0.0, float(d.up) - maxf(p.vy, 0.0)), dz * push, ability.name)
 	ability_cd = ability.cooldown
 	fx.append({"type": "dash", "ability": ability.id})
+	if up.passive == "commando": # Run and Gun: fresh mags and a burst of damage
+		for slot: String in ["primary", "secondary"]:
+			state[slot].ammo = mag_size(slot)
+			state[slot].reload_t = 0.0
+		up.dash_buff_t = Upgrades.PASSIVE.run_gun_time
+		fx.append({"type": "passive", "passive": "run_and_gun"})
 
 
 func _spawn_projectile(kind: String, def: Dictionary, origin: Vector3, d: Vector3, inherit: bool, p: PlayerSim) -> Projectile:
@@ -615,6 +621,10 @@ func item_explosion(pos: Vector3, radius: float, dmg: float, kind: String) -> vo
 
 ## self_knock false: a Triple Tap copy's blast doesn't launch you (only the real one does).
 func _explode(pos: Vector3, e: Dictionary, p: PlayerSim, kind: String, self_knock := true) -> void:
+	if up.passive == "bomber": # Demolition: bigger blasts
+		e = e.duplicate()
+		e.radius = float(e.radius) * Upgrades.PASSIVE.blast_size
+	var caught := 0
 	for t in targets:
 		if t.dead:
 			continue
@@ -626,12 +636,17 @@ func _explode(pos: Vector3, e: Dictionary, p: PlayerSim, kind: String, self_knoc
 		if d_min < e.radius:
 			var dmg: float = e.damage * (1 - 0.6 * (d_min / e.radius))
 			damage_target(t, dmg, "body", t.pos + Vector3(0, 1.2, 0))
+			if t.kind == "enemy":
+				caught += 1
 			# Players have real bodies: explosions launch them too.
 			if t.body and not t.dead:
 				var kdir := ((t.pos + Vector3(0, 0.9, 0) - pos).normalized() + Vector3(0, 0.5, 0)).normalized()
 				var ks: float = e.knockback * (1 - 0.5 * (d_min / e.radius))
 				t.body.apply_impulse(kdir.x * ks, kdir.y * ks, kdir.z * ks, kind)
 
+	if caught > 0 and up.passive == "bomber": # Demolition: every enemy caught speeds up the Frag
+		ability_cd = maxf(0.0, ability_cd - Upgrades.PASSIVE.blast_cd * caught)
+		fx.append({"type": "passive", "passive": "demolition"})
 	# Knockback on the player (no self-damage).
 	if not self_knock:
 		fx.append({"type": "explosion", "pos": pos, "radius": e.radius, "kind": kind})

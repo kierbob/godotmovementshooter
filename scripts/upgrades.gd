@@ -132,6 +132,13 @@ const MISSILE := {"speed": 24.0, "up": 4.0, "gravity": 0.0, "radius": 0.18, "imp
 const HOLE := {"time": 2.5, "pull_r": 9.0, "pull": 7.0, "grind_r": 3.0, "dps": 30.0, "implode": 120.0}
 ## Levels (Risk of Rain style): kills give XP; each level is +LEVEL_DAMAGE damage and
 ## +LEVEL_HEALTH max health, and a full heal. Level n -> n+1 takes XP_BASE * XP_GROWTH^(n-1).
+## The characters' passives (Characters.LIST[..].passive says the same in words).
+const PASSIVE := {
+	"scrapper_range": 8.0, "scrapper_heal": 12.0, "scrapper_air": 0.15, # Brawler
+	"blast_size": 1.2, "blast_cd": 0.4, # Bomber (Combat._explode)
+	"deadeye_range": 20.0, "deadeye_bonus": 0.25, # Sharpshooter
+	"run_gun_time": 2.0, "run_gun_bonus": 0.2, # Commando (Combat._dash)
+}
 const LEVEL_DAMAGE := 0.1
 const LEVEL_HEALTH := 12.0
 const XP_BASE := 20.0
@@ -162,6 +169,14 @@ var _pull_t := 0.0
 var _hole_acc := {} # target -> black hole damage built up (dealt in chunks)
 var _hole_id := 0 # the view keys its black holes on this (a Dictionary's hash changes as it ticks)
 var _time := 0.0
+## The character's passive, by character id ("" = none: online play, tests). Main sets it for solo
+## play; with one, the hooks run even with no items.
+var passive := "":
+	set(v):
+		passive = v
+		if v != "":
+			active = true
+var dash_buff_t := 0.0 # Run and Gun: time left of the damage bonus after a dash
 
 
 func _init(c: Combat) -> void:
@@ -186,7 +201,7 @@ func add(id: String, n := 1) -> void:
 func clear() -> void:
 	stacks.clear()
 	total = 0
-	active = level > 1
+	active = level > 1 or passive != ""
 
 
 ## XP needed to go from `lvl` to the next.
@@ -272,6 +287,16 @@ func modify_damage(t: Combat.Target, dmg: float, zone: String, point: Vector3, s
 			mult += 0.4 * count("headhunter")
 		if count("lucky_penny") > 0 and roll(minf(1.0, 0.1 * count("lucky_penny"))):
 			crit = true
+		match passive:
+			"brawler": # Scrapper: in the air
+				if not p.grounded:
+					mult += PASSIVE.scrapper_air
+			"sharpshooter": # Deadeye: from far away
+				if point.distance_to(Combat.eye_position(p)) >= PASSIVE.deadeye_range:
+					mult += PASSIVE.deadeye_bonus
+			"commando": # Run and Gun: just after a dash
+				if dash_buff_t > 0:
+					mult += PASSIVE.run_gun_bonus
 	var mark: Dictionary = t.status.get("mark", {})
 	if not mark.is_empty():
 		mult += float(mark.mult)
@@ -354,14 +379,21 @@ func ricochet(point: Vector3, dmg: float) -> void:
 	combat.damage_target(t, dmg * 0.75, "body", to, "gun")
 
 
-## A target died (any cause). Its kill effects run next tick.
-func on_kill(t: Combat.Target) -> void:
-	if total > 0 and t.kind in ["enemy", "dummy"]:
+## A target died (any cause; zone and src of the killing hit). Its kill effects run next tick.
+func on_kill(t: Combat.Target, zone := "", src := "") -> void:
+	if (total > 0 or passive != "") and t.kind in ["enemy", "dummy"]:
 		_kills.append(t)
+	if passive == "sharpshooter" and zone == "head" and src == "gun" and combat.ability_cd > 0:
+		combat.ability_cd = 0.0 # Deadeye: the knife's back
+		combat.fx.append({"type": "passive", "passive": "deadeye"})
 
 
 func _kill_effects(t: Combat.Target) -> void:
 	var center := t.pos + Vector3(0, 1.0 * t.size, 0)
+	var p := combat.player
+	if passive == "brawler" and p and not p.dead and center.distance_to(Combat.eye_position(p)) <= PASSIVE.scrapper_range:
+		p.hp = minf(p.max_hp, p.hp + PASSIVE.scrapper_heal) # Scrapper: up close
+		combat.fx.append({"type": "passive", "passive": "scrapper"})
 	if count("adrenaline") > 0:
 		adrenaline_t = 1.0 + count("adrenaline")
 	if count("speed_loader") > 0:
@@ -423,6 +455,7 @@ func tick(p: PlayerSim, dt: float) -> void:
 		if not t.status.is_empty():
 			_tick_status(t, dt)
 	_apply_stats(p) # also puts everything back after the items are dropped
+	dash_buff_t = maxf(0.0, dash_buff_t - dt)
 	if total == 0:
 		return
 	_time += dt
