@@ -19,7 +19,7 @@ extends RefCounted
 ## Gold per kill, by enemy type (tougher ones pay more). XP is the same.
 const GOLD := {
 	"swarmer": 3, "charger": 7, "gunner": 7, "lobber": 8, "sniper": 9, "brute": 18,
-	"flyer_projectile": 8, "flyer_beam": 9, "flyer_healer": 10,
+	"flyer_projectile": 8, "flyer_beam": 9, "flyer_healer": 10, "colossus": 150,
 }
 const SMALL_ODDS := {"common": 79.0, "uncommon": 20.0, "rare": 1.0}
 const CHESTS := {
@@ -71,6 +71,7 @@ class Drop:
 var map: MapData
 var up: Upgrades
 var gold := 0
+var money := 1.0 # gold per kill and prices, scaled up on later stages (Director.money_mult)
 var chests: Array[Chest] = []
 var drops: Array[Drop] = []
 var events: Array[Dictionary] = [] # gold, chest_open, pickup, deny, shrine_fail, barrel
@@ -154,7 +155,7 @@ func add_chest(pos: Vector3, size: String, yaw := 0.0) -> Chest:
 	c.pos = pos
 	c.size = size
 	c.yaw = yaw
-	c.cost = CHESTS[size].cost
+	c.cost = int(round(CHESTS[size].cost * money))
 	if size == "shop" and c.item == "":
 		c.item = roll_item("shop")
 	chests.append(c)
@@ -229,6 +230,14 @@ func open(c: Chest, p: PlayerSim) -> bool:
 	return true
 
 
+## An item straight onto the ground (the boss's reward), with the same hop and glow.
+func drop_item(pos: Vector3, item: String, p: PlayerSim) -> void:
+	var c := Chest.new()
+	c.pos = pos
+	c.size = "golden"
+	_drop(c, item, p)
+
+
 func _drop(c: Chest, item: String, p: PlayerSim) -> void:
 	var d := Drop.new()
 	d.id = _next_id
@@ -268,7 +277,7 @@ func roll_item(kind: String) -> String:
 ## Gold (and XP) for kills (Enemies.deaths, this tick's), items flying and landing, picking them up.
 func tick(p: PlayerSim, deaths: Array[Dictionary], dt: float) -> void:
 	for dth in deaths:
-		var amount: int = GOLD.get(dth.type, 5)
+		var amount := int(round(GOLD.get(dth.type, 5) * money))
 		gold += amount
 		events.append({"type": "gold", "amount": amount, "pos": dth.pos})
 		up.add_xp(amount, p) # XP: the same as the gold (tougher kills, more of both)

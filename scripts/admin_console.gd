@@ -12,6 +12,7 @@ extends CanvasLayer
 ##   gold [amount]         money for chests (100 if no amount); chest [kind] puts one in front of you
 ##                         (small, large, golden, damage, utility, healing, shop, shrine, barrel)
 ##   levelup [n]           gain levels (1 if no number)
+##   wave <n> / boss / nextstage   in a run: jump to a wave, to the boss, or on to the next stage
 ##   help
 ## Up / Down walk through what you typed before. Next to the text bar there are buttons for all
 ## of it (every enemy, a count, god / freeze / heal / kill all), and under it a button per item
@@ -23,6 +24,7 @@ const HELP := [
 	"killall · god [on/off] · heal · freeze / unfreeze · list · help",
 	"give <item> [count] (give random 5) · take <item> · items · clearitems",
 	"gold [amount] · chest [small/large/golden/damage/utility/healing/shop/shrine/barrel] · levelup [n]",
+	"wave <n> · boss · nextstage (in a run)",
 ]
 const VARIANT_WORDS := {"projectile": "flyer_projectile", "beam": "flyer_beam", "healer": "flyer_healer",
 	"charger": "charger", "brute": "brute", "swarmer": "swarmer", "gunner": "gunner", "lobber": "lobber", "sniper": "sniper"}
@@ -107,7 +109,7 @@ func _build_buttons() -> Control:
 	for fam: String in Enemies.FAMILIES:
 		var r := HBoxContainer.new()
 		r.add_theme_constant_override("separation", 6)
-		r.add_child(_tag(fam.to_upper() + "S"))
+		r.add_child(_tag(fam.to_upper() + ("ES" if fam.ends_with("s") else "S")))
 		for id: String in Enemies.FAMILIES[fam]:
 			var label := String(Enemies.TYPES[id].name).trim_suffix(" Flyer").to_upper()
 			var word := id.trim_prefix("flyer_")
@@ -285,6 +287,12 @@ func execute(text: String) -> String:
 			return _call("clearitems", {})
 		"gold", "money":
 			return _call("gold", {"amount": int(words[1]) if words.size() > 1 and words[1].is_valid_int() else 100})
+		"wave":
+			return _call("wave", {"n": clampi(int(words[1]), 1, Director.WAVES) if words.size() > 1 and words[1].is_valid_int() else 1})
+		"boss":
+			return _call("boss", {})
+		"nextstage", "next":
+			return _call("nextstage", {})
 		"levelup", "level":
 			return _call("levelup", {"n": clampi(int(words[1]), 1, 50) if words.size() > 1 and words[1].is_valid_int() else 1})
 		"chest":

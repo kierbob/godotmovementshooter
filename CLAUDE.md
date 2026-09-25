@@ -96,6 +96,15 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   Upgrades (`add_xp`, `level`: +10% damage, +12 health each). `tests/loot_test.gd` checks loot.
   Characters: Brawler, Bomber, Sharpshooter, Commando (Combat Dash: an ability with `dash` instead of
   a projectile, see `Combat._dash`). Enemies push apart from each other (`Enemies._separate`).
+- The run: `scripts/director.gd` (Director: a stage's 8 waves with a budget spent by `COST` on the
+  types `UNLOCK`ed so far, spawned in groups 16-34 m out; health/damage/money scale by wave and
+  stage; then the boss ("colossus" in Enemies, family "boss": slam / volley / summon); events
+  wave_start, wave_clear, boss_warn, boss, stage_clear, next_stage; ticked last in main's physics,
+  only in a solo run), `scripts/run_hud.gd` (wave counter, banners, boss bar, results screen).
+  main.gd: `_update_run` handles the events, `_next_stage` reloads via `_load_into` with
+  `_carry_out()` (items, level, XP, gold, kills, time) in `pending_run.carry`; dying in a run shows
+  the results instead of respawning. `Characters.STAGES` lists stage maps (ones not built yet are
+  skipped). F10: wave/boss/nextstage. `tests/run_test.gd` checks the director.
 - `scripts/map_data.gd`: loads map scenes (and map JSON) and does collision (matches `world.js`).
   `nearby()` looks boxes up in an 8 m grid but returns exactly what a full scan would, in map order;
   `ray_boxes()` walks a ray through that grid (Combat.raycast uses it when `combat.grid` is set,
@@ -116,7 +125,8 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   `tests/trial_test.gd` the time trial, `tests/sound_test.gd` the sounds, `tests/net_test.gd`
   multiplayer (codec, server matches prediction, combat, lag comp, a real ENet host + client),
   `tests/enemy_test.gd` the enemies (fairness, every type, console parsing), `tests/item_test.gd`
-  the items, `tests/loot_test.gd` gold, chests and drops.
+  the items, `tests/loot_test.gd` gold, chests and drops, `tests/run_test.gd` waves, the boss and
+  stages.
 
 ## Rules
 
@@ -124,7 +134,7 @@ multiplayer becomes optional co-op later (the owner said to leave multiplayer al
   collision in `map_data.gd`, run `tests/compare.gd`; it must pass. One deliberate difference: in
   the air, moving uphill into a ramp rides up onto it (the web game teleports you to the ramp's
   low end); see `PlayerSim._move_horizontal` and the ramp check in `tests/map_test.gd`.
-- After touching combat, items or menus, run `tests/combat_test.gd`, `tests/item_test.gd` and `tests/menu_test.gd` (and
+- After touching combat, items, the run or menus, run `tests/combat_test.gd`, `tests/item_test.gd`, `tests/run_test.gd` and `tests/menu_test.gd` (and
   `tests/trial_test.gd` / `tests/sound_test.gd` for those areas). After touching multiplayer,
   PlayerSim or Combat, run `tests/net_test.gd`.
 - Don't regenerate traces: `tools/make_traces.mjs` needs the web project next to this folder.
@@ -158,6 +168,7 @@ godot --headless --path . --script res://tests/net_test.gd
 godot --headless --path . --script res://tests/enemy_test.gd
 godot --headless --path . --script res://tests/item_test.gd
 godot --headless --path . --script res://tests/loot_test.gd
+godot --headless --path . --script res://tests/run_test.gd
 ```
 
 To try two real games against each other, start one with `-- --host=7777` and another with
@@ -179,6 +190,8 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --resolution 1600x900 -- -
    lobby, loading screen).
 5. Roguelite: ~~enemies~~ (9 types + F10 admin console), ~~stage 1 map~~ (Sunstone Valley),
    ~~stacking items~~ (40, F10 give), ~~gold + chests~~ (+ shops, shrines, barrels), ~~levels~~,
-   spawn director, run over on death, teleporter/boss/next stage, more stages, character passives.
+   ~~waves + boss + next stage~~ (the director, the Colossus; no teleporter, the owner's call),
+   ~~run over on death~~, the Fantasy Village (stage 2, from the owner's building assets), more
+   stages, character passives.
 6. ~~Multiplayer~~ (first version done: host/join, FFA, prediction, lag compensation). Later:
    teams, match rules, dedicated server.

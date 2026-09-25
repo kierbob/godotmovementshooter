@@ -44,6 +44,7 @@ var _trial_time: Label
 var _trial_best: Label
 var online: OnlineHud # health, kill feed, scoreboard... (multiplayer only)
 var items: ItemHud # the items you carry + the pickup banner
+var run: RunHud # waves, banners, the boss bar, the results screen
 var _online := false
 
 
@@ -116,6 +117,9 @@ func _ready() -> void:
 	items.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(items)
 	move_child(items, 1)
+	run = RunHud.new()
+	run.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(run)
 	_plain_dot = PlainDot.new()
 	_plain_dot.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_plain_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -271,6 +275,7 @@ func set_in_game(on: bool) -> void:
 	_in_game = on
 	online.visible = on and _online
 	items.visible = on
+	run.visible = on
 	_speed.visible = on
 	_speed_sub.visible = on
 	_panel.visible = on and debug_mode > 0

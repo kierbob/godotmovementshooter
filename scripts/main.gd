@@ -86,6 +86,9 @@ var _built := false # the scene finished building (it yields frames while a load
 var enemies: Enemies
 var enemy_view: EnemyView
 var console: AdminConsole # F10
+var director: Director # a solo run's waves and boss (null in practice)
+var run_info := {} # this run so far: stage_n, and what the earlier stages add to the results
+var _run_over := false
 var loot: Loot # gold, chests and dropped items (solo)
 var loot_view: LootView
 var interact_pressed := false
@@ -113,6 +116,10 @@ func _ready() -> void:
 	combat.grid = map
 	enemies = Enemies.new(map, combat)
 	loot = Loot.new(map, combat.up)
+	if pending_run.get("mode", "") == "solo":
+		run_info = pending_run.duplicate(true)
+		director = Director.new(enemies, map, int(run_info.get("stage_n", 1)))
+		loot.money = director.money_mult() # later stages: bigger payouts, pricier chests
 	loot.place_chests() # a random pick of the map's chest spots (none on maps without any)
 	await _step(0.5, "Loading guns and effects")
 	combat_view = CombatView.new()
@@ -163,6 +170,10 @@ func _ready() -> void:
 		else:
 			_enter_menu())
 	menu.quit_game.connect(func() -> void: get_tree().quit())
+	hud.run.again.connect(func() -> void:
+		_enter_menu()
+		menu.open_lobby("solo"))
+	hud.run.main_menu.connect(_enter_menu)
 	menu.settings_changed.connect(_on_settings_changed)
 	menu.host_match.connect(_on_host)
 	menu.join_match.connect(_on_join)
@@ -196,6 +207,7 @@ func _ready() -> void:
 	match run.get("mode", ""):
 		"solo", "practice":
 			_start_play()
+			_carry_in(run.get("carry", {}))
 			if run.get("trial", "") != "" and trial:
 				trial.enter(player, run.trial == "on")
 				_handle_trial_events()
@@ -247,6 +259,7 @@ func _load_into(kicker: String, stage: String, run: Dictionary) -> void:
 func _enter_menu() -> void:
 	state = "menu"
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	hud.run.hide_results()
 	hud.set_in_game(false)
 	viewmodel.visible = false
 	menu.show_screen("main")
@@ -266,6 +279,7 @@ func _start_play() -> void:
 	enemies.clear()
 	enemy_view.clear()
 	_respawn_t = -1.0
+	_run_over = false
 	_killer = ""
 	combat_view.clear()
 	hud.clear_floaters()
@@ -611,6 +625,8 @@ func _physics_process(_delta: float) -> void:
 			if chest:
 				loot.open(chest, player)
 		loot.tick(player, enemies.deaths, Cfg.TICK_DT)
+		if director:
+			director.tick(player, Cfg.TICK_DT)
 	interact_pressed = false
 	if trial:
 		trial.tick(player, Cfg.TICK_DT)
@@ -620,8 +636,17 @@ func _physics_process(_delta: float) -> void:
 		_respawn()
 
 
-## Solo health: spawn protection and regen while alive; back at the spawn a moment after dying.
+## Solo health: spawn protection and regen while alive; back at the spawn a moment after dying
+## (practice), or the run is over (a run).
 func _tick_health(dt: float) -> void:
+	if player.dead and director:
+		if not _run_over:
+			_run_over = true
+			_respawn_t = 1.6 # a moment to see what got you
+		_respawn_t -= dt
+		if _respawn_t <= 0 and not hud.run.results_up():
+			_show_results("RUN OVER", Color("ff6a5a"))
+		return
 	if player.dead:
 		if _respawn_t < 0:
 			_respawn_t = SOLO_RESPAWN
@@ -694,8 +719,12 @@ func _process(delta: float) -> void:
 		_handle_enemy_events(enemies.events)
 		enemies.events.clear()
 		_update_loot(dt)
+		_update_run(dt)
 		if state != "menu":
-			hud.online.update(dt, player, yaw, maxf(0.0, _respawn_t), _killer, "")
+			# in a run there's no respawn (-1: no timer), and the results replace the death screen
+			hud.online.update(dt, player, yaw, -1.0 if director else maxf(0.0, _respawn_t), _killer, "")
+			if hud.run.results_up():
+				hud.online.hide_death()
 			if player.dead:
 				viewmodel.visible = false
 			elif combat.enabled:
@@ -1275,6 +1304,82 @@ func _handle_enemy_events(evs: Array[Dictionary]) -> void:
 				sound.play("impulse", {"pos": _enemy_pos(e.id)})
 
 
+## The waves: the HUD, banners and sounds for what the director did, and off to the next stage.
+func _update_run(dt: float) -> void:
+	hud.run.update(dt, director if state != "menu" else null, enemies)
+	if director == null:
+		return
+	for e in director.events:
+		match e.type:
+			"wave_start":
+				hud.run.banner("WAVE %d" % e.wave, "%d enemies incoming" % e.count, Color.WHITE)
+				sound.play("go")
+			"wave_clear":
+				if e.wave < Director.WAVES:
+					hud.run.banner("WAVE %d CLEARED" % e.wave, "", UiStyle.YELLOW, 1.8)
+			"boss_warn":
+				hud.run.banner("BOSS INCOMING", "", Color("ff6a5a"), 3.5)
+				sound.play("teleport")
+			"boss":
+				hud.run.banner(String(e.name).to_upper(), "stage %d boss" % director.stage, Color("ff6a5a"))
+				sound.play("explosion", {"pos": e.pos})
+				combat_view.shake = maxf(combat_view.shake, 0.08)
+			"stage_clear":
+				hud.run.banner("STAGE CLEARED", "grab your loot: the next stage is coming", Color("ffd84a"), 4.0)
+				sound.play("finish")
+				# the boss's reward: a rare, sometimes a legendary
+				var rarity := "legendary" if randf() < 0.35 else "rare"
+				loot.drop_item(e.pos, combat.up.random_of(rarity), player)
+			"next_stage":
+				_next_stage()
+	director.events.clear()
+
+
+## Everything a run takes to the next stage (and the results screen adds up).
+func _carry_out() -> Dictionary:
+	var before: Dictionary = run_info.get("carry", {})
+	return {"items": combat.up.stacks.duplicate(), "level": combat.up.level, "xp": combat.up.xp, "gold": loot.gold,
+		"kills": int(before.get("kills", 0)) + (director.kills if director else 0),
+		"time": float(before.get("time", 0.0)) + (director.time if director else 0.0)}
+
+
+## A new stage of the same run: your items, level and gold come along.
+func _carry_in(carry: Dictionary) -> void:
+	if carry.is_empty():
+		return
+	for id: String in carry.get("items", {}):
+		combat.up.add(id, int(carry.items[id]))
+	combat.up.level = int(carry.get("level", 1))
+	combat.up.xp = float(carry.get("xp", 0.0))
+	combat.up.active = combat.up.total > 0 or combat.up.level > 1
+	loot.gold = int(carry.get("gold", 0))
+	combat.up.tick(player, 0.0) # max health from items and levels, before anything happens
+	player.hp = player.max_hp
+
+
+func _next_stage() -> void:
+	var n := int(run_info.get("stage_n", 1)) + 1
+	_load_into("STAGE %d" % n, Characters.stage_map(n), {"mode": "solo", "stage_n": n, "carry": _carry_out()})
+
+
+## The results screen (the run's over): what you did, and the way out.
+func _show_results(title: String, color: Color) -> void:
+	var c := _carry_out()
+	var secs := int(c.time)
+	hud.run.show_results(title, color, [
+		["Character", Characters.get_info(Settings.character).name],
+		["Stage", "%d (wave %d)" % [director.stage, director.wave]],
+		["Time", "%d:%02d" % [secs / 60, secs % 60]],
+		["Kills", c.kills],
+		["Level", combat.up.level],
+		["Items", combat.up.total],
+		["Gold", loot.gold],
+	])
+	state = "over"
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	viewmodel.visible = false
+
+
 ## Chests, dropped items, gold and the "open chest" prompt.
 func _update_loot(dt: float) -> void:
 	loot_view.update(loot, camera, dt)
@@ -1403,6 +1508,20 @@ func admin(what: String, data: Dictionary) -> String:
 			for id: String in combat.up.stacks:
 				have.append("%s x%d" % [Upgrades.LIST[id].name, combat.up.count(id)])
 			return ", ".join(have)
+		"wave", "boss", "nextstage":
+			if director == null:
+				return "Not in a run (Singleplayer)"
+			match what:
+				"wave":
+					director.skip_to(int(data.n))
+					enemies.clear()
+					return "Wave %d next" % int(data.n)
+				"boss":
+					director.skip_to_boss()
+					enemies.clear()
+					return "The boss is coming"
+			_next_stage()
+			return "On to the next stage"
 		"levelup":
 			for i in int(data.n):
 				combat.up.add_xp(Upgrades.xp_to_next(combat.up.level) - combat.up.xp, player)
