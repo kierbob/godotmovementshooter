@@ -223,15 +223,16 @@ func _init() -> void:
 	button(game.console._panel, "x3").pressed.emit()
 	button(game.console._panel, "RANDOM").pressed.emit()
 	check("x3 then RANDOM gives three random items", game.combat.up.total == 4)
+	var ft_before: int = game.combat.up.count("frost_tip") # RANDOM may have rolled one already
 	button(game.console._panel, "FT").pressed.emit()
-	check("an item's button gives it (x3 Frost Tip)", game.combat.up.count("frost_tip") == 3)
+	check("an item's button gives it (x3 Frost Tip)", game.combat.up.count("frost_tip") == ft_before + 3)
 	var chill_me: Enemies.Enemy = game.enemies.spawn("brute", Vector3(game.player.px, game.player.py, game.player.pz - 15.0))
 	for i in 5:
 		game.combat.damage_target(chill_me.target, 1.0, "body", chill_me.center())
 	await frames(3)
 	var ice: MeshInstance3D = game.enemy_view._views[chill_me.id].fx._ice
 	check("frozen solid: the enemy gets its ice block", ice != null and ice.visible)
-	check("'items' lists what you carry", game.console.execute("items").contains("Frost Tip x3"))
+	check("'items' lists what you carry", game.console.execute("items").contains("Frost Tip x%d" % (ft_before + 3)))
 	button(game.console._panel, "CLEAR").pressed.emit()
 	await frames(3)
 	check("CLEAR drops them all (and the bar empties)", game.combat.up.total == 0 and game.hud.items._bar.get_child_count() == 0)

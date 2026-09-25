@@ -9,7 +9,8 @@ extends RefCounted
 ##   Shooters:         Gunner (slow bursts), Lobber (arcing grenades with a landing marker),
 ##                     Sniper (a laser that tracks you, locks, then fires)
 ##   Flyers:           Projectile (dodgeable orbs), Beam (Moira-style lock-on that breaks at range
-##                     or behind cover), Healer (heals other enemies, never hurts you)
+##                     or behind cover), Healer (heals the enemies that fight, never another healer,
+##                     never hurts you)
 ##
 ## Fair-play rules every attack follows (checked by tests/enemy_test.gd):
 ##   - a visible, audible windup of at least 0.25 s before anything can hurt you
@@ -20,6 +21,11 @@ extends RefCounted
 ## Ground enemies move with PlayerSim (the same collision, ramps and jump pads as you); flyers
 ## steer freely and get pushed out of walls.
 
+## Enemies think and move 60 times a second (every other tick, half of them on each), or 30 once
+## they're LOD_FAR from you: the sim runs at 120 and moving a ground enemy costs as much as moving
+## you, so a crowd ticked every tick eats the frame. Their timings are in seconds, so nothing gets
+## faster or slower; their shots still fly every tick.
+const LOD_FAR := 40.0
 const REGEN_DELAY := 3.0 # the player heals this long after the last hit (same as online)
 const REGEN_RATE := 30.0
 
@@ -53,6 +59,8 @@ const SNIPER := {"reach": 60.0, "aim": 1.5, "lock": 0.4, "damage": 35.0, "cooldo
 const FLYER_ORB := {"reach": 35.0, "windup": 0.35, "speed": 22.0, "damage": 10.0, "cooldown": 1.8}
 const FLYER_BEAM := {"reach": 13.0, "break": 15.0, "windup": 0.6, "dps": 13.0, "max": 3.0, "cooldown": 3.0}
 const HEALER := {"reach": 25.0, "hps": 30.0}
+const FLY_MIN := 2.5 # flyers stay this far above the ground...
+const FLY_MAX := 8.0 # ...and at most this far above it (or above you, if you're up high)
 
 
 class Enemy:
@@ -80,6 +88,10 @@ class Enemy:
 	var wave_at := Vector3.ZERO
 	var beam_acc := 0.0 # beam damage built up, dealt in small chunks (one hurt flash, not 120 a second)
 	var alive := true
+	var acc := 0.0 # sim time since it last thought (see LOD_FAR)
+	var ground_y := 0.0 # flyers: the ground under where they're heading (refreshed every GROUND_EVERY)
+	var ground_t := 0.0
+	var heal_los_t := 0.0 # healers: time until the next line-of-sight check on their patient
 
 	func center() -> Vector3:
 		return target.pos + Vector3(0, 1.0 * target.size, 0)
@@ -102,6 +114,8 @@ var _rng := RandomNumberGenerator.new()
 func _init(m: MapData, c: Combat) -> void:
 	map = m
 	combat = c
+	if combat.grid == null and combat.boxes == m.boxes:
+		combat.grid = m
 	_rng.seed = 7
 
 
@@ -129,6 +143,7 @@ func spawn(type: String, pos: Vector3) -> Enemy:
 		e.target.body = e.body # explosions launch them
 		e.target.pos = pos
 	e.strafe_dir = 1.0 if _rng.randf() < 0.5 else -1.0
+	e.acc = (e.id % 4) * Cfg.TICK_DT # spread them out, so each tick moves a share of the crowd
 	list.append(e)
 	combat.targets.append(e.target)
 	events.append({"type": "spawn", "id": e.id, "enemy": type})
@@ -157,13 +172,19 @@ func tick(p: PlayerSim, dt: float) -> void:
 		if e.target.knock != Vector3.ZERO: # an item shoved it (ground types get it through their body)
 			e.vel += e.target.knock
 			e.target.knock = Vector3.ZERO
+		e.acc += dt
+		var every := 4 if e.center().distance_squared_to(player_center) > LOD_FAR * LOD_FAR else 2
+		if e.acc < every * dt - 1e-6:
+			continue
+		var step := e.acc
+		e.acc = 0.0
 		# Items slow time for it: chilled runs at half speed, frozen stops (and loses its attack).
-		var edt := dt * Upgrades.time_scale(e.target)
+		var edt := step * Upgrades.time_scale(e.target)
 		if frozen or edt == 0.0:
 			if edt == 0.0 and e.state != "move":
 				_enter(e, "move")
 				e.cd = maxf(e.cd, 0.5)
-			_hold(e)
+			_hold(e, step)
 			continue
 		e.cd = maxf(0.0, e.cd - edt)
 		e.t += edt
@@ -468,7 +489,13 @@ func _tick_flyer(e: Enemy, p: PlayerSim, dt: float) -> void:
 			_flyer_orb(e, p, pc)
 		else:
 			_flyer_beam(e, p, pc, dt)
-	desired.y = maxf(desired.y, _ground_under(desired) + 2.5)
+	# Hover height: over the ground, never climbing away (two healers each hovering over the other
+	# used to ratchet up forever). Over you too when you're up on something high.
+	e.ground_t -= dt
+	if e.ground_t <= 0:
+		e.ground_t = 0.2
+		e.ground_y = _ground_under(desired)
+	desired.y = clampf(desired.y, e.ground_y + FLY_MIN, maxf(e.ground_y, p.py) + FLY_MAX)
 	var busy := e.state in ["windup", "attack"] and e.type == "flyer_projectile"
 	var want := (desired - e.pos)
 	var accel := 10.0
@@ -532,24 +559,33 @@ func _healer(e: Enemy, p: PlayerSim, dt: float) -> Vector3:
 		events.append({"type": "heal_off", "id": e.id})
 	if e.heal_target == null and e.t > 0.3:
 		e.t = 0.0
-		var best: Enemy = null
-		var best_frac := 1.0
+		# The most hurt one in reach that it can see. Never another healer: they can't hurt you, so
+		# keeping each other alive would only drag the fight out. Sight is checked only for the few
+		# most hurt: a ray to every enemy in a big crowd every search adds up.
+		var hurt: Array[Enemy] = []
 		for o in list:
-			if o == e or not o.alive or o.target.hp >= o.target.max_hp:
+			if o.type == "flyer_healer" or not o.alive or o.target.hp >= o.target.max_hp:
 				continue
-			if o.center().distance_to(e.pos) > HEALER.reach or not _can_see(e.pos, o.center()):
-				continue
-			var frac := o.target.hp / o.target.max_hp
-			if frac < best_frac:
-				best_frac = frac
+			if o.center().distance_to(e.pos) <= HEALER.reach:
+				hurt.append(o)
+		hurt.sort_custom(func(a: Enemy, b: Enemy) -> bool: return a.target.hp / a.target.max_hp < b.target.hp / b.target.max_hp)
+		var best: Enemy = null
+		for o in hurt.slice(0, 4):
+			if _can_see(e.pos, o.center()):
 				best = o
+				break
 		if best:
 			e.heal_target = best
 			events.append({"type": "heal_on", "id": e.id, "target": best.id})
 	var anchor: Vector3
 	if e.heal_target:
 		var o := e.heal_target
-		if not _can_see(e.pos, o.center()) or o.center().distance_to(e.pos) > HEALER.reach + 3:
+		e.heal_los_t -= dt
+		var lost := false
+		if e.heal_los_t <= 0:
+			e.heal_los_t = 0.25
+			lost = not _can_see(e.pos, o.center())
+		if lost or o.center().distance_to(e.pos) > HEALER.reach + 3:
 			e.heal_target = null
 			events.append({"type": "heal_off", "id": e.id})
 			anchor = o.center()
@@ -557,11 +593,12 @@ func _healer(e: Enemy, p: PlayerSim, dt: float) -> Vector3:
 			o.target.hp = minf(o.target.max_hp, o.target.hp + HEALER.hps * dt)
 			anchor = o.center()
 	else:
-		# Nobody to heal: tag along with the nearest enemy (or hang back from the player).
+		# Nobody to heal: tag along with the nearest enemy that isn't another healer (following each
+		# other they'd just drift off), or hang back from the player.
 		var nearest: Enemy = null
 		var nd := INF
 		for o in list:
-			if o != e and o.alive and o.center().distance_to(e.pos) < nd:
+			if o != e and o.alive and o.type != "flyer_healer" and o.center().distance_to(e.pos) < nd:
 				nd = o.center().distance_to(e.pos)
 				nearest = o
 		anchor = nearest.center() if nearest else pc + (e.pos - pc).normalized() * 14.0
@@ -669,11 +706,11 @@ func _enter(e: Enemy, s: String) -> void:
 
 
 ## Frozen: stand still (ground types still fall and settle).
-func _hold(e: Enemy) -> void:
+func _hold(e: Enemy, dt: float) -> void:
 	if e.body:
 		var c := Cmd.new()
 		c.yaw = e.yaw
-		e.body.step(c, map, Cfg.TICK_DT)
+		e.body.step(c, map, dt)
 		e.target.pos = Vector3(e.body.px, e.body.py, e.body.pz)
 
 
@@ -708,8 +745,7 @@ func _can_see(a: Vector3, b: Vector3) -> bool:
 func _ray_walls(o: Vector3, d: Vector3, max_t: float) -> float:
 	var best := -1.0
 	var lim := max_t
-	var mid := o + d * (max_t * 0.5)
-	for b in map.nearby(mid.x, mid.y, mid.z, max_t * 0.5 + 1.0):
+	for b in map.ray_boxes(o, d, max_t):
 		if b.kind == "barrier":
 			continue
 		var h := Combat.ray_box(o, d, b, lim)

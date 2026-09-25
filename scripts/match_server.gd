@@ -83,6 +83,7 @@ func add_player(id: int, player_name: String, loadout: Dictionary, color := Colo
 	c.sim = PlayerSim.new()
 	c.sim.quiet = true # nobody reads the server's movement log
 	c.combat = Combat.new(map.boxes, [])
+	c.combat.grid = map
 	c.target = Combat.Target.new()
 	c.target.id = id
 	c.target.kind = "player"
